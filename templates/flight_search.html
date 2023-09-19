@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Flight Search</h1>
+<form action="/search" method="post">
+	<label for="departure">Departure City</label>
+	<input type="text" id="departure" name="departure" required>
+	<br><br>
+
+	<label for="destination">Destination City:</label>
+	<input type="text" id="destination" name="destination" required>
+	<br><br>
+
+	<label for="departure-date">Departure Date:</label>
+	<input type="date" id="departure-date" name="departure-date" required>
+	<br><br>
+
+	<label for="return-date">Return Date:</label>
+	<input type="date" id="return-date" name="return-date" required>
+	<br><br>
+
+	<input type="submit" value="Search Flights">
+</form>
+
+<br><br>
+<a href="/logout">Logout</a>
+
+<script>
+  const departureDate = document.getElementById("departure-date");
+  const returnDate = document.getElementById("return-date");
+
+  departureDate.min = new Date().toISOString().split('T').at(0)
+  returnDate.min = new Date().toISOString().split('T').at(0)
+
+  function updateDates() {
+    if (!returnDate.value || !departureDate.value) return
+
+    if (returnDate.value < departureDate.value) {
+      const returnDateValue = returnDate.value;
+      const departureDateValue = departureDate.value;
+      returnDate.value = departureDateValue
+      departureDate.value = returnDateValue
+    }
+  }
+
+  returnDate.addEventListener("change", updateDates);
+  departureDate.addEventListener("change", updateDates);
+</script>
+
+{% endblock %}

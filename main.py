@@ -10,7 +10,7 @@ app.secret_key = b"cvobidrnsuerbsifurf34ads"
 @app.route("/")
 def home():
     if "username" in session:
-        return render_template("user-home.html", username=session["username"])
+        return render_template("flight_search.html", username=session["username"])
     return render_template("no-session.html")
 
 
@@ -28,3 +28,30 @@ def logout():
     # remove the username from the session if it's there
     session.pop("username", None)
     return redirect("/")
+
+
+@app.route("/search", methods=["POST"])
+def search_flights():
+    departure_date = request.form["departure-date"]
+    return_date = request.form["return-date"]
+
+    # Hier solltest du die Flugdaten aus deiner Datenquelle abrufen.
+    # Dies ist ein Dummy-Beispiel, in dem wir statische Daten verwenden:
+    flights = [
+        {
+            "flight_number": "ABC123",
+            "departure_city": "New York",
+            "destination_city": "Los Angeles",
+            "departure_date": "2023-10-15",
+            "return_date": "2023-10-20",
+        },
+        # Weitere Flugdaten hier
+    ]
+
+    return render_template("search_results.html", flights=flights)
+
+
+# ... (deine anderen Routen)
+
+if __name__ == "__main__":
+    app.run(debug=True)
