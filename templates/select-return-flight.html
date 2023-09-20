@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Select Return Flight</h1>
+  <form action="/select-return-flight" method="post">
+      <table border="1">
+          <tr>
+            <th>Departure City</th>
+            <th>Destination City</th>
+            <th>Departure Time</th>
+            <th>Arrival Time</th>
+            <th>Economy Price</th>
+            <th>Business Price</th>
+            <th>First Class Price</th>
+            <th>Select</th>
+          </tr>
+          {% for flight in return_flights %}
+          <tr>
+            <td>{{ flight["departure_city"] }}</td>
+            <td>{{ flight["destination_city"] }}</td>
+            <td>{{ flight["departure_time"] }}</td>
+            <td>{{ flight["arrival_time"] }}</td>
+            <td>${{ flight["economy_price"] }}</td>
+            <td>${{ flight["business_price"] }}</td>
+            <td>${{ flight["first_class_price"] }}</td>
+            <td>
+                <input type="radio" name="selected-return-flight" value="{{ flight["flight_number"] }}">
+            </td>
+          </tr>
+          {% endfor %}
+      </table>
+      <br>
+      <input type="submit" value="Select">
+  </form>
+  <br><br>
+  <a href="/">Back to Home</a>
+
+
+{% endblock %}

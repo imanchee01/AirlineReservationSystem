@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Choose Your Luggage</h1>
+<form action="/confirm_luggage" method="post">
+	<ul>
+		{% for option in luggage_options %}
+		<li>
+			<input type="radio" name="selected_luggage" value="{{ option.category }}">
+			{{ option.category }} - ${{ option.price }}
+		</li>
+		{% endfor %}
+	</ul>
+	<input type="submit" value="Confirm Luggage Booking">
+</form>
+{% endblock %}
