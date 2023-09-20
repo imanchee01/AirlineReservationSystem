@@ -2,24 +2,24 @@
 
 {% block content %}
 <h1>Flight Search</h1>
-<form action="/search" method="post">
+<form action="/select-flight" method="get">
 	<label for="departure">Departure City</label>
-	<input type="text" id="departure" name="departure" required>
+	<input class="form-control" type="text" id="departure" name="departure" required>
 
 	<label for="destination">Destination City:</label>
-	<input type="text" id="destination" name="destination" required>
+	<input class="form-control" type="text" id="destination" name="destination" required>
 	<br><br>
 
 	<label for="departure-date">Departure Date:</label>
-	<input type="date" id="departure-date" name="departure-date" required>
+	<input class="form-control" type="date" id="departure-date" name="departure_date" required>
 
 	<label for="return-date">Return Date:</label>
-	<input type="date" id="return-date" name="return-date" required>
+	<input class="form-control" type="date" id="return-date" name="return_date" required>
 	<br><br>
 
 	<!-- Dropdown-Menü zur Auswahl der Anzahl der Personen -->
 	<label for="person-count">Number of Persons:</label>
-	<select id="person-count" name="person-count">
+	<select class="form-control" id="person-count" name="person-count">
 		<option value="1">1</option>
 		<option value="2">2</option>
 		<option value="3">3</option>
@@ -28,7 +28,7 @@
 	</select>
 	<br><br>
 
-	<input type="submit" value="Search Flights">
+	<input class="btn btn-default" type="submit" value="Search Flights">
 </form>
 
 <br><br>
