@@ -1,8 +1,6 @@
 import mariadb
 
 
-
-
 db_config = {
     'user': 'dbuser',
     'password': '1111',
