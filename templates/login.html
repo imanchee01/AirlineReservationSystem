@@ -1,18 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-	<h1>Hello, Login!</h1>
-	<form action="/login" method="post">
-		<label>
-			Email
-			<input type="text" name="username" required />
-		</label>
-		<br>
-		<label>
-			Password
-			<input type="password" name="password" required />
-		</label>
-		<br>
-		<button type="submit">Login</button>
-	</form>
+<h1>Hello, Login!</h1>
+<form action="/login" method="post">
+	<label>
+		Email
+		<input class="form-control" type="text" name="username" required/>
+	</label>
+	<br>
+	<label>
+		Password
+		<input class="form-control" type="password" name="password" required/>
+	</label>
+	<br>
+	<button class="btn btn-default" type="submit">Login</button>
+</form>
+
+<br>
+<a href="/sign-up">Sign Up</a>
 {% endblock %}
