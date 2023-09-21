@@ -1,6 +1,5 @@
 import mariadb
 
-
 db_config = {
     'user': 'dbuser',
     'password': '1111',
@@ -61,6 +60,7 @@ def get_data_for_client(userId):
         if connection:
             connection.close()
 
+# need to adjust this + departure
 
 def get_flights_by_destination(destination):
     try:
