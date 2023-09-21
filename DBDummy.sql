@@ -277,6 +277,7 @@ CREATE TABLE IF NOT EXISTS `request` (
   `request_ticketId` int(11) DEFAULT NULL,
   `request_clientId` int(11) NOT NULL,
   `request_employeeId` int(11) DEFAULT NULL,
+  `request_information` text DEFAULT NULL,
   PRIMARY KEY (`requestId`),
   KEY `request_ticketId` (`request_ticketId`),
   KEY `request_clientId` (`request_clientId`),
@@ -291,7 +292,7 @@ CREATE TABLE IF NOT EXISTS `request` (
 -- Exportiere Struktur von Trigger airline.AddMilesToClientsMiles
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
 DELIMITER //
-CREATE TRIGGER `AddMilesToClientsMiles` BEFORE INSERT ON `tickets` FOR EACH ROW BEGIN
+CREATE TRIGGER `AddMilesToClientsMiles` AFTER INSERT ON `tickets` FOR EACH ROW BEGIN
 	UPDATE client SET miles = miles + NEW.ticket_miles
 	WHERE clientId = NEW.ticket_userId;
 END//
@@ -439,6 +440,25 @@ CREATE TRIGGER `update_clientTier_insertTicket` AFTER INSERT ON `tickets` FOR EA
 END//
 DELIMITER ;
 SET SQL_MODE=@OLDTMP_SQL_MODE;
+
+-- Exportiere Struktur von Trigger airline.sync_ticket_miles
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `sync_ticket_miles` BEFORE INSERT ON `tickets` FOR EACH ROW BEGIN
+    DECLARE miles INT;
+    
+    -- Ermittle die Meilen für den Flug basierend auf ticket_flightcode
+    SELECT flight_miles INTO miles
+    FROM flights
+    WHERE flightcode = NEW.ticket_flightcode;
+    
+    -- Setze tickets_miles auf die gefundenen Flugmeilen
+    SET NEW.ticket_miles = miles;
+	
+END//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
+
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
