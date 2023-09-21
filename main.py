@@ -1,6 +1,7 @@
 from flask import Flask, request, session, redirect
 from flask import render_template
 import re
+import mariadb
 
 app = Flask(__name__)
 
