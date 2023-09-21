@@ -19,6 +19,51 @@
 CREATE DATABASE IF NOT EXISTS `airline` /*!40100 DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci */;
 USE `airline`;
 
+-- Exportiere Struktur von Tabelle airline.user
+CREATE TABLE IF NOT EXISTS `user` (
+  `userId` int(10) NOT NULL AUTO_INCREMENT,
+  `user_password` varchar(50) NOT NULL,
+  `user_type` enum('Employee','Client') DEFAULT 'Client',
+  `user_email` varchar(50) NOT NULL,
+  `user_name` varchar(100) NOT NULL,
+  PRIMARY KEY (`userId`),
+  UNIQUE KEY `user_email` (`user_email`),
+  CONSTRAINT `CONSTRAINT_1` CHECK (`user_email` like '%@%.%')
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- Exportiere Daten aus Tabelle airline.user: ~4 rows (ungefähr)
+INSERT INTO `user` (`userId`, `user_password`, `user_type`, `user_email`, `user_name`) VALUES
+	(27, 'password1', 'Employee', 'employee1@example.com', 'John Doe'),
+	(28, 'password2', 'Client', 'client1@example.com', 'Jane Smith'),
+	(29, 'password3', 'Client', 'client2@example.com', 'Bob Johnson'),
+	(30, 'password4', 'Client', 'client3@example.com', 'Elena Evergreen');
+
+-- Exportiere Struktur von Tabelle airline.client
+CREATE TABLE IF NOT EXISTS `client` (
+  `clientId` int(11) DEFAULT NULL,
+  `miles` float DEFAULT 0,
+  `tier` enum('bronze','silver','gold') DEFAULT 'bronze',
+  KEY `clientId` (`clientId`),
+  CONSTRAINT `client_ibfk_1` FOREIGN KEY (`clientId`) REFERENCES `user` (`userId`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- Exportiere Daten aus Tabelle airline.client: ~3 rows (ungefähr)
+INSERT INTO `client` (`clientId`, `miles`, `tier`) VALUES
+	(28, 450, 'bronze'),
+	(29, 1300, 'silver'),
+	(30, 0, 'bronze');
+
+-- Exportiere Struktur von Tabelle airline.employee
+CREATE TABLE IF NOT EXISTS `employee` (
+  `employeeId` int(11) DEFAULT NULL,
+  KEY `employeeId` (`employeeId`),
+  CONSTRAINT `employee_ibfk_1` FOREIGN KEY (`employeeId`) REFERENCES `user` (`userId`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- Exportiere Daten aus Tabelle airline.employee: ~1 rows (ungefähr)
+INSERT INTO `employee` (`employeeId`) VALUES
+	(27);
+
 -- Exportiere Struktur von Tabelle airline.aircraft
 CREATE TABLE IF NOT EXISTS `aircraft` (
   `aircraftId` int(11) NOT NULL AUTO_INCREMENT,
@@ -100,32 +145,6 @@ INSERT INTO `airport` (`airportId`, `airport_location`, `airport_name`) VALUES
 	('ZAG', 'Zagreb', 'Zagreb Airport'),
 	('ZRH', 'Zurich', 'Zurich Airport');
 
--- Exportiere Struktur von Tabelle airline.client
-CREATE TABLE IF NOT EXISTS `client` (
-  `clientId` int(11) DEFAULT NULL,
-  `miles` float DEFAULT 0,
-  `tier` enum('bronze','silver','gold') DEFAULT 'bronze',
-  KEY `clientId` (`clientId`),
-  CONSTRAINT `client_ibfk_1` FOREIGN KEY (`clientId`) REFERENCES `user` (`userId`) ON DELETE NO ACTION ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- Exportiere Daten aus Tabelle airline.client: ~3 rows (ungefähr)
-INSERT INTO `client` (`clientId`, `miles`, `tier`) VALUES
-	(28, 450, 'bronze'),
-	(29, 1300, 'silver'),
-	(30, 0, 'bronze');
-
--- Exportiere Struktur von Tabelle airline.employee
-CREATE TABLE IF NOT EXISTS `employee` (
-  `employeeId` int(11) DEFAULT NULL,
-  KEY `employeeId` (`employeeId`),
-  CONSTRAINT `employee_ibfk_1` FOREIGN KEY (`employeeId`) REFERENCES `user` (`userId`) ON DELETE NO ACTION ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- Exportiere Daten aus Tabelle airline.employee: ~1 rows (ungefähr)
-INSERT INTO `employee` (`employeeId`) VALUES
-	(27);
-
 -- Exportiere Struktur von Tabelle airline.flights
 CREATE TABLE IF NOT EXISTS `flights` (
   `flightcode` int(11) NOT NULL AUTO_INCREMENT,
@@ -205,24 +224,6 @@ INSERT INTO `flights` (`flightcode`, `flight_miles`, `flight_source`, `flight_de
 	(59, 540, 'FRA', 'FCO', 'wednesday', '14:25:00', '12:45:00', 28),
 	(60, 540, 'FCO', 'FRA', 'thursday', '17:35:00', '16:00:00', 28);
 
--- Exportiere Struktur von Tabelle airline.request
-CREATE TABLE IF NOT EXISTS `request` (
-  `requestId` int(11) NOT NULL AUTO_INCREMENT,
-  `request_status` enum('pending','in process','completed') NOT NULL DEFAULT 'pending',
-  `request_ticketId` int(11) DEFAULT NULL,
-  `request_clientId` int(11) NOT NULL,
-  `request_employeeId` int(11) DEFAULT NULL,
-  PRIMARY KEY (`requestId`),
-  KEY `request_ticketId` (`request_ticketId`),
-  KEY `request_clientId` (`request_clientId`),
-  KEY `request_employeeId` (`request_employeeId`),
-  CONSTRAINT `request_ibfk_1` FOREIGN KEY (`request_ticketId`) REFERENCES `tickets` (`ticketId`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  CONSTRAINT `request_ibfk_2` FOREIGN KEY (`request_clientId`) REFERENCES `client` (`clientId`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  CONSTRAINT `request_ibfk_3` FOREIGN KEY (`request_employeeId`) REFERENCES `employee` (`employeeId`) ON DELETE NO ACTION ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- Exportiere Daten aus Tabelle airline.request: ~0 rows (ungefähr)
-
 -- Exportiere Struktur von Tabelle airline.ticketprice
 CREATE TABLE IF NOT EXISTS `ticketprice` (
   `pricecategory` enum('short distance','middle distance','long distance') NOT NULL,
@@ -269,24 +270,23 @@ INSERT INTO `tickets` (`ticket_name`, `ticket_date`, `ticket_miles`, `ticketId`,
 	('Bob Johnson', '2023-09-20', 100, 9, '2023-09-20', 29, 2, 'economy'),
 	('Bob Johnson', '2023-09-20', 100, 10, '2023-09-20', 29, 4, 'economy');
 
--- Exportiere Struktur von Tabelle airline.user
-CREATE TABLE IF NOT EXISTS `user` (
-  `userId` int(10) NOT NULL AUTO_INCREMENT,
-  `user_password` varchar(50) NOT NULL,
-  `user_type` enum('Employee','Client') DEFAULT 'Client',
-  `user_email` varchar(50) NOT NULL,
-  `user_name` varchar(100) NOT NULL,
-  PRIMARY KEY (`userId`),
-  UNIQUE KEY `user_email` (`user_email`),
-  CONSTRAINT `CONSTRAINT_1` CHECK (`user_email` like '%@%.%')
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+-- Exportiere Struktur von Tabelle airline.request
+CREATE TABLE IF NOT EXISTS `request` (
+  `requestId` int(11) NOT NULL AUTO_INCREMENT,
+  `request_status` enum('pending','in process','completed') NOT NULL DEFAULT 'pending',
+  `request_ticketId` int(11) DEFAULT NULL,
+  `request_clientId` int(11) NOT NULL,
+  `request_employeeId` int(11) DEFAULT NULL,
+  PRIMARY KEY (`requestId`),
+  KEY `request_ticketId` (`request_ticketId`),
+  KEY `request_clientId` (`request_clientId`),
+  KEY `request_employeeId` (`request_employeeId`),
+  CONSTRAINT `request_ibfk_1` FOREIGN KEY (`request_ticketId`) REFERENCES `tickets` (`ticketId`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  CONSTRAINT `request_ibfk_2` FOREIGN KEY (`request_clientId`) REFERENCES `client` (`clientId`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  CONSTRAINT `request_ibfk_3` FOREIGN KEY (`request_employeeId`) REFERENCES `employee` (`employeeId`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
--- Exportiere Daten aus Tabelle airline.user: ~4 rows (ungefähr)
-INSERT INTO `user` (`userId`, `user_password`, `user_type`, `user_email`, `user_name`) VALUES
-	(27, 'password1', 'Employee', 'employee1@example.com', 'John Doe'),
-	(28, 'password2', 'Client', 'client1@example.com', 'Jane Smith'),
-	(29, 'password3', 'Client', 'client2@example.com', 'Bob Johnson'),
-	(30, 'password4', 'Client', 'client3@example.com', 'Elena Evergreen');
+-- Exportiere Daten aus Tabelle airline.request: ~0 rows (ungefähr)
 
 -- Exportiere Struktur von Trigger airline.AddMilesToClientsMiles
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
