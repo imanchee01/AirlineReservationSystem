@@ -1,11 +1,11 @@
-from flask import Flask, request, session, redirect, render_template
+from flask import Flask, request, session, redirect, render_template, url_for, flash
 import re
+from database import *
 
 app = Flask(__name__)
 
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b"cvobidrnsuerbsifurf34ads"
-
 
 outward_flights = [
     {
@@ -77,9 +77,9 @@ def sign_up():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['user_email']
+        username = request.form['username']
         password = request.form['user_password']
-        user_role = get_user_role(username, password)
+        user_type = get_user_role(username, password)
 
         if user_type:
             session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.

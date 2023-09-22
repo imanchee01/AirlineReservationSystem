@@ -2,11 +2,11 @@ import mariadb
 
 
 db_config = {
-    'user': 'dbuser',
-    'password': '1111',
+    'user': 'root',
+    'password': '',
     'host': 'localhost',
     'database': 'airline',
-    'port': 3307
+    'port': 3308
 }
 
 def get_user_role(username, password):
@@ -46,7 +46,7 @@ def get_data_for_client(userId):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("""SELECT miles, tier
+        cursor.execute("""SELECT clientId, miles, tier
                           FROM client
                           WHERE clientId = %s;""", (userId,))
 
@@ -66,7 +66,7 @@ def get_flights_by_destination(destination):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM flights WHERE destination = %s", (destination,))
+        cursor.execute("SELECT * FROM flights WHERE flight_destination = %s", (destination,))
         results = cursor.fetchall()
         return results
     except mariadb.Error as e:
