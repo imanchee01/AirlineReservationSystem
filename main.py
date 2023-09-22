@@ -55,6 +55,7 @@ def is_valid_registration_data(firstName, lastName, email, password):
         return False
 
     if len(password) < 8:
+        flash('Password must be 8 characters or longer')
         return False
 
     return True
