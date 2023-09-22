@@ -2,16 +2,18 @@
 
 {% block content %}
 <h1>Flight Search</h1>
-<form action="/select-flight" method="get">
+<form action="/select-flight" method="get" onsubmit="return validateForm()">
 	<label for="departure">Departure City</label>
 	<input class="form-control" type="text" id="departure" name="departure" required>
 
 	<label for="destination">Destination City:</label>
 	<input class="form-control" type="text" id="destination" name="destination" required>
+	<div id="error-message" style="color: red;"></div>
 	<br><br>
 
 	<label for="departure-date">Departure Date:</label>
 	<input class="form-control" type="date" id="departure-date" name="departure_date" required>
+	<br><br>
 
 	<label for="return-date">Return Date:</label>
 	<input class="form-control" type="date" id="return-date" name="return_date" required>
@@ -37,23 +39,39 @@
 <script>
   const departureDate = document.getElementById("departure-date");
   const returnDate = document.getElementById("return-date");
+  const departure = document.getElementById("departure");
+  const destination = document.getElementById("destination");
+  const errorMessage = document.getElementById("error-message");
 
-  departureDate.min = new Date().toISOString().split('T').at(0)
-  returnDate.min = new Date().toISOString().split('T').at(0)
+  departureDate.min = new Date().toISOString().split('T')[0];
+  returnDate.min = new Date().toISOString().split('T')[0];
 
   function updateDates() {
-    if (!returnDate.value || !departureDate.value) return
+    if (!returnDate.value || !departureDate.value) return;
 
     if (returnDate.value < departureDate.value) {
       const returnDateValue = returnDate.value;
       const departureDateValue = departureDate.value;
-      returnDate.value = departureDateValue
-      departureDate.value = returnDateValue
+      returnDate.value = departureDateValue;
+      departureDate.value = returnDateValue;
     }
   }
 
   returnDate.addEventListener("change", updateDates);
   departureDate.addEventListener("change", updateDates);
+
+  function validateForm() {
+    if (departure.value === destination.value) {
+      errorMessage.textContent = "Departure and destination cannot be the same airport.";
+      return false; // Block form submission
+    } else {
+      errorMessage.textContent = "";
+      return true; // Allow form submission
+    }
+  }
+
+  departure.addEventListener("input", validateForm);
+  destination.addEventListener("input", validateForm);
 </script>
 
 {% endblock %}

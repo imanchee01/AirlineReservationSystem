@@ -1,4 +1,7 @@
-from flask import Flask, request, session, redirect, render_template, url_for, flash
+from flask import Flask, request, session, redirect, flash
+from flask import render_template
+from sqlalchemy.testing.pickleable import User
+from db import init_db
 import re
 from database import *
 
@@ -6,6 +9,8 @@ app = Flask(__name__)
 
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b"cvobidrnsuerbsifurf34ads"
+
+init_db(app)
 
 outward_flights = [
     {

@@ -30,6 +30,7 @@
 			<th>Business Price</th>
 			<th>First Class Price</th>
 			<th>Class</th>
+			<th>Extra Luggage</th>
 		</tr>
 		{% for flight in flights%}
 		<tr>
@@ -47,6 +48,16 @@
 					<option value="economy">Economy: $300</option>
 					<option value="business">Business: $600</option>
 					<option value="first">First: $1,000</option>
+				</select>
+			</td>
+			<td>
+				<select class="form-control" name="extra_luggage" id="extra-luggage">
+					<option value="0">No Extra Luggage</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
 				</select>
 			</td>
 		</tr>
