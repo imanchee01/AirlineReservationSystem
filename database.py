@@ -13,13 +13,15 @@ def get_user_role(username, password):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT user_type FROM airline.user WHERE user_name = %s AND user_password = %s", (username, password))
+        cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s AND user_password = %s", (username, password))
         result = cursor.fetchone()
 
         if result:
             return result['user_type']
+
         else:
             return None
+
     except mariadb.Error as e:
         print(f"Error connecting to MariaDB Platform: {e}")
         return None

@@ -78,21 +78,27 @@ def sign_up():
 def login():
     if request.method == 'POST':
         username = request.form['username']
-        password = request.form['user_password']
+        password = request.form['password']
+
         user_type = get_user_role(username, password)
+
+        print(username, password, user_type)
 
         if user_type:
             session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.
 
-            if user_type == 'client':
+            if user_type == 'Client':
                 return redirect(
-                    url_for('search_flights'))  # Redirect to the flight search page if the user is a client.
-            elif user_type == 'employee':
+                    url_for('flight_search'))  # Redirect to the flight search page if the user is a client.
+
+            elif user_type == 'Employee':
                 return redirect(
-                    url_for('manage_requests'))  # Redirect to the manage requests page if the user is an employee.
+                    url_for('employee_home'))  # Redirect to the manage requests page if the user is an employee.
+
         else:
             flash('Invalid login credentials. Please try again or sign up.', 'error')
             return redirect(url_for('login'))
+
     return render_template('login.html')
 
 @app.route('/search_flights')
