@@ -36,11 +36,11 @@ class User(db.Model):
         self.user_type = user_type
         self.set_password(user_password)
 
-    # TODO: user encryption!
+    # TODO: use encryption!
     def set_password(self, user_password):
         self.user_password = user_password  # generate_password_hash(user_password)
 
-    # TODO: user encryption!
+    # TODO: use encryption!
     def check_password(self, user_password):
         return user_password == self.user_password  # check_password_hash(self.user_password, user_password)
 
