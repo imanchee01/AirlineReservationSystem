@@ -1,7 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from werkzeug.security import generate_password_hash, check_password_hash
+
+# from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -35,11 +36,13 @@ class User(db.Model):
         self.user_type = user_type
         self.set_password(user_password)
 
+    # TODO: user encryption!
     def set_password(self, user_password):
-        self.user_password = generate_password_hash(user_password)
+        self.user_password = user_password  # generate_password_hash(user_password)
 
+    # TODO: user encryption!
     def check_password(self, user_password):
-        return check_password_hash(self.user_password, user_password)
+        return user_password == self.user_password  # check_password_hash(self.user_password, user_password)
 
     def __repr__(self):
         return f"<User {self.user_name}>"
