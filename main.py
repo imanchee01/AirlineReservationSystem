@@ -58,6 +58,11 @@ def is_valid_registration_data(firstName, lastName, email, password):
         flash('Password must be 8 characters or longer')
         return False
 
+    # if useremail already exists throw an error
+    if email in email_list():
+        flash('Email already in use')
+        return False
+
     return True
 
 
