@@ -55,6 +55,7 @@ def is_valid_registration_data(firstName, lastName, email, password):
         return False
 
     if len(password) < 8:
+        flash('Password must be 8 characters or longer')
         return False
 
     return True
@@ -69,7 +70,8 @@ def sign_up():
         password = request.form["password"]
 
         if is_valid_registration_data(firstName, lastName, email, password):
-            return redirect("/flight-search")
+            save_signup_information(firstName, lastName, email, password)
+            return redirect(url_for('flight_search'))
 
     return render_template("sign-up.html")
 

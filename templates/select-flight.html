@@ -31,7 +31,7 @@
 			<th>First Class Price</th>
 			<th>Class</th>
 		</tr>
-		{% for flight in outward_flights %}
+		{% for flight in flights%}
 		<tr>
 			<td><input type="radio" name="flight_number" value="{{ flight['flight_number'] }}"/></td>
 			<td>{{ flight["departure_city"] }}</td>
