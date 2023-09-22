@@ -93,9 +93,26 @@ def save_signup_information(first_name, last_name, email, password):
             connection.close()
 
 
+def get_all_emails():
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT user_email FROM User")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def email_list():
+    email_list = get_all_emails()
+    emails = [entry['user_email'] for entry in email_list]
+    return emails
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_data_for_client(userId)
-    save_signup_information('Paula', 'Seibert', 'paula@example.com', 1234)
     print(client_data)  # This will print the data returned by the function
