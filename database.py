@@ -2,11 +2,11 @@ import mariadb
 
 
 db_config = {
-    'user': 'root',
-    'password': '',
+    'user': 'dbuser',
+    'password': '1111',
     'host': 'localhost',
     'database': 'airline',
-    'port': 3308
+    'port': 3307
 }
 
 def get_user_role(username, password):
