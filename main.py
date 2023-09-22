@@ -39,8 +39,8 @@ def user_list():
 
 @app.route("/")
 def home():
-    if "username" in session:
-        return render_template("user-home.html", username=session["username"])
+    if "user_name" in session:
+        return render_template("user-home.html", user_name=session["user_name"])
     return render_template("no-session.html")
 
 
