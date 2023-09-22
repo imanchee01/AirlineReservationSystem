@@ -1,11 +1,12 @@
 import mariadb
 
+
 db_config = {
-    'user': 'dbuser',
-    'password': '1111',
+    'user': 'root',
+    'password': '',
     'host': 'localhost',
     'database': 'airline',
-    'port': 3307
+    'port': 3308
 }
 
 def get_user_role(username, password):
@@ -17,8 +18,10 @@ def get_user_role(username, password):
 
         if result:
             return result['user_type']
+
         else:
             return None
+
     except mariadb.Error as e:
         print(f"Error connecting to MariaDB Platform: {e}")
         return None
@@ -45,7 +48,7 @@ def get_data_for_client(userId):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("""SELECT miles, tier
+        cursor.execute("""SELECT clientId, miles, tier
                           FROM client
                           WHERE clientId = %s;""", (userId,))
 
@@ -60,13 +63,11 @@ def get_data_for_client(userId):
         if connection:
             connection.close()
 
-# need to adjust this + departure
-
 def get_flights_by_destination(destination):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM flights WHERE destination = %s", (destination,))
+        cursor.execute("SELECT * FROM flights WHERE flight_destination = %s", (destination,))
         results = cursor.fetchall()
         return results
     except mariadb.Error as e:
@@ -76,7 +77,25 @@ def get_flights_by_destination(destination):
         if connection:
             connection.close()
 
+def save_signup_information(first_name, last_name, email, password):
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("INSERT INTO User(user_password, user_type, user_email, user_name) VALUES (%s, 'Client', %s, %s)",
+                       (password, email, f'{first_name} {last_name}')
+                       )
+        connection.commit() #Commit changes to database
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        connection.rollback()
+    finally:
+        if connection:
+            connection.close()
+
+
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_data_for_client(userId)
+    save_signup_information('Paula', 'Seibert', 'paula@example.com', 1234)
     print(client_data)  # This will print the data returned by the function
