@@ -7,32 +7,6 @@ app = Flask(__name__)
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b"cvobidrnsuerbsifurf34ads"
 
-outward_flights = [
-    {
-        "flight_number": "ABC123",
-        "departure_city": "New York",
-        "destination_city": "Los Angeles",
-        "departure_time": "09:00 AM",
-        "arrival_time": "02:00 PM",
-        "economy_price": 300,
-        "business_price": 600,
-        "first_class_price": 1000,
-    }
-]
-
-return_flights = [
-    {
-        "flight_number": "XYZ456",
-        "departure_city": "Los Angeles",
-        "destination_city": "New York",
-        "departure_time": "03:00 PM",
-        "arrival_time": "08:00 PM",
-        "economy_price": 300,
-        "business_price": 600,
-        "first_class_price": 1000,
-    }
-]
-
 
 @app.route("/")
 def home():
@@ -69,7 +43,11 @@ def sign_up():
         password = request.form["password"]
 
         if is_valid_registration_data(firstName, lastName, email, password):
-            return redirect("/flight-search")
+            save_signup_information(firstName, lastName, email, password)
+            return redirect(url_for('flight_search'))
+        else:
+            flash('Invalid Account Information. Please try again', 'error')
+            return render_template("sign-up.html")
 
     return render_template("sign-up.html")
 
@@ -93,7 +71,7 @@ def login():
 
             elif user_type == 'Employee':
                 return redirect(
-                    url_for('employee_home'))  # Redirect to the manage requests page if the user is an employee.
+                    url_for('manage_requests'))  # Redirect to the manage requests page if the user is an employee.
 
         else:
             flash('Invalid login credentials. Please try again or sign up.', 'error')
@@ -104,13 +82,12 @@ def login():
 @app.route('/search_flights')
 def search_flights():
     # Your logic for flight search
-    return render_template('search_flights.html')
+    return render_template('flight-search.html')
 
 @app.route('/manage_requests')
 def manage_requests():
     # Your logic for managing requests
-    return render_template('manage_requests.html')
-
+    return render_template('employee-home.html')
 
 
 @app.route("/logout")

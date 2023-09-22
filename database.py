@@ -63,7 +63,6 @@ def get_data_for_client(userId):
         if connection:
             connection.close()
 
-
 def get_flights_by_destination(destination):
     try:
         connection = mariadb.connect(**db_config)
@@ -78,7 +77,25 @@ def get_flights_by_destination(destination):
         if connection:
             connection.close()
 
+def save_signup_information(first_name, last_name, email, password):
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("INSERT INTO User(user_password, user_type, user_email, user_name) VALUES (%s, 'Client', %s, %s)",
+                       (password, email, f'{first_name} {last_name}')
+                       )
+        connection.commit() #Commit changes to database
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        connection.rollback()
+    finally:
+        if connection:
+            connection.close()
+
+
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_data_for_client(userId)
+    save_signup_information('Paula', 'Seibert', 'paula@example.com', 1234)
     print(client_data)  # This will print the data returned by the function
