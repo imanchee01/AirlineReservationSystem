@@ -77,17 +77,17 @@ def sign_up():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['user_email']
-        password = request.form['user_password']
+        username = request.form['username']
+        password = request.form['password']
         user_type = get_user_role(username, password)
 
         if user_type:
             session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.
 
-            if user_type == 'client':
+            if user_type == 'Client':
                 return redirect(
                     url_for('search_flights'))  # Redirect to the flight search page if the user is a client.
-            elif user_type == 'employee':
+            elif user_type == 'Employee':
                 return redirect(
                     url_for('manage_requests'))  # Redirect to the manage requests page if the user is an employee.
         else:
@@ -98,12 +98,12 @@ def login():
 @app.route('/search_flights')
 def search_flights():
     # Your logic for flight search
-    return render_template('search_flights.html')
+    return render_template('flight-search.html')
 
 @app.route('/manage_requests')
 def manage_requests():
     # Your logic for managing requests
-    return render_template('manage_requests.html')
+    return render_template('employee-home.html')
 
 
 
