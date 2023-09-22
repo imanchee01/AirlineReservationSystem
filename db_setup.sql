@@ -22,7 +22,7 @@ USE `airline`;
 -- Exportiere Struktur von Tabelle airline.user
 CREATE TABLE IF NOT EXISTS `user` (
   `userId` int(10) NOT NULL AUTO_INCREMENT,
-  `user_password` varchar(50) NOT NULL,
+  `user_password` varchar(256) NOT NULL,
   `user_type` enum('Employee','Client') DEFAULT 'Client',
   `user_email` varchar(50) NOT NULL,
   `user_name` varchar(100) NOT NULL,
@@ -33,10 +33,10 @@ CREATE TABLE IF NOT EXISTS `user` (
 
 -- Exportiere Daten aus Tabelle airline.user: ~4 rows (ungefähr)
 INSERT INTO `user` (`userId`, `user_password`, `user_type`, `user_email`, `user_name`) VALUES
-	(27, 'password1', 'Employee', 'employee1@example.com', 'John Doe'),
-	(28, 'password2', 'Client', 'client1@example.com', 'Jane Smith'),
-	(29, 'password3', 'Client', 'client2@example.com', 'Bob Johnson'),
-	(30, 'password4', 'Client', 'client3@example.com', 'Elena Evergreen');
+	(27, 'pbkdf2:sha256:600000$AKBByI9uLfDkQJum$24d84e66c9349e651f128da27d329985980aa20dc36cdc1cd31a0fb1fa0bf517', 'Employee', 'employee1@example.com', 'John Doe'),
+	(28, 'pbkdf2:sha256:600000$AKBByI9uLfDkQJum$2c7bd1f45cc2d8ad49e879f549fef401da22ecbe56551811514c0757e1fe7117', 'Client', 'client1@example.com', 'Jane Smith'),
+	(29, 'pbkdf2:sha256:600000$AKBByI9uLfDkQJum$8bd661170108ea69f3e43630d9b5164c3517ebca71efe379f82701f6d492bbac', 'Client', 'client2@example.com', 'Bob Johnson'),
+	(30, 'pbkdf2:sha256:600000$AKBByI9uLfDkQJum$b24965f849c1146712b7190fcc45bc240ff6edbc0156a0720405238610f0be21', 'Client', 'client3@example.com', 'Elena Evergreen');
 
 -- Exportiere Struktur von Tabelle airline.client
 CREATE TABLE IF NOT EXISTS `client` (
