@@ -1,16 +1,8 @@
-from flask import Flask, request, session, redirect, flash
+from flask import request, session, redirect, flash
 from flask import render_template
-from sqlalchemy.testing.pickleable import User
-from db import init_db
+from db import app, db, User
 import re
 from database import *
-
-app = Flask(__name__)
-
-# Set the secret key to some random bytes. Keep this really secret!
-app.secret_key = b"cvobidrnsuerbsifurf34ads"
-
-init_db(app)
 
 outward_flights = [
     {
@@ -37,6 +29,12 @@ return_flights = [
         "first_class_price": 1000,
     }
 ]
+
+
+@app.route("/users")
+def user_list():
+    users = db.session.execute(db.select(User)).scalars()
+    return render_template("users.html", users=users)
 
 
 @app.route("/")
