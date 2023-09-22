@@ -69,7 +69,8 @@ def sign_up():
         password = request.form["password"]
 
         if is_valid_registration_data(firstName, lastName, email, password):
-            return redirect("/flight-search")
+            save_signup_information(firstName, lastName, email, password)
+            return redirect(url_for('flight_search'))
 
     return render_template("sign-up.html")
 
