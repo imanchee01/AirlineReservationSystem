@@ -5,32 +5,40 @@
 {% block content %}
 	<h1>Flight Search</h1>
 	<form action="/select-flight" method="get" onsubmit="return validateForm()">
-		<label for="departure">Departure City</label>
-		<input class="form-control" type="text" id="departure" name="departure" required>
+		<div class="row">
+			<div class="col-xs-6">
+				<label for="departure">Departure City</label>
+				<input class="form-control" type="text" id="departure" name="departure" required>
+				<br>
+				<label for="destination">Destination City:</label>
+				<input class="form-control" type="text" id="destination" name="destination" required>
+				<div id="error-message" style="color: red;"></div>
+				<br><br>
+			</div>
+			<div class="col-xs-6">
+				<label for="departure-date">Departure Date:</label>
+				<input class="form-control" type="date" id="departure-date" name="departure_date" required>
+				<br>
+				<label for="return-date">Return Date:</label>
+				<input class="form-control" type="date" id="return-date" name="return_date" required>
+				<br><br>
+			</div>
+		</div>
 
-		<label for="destination">Destination City:</label>
-		<input class="form-control" type="text" id="destination" name="destination" required>
-		<div id="error-message" style="color: red;"></div>
+		<div class="row">
+			<div class="col-xs-6">
+				<label for="person-count">Number of Persons:</label>
+				<select class="form-control" id="person-count" name="person-count">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+			</div>
+		</div>
 		<br><br>
 
-		<label for="departure-date">Departure Date:</label>
-		<input class="form-control" type="date" id="departure-date" name="departure_date" required>
-		<br><br>
-
-		<label for="return-date">Return Date:</label>
-		<input class="form-control" type="date" id="return-date" name="return_date" required>
-		<br><br>
-
-		<!-- Dropdown-Menü zur Auswahl der Anzahl der Personen -->
-		<label for="person-count">Number of Persons:</label>
-		<select class="form-control" id="person-count" name="person-count">
-			<option value="1">1</option>
-			<option value="2">2</option>
-			<option value="3">3</option>
-			<option value="4">4</option>
-			<option value="5">5</option>
-		</select>
-		<br><br>
 
 		<input class="btn btn-default" type="submit" value="Search Flights">
 	</form>

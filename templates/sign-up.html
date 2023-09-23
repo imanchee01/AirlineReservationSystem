@@ -3,9 +3,9 @@
 {% block title %}Sign Up{% endblock %}
 
 {% block content %}
-	<form method="POST">
-		<h1>Sign Up</h1>
-		<div class="form-group">
+	<div class="row">
+		<form method="POST" class="col-md-6">
+			<h1>Sign Up</h1>
 			<label for="firstName">First Name</label>
 			<input
 				type="text"
@@ -15,6 +15,7 @@
 				placeholder="Enter First Name"
 				required
 			/>
+			<br>
 			<label for="lastName">Last Name</label>
 			<input
 				type="text"
@@ -24,9 +25,7 @@
 				placeholder="Enter Last Name"
 				required
 			/>
-		</div>
-		<br>
-		<div class="form-group">
+			<br>
 			<label for="email">Email Address</label>
 			<input
 				type="email"
@@ -36,6 +35,7 @@
 				placeholder="Enter Email"
 				required
 			/>
+			<br>
 			<label for="password">Password</label>
 			<input
 				type="password"
@@ -45,10 +45,10 @@
 				placeholder="Enter Password (min. 8)"
 				required
 			/>
-		</div>
-		<br>
-		<button type="submit" class="btn btn_primary">Submit</button>
-	</form>
+			<br>
+			<button type="submit" class="btn btn_primary">Submit</button>
+		</form>
+	</div>
 
 	{% with messages = get_flashed_messages(with_categories=true) %}
 		{% if messages %}
