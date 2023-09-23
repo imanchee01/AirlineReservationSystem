@@ -1,4 +1,4 @@
-from flask import request, session, redirect, flash
+from flask import request, session, redirect, flash, url_for
 from flask import render_template
 from db import app, db, User
 import re
@@ -6,27 +6,27 @@ from database import *
 
 outward_flights = [
     {
-        "flight_number": "ABC123",
-        "departure_city": "New York",
-        "destination_city": "Los Angeles",
-        "departure_time": "09:00 AM",
-        "arrival_time": "02:00 PM",
-        "economy_price": 300,
-        "business_price": 600,
-        "first_class_price": 1000,
+        "flightcode": "ABC123",
+        "flight_source": "New York",
+        "flight_destination": "Los Angeles",
+        "flight_depTime": "09:00 AM",
+        "flight_arrtime": "02:00 PM",
+        "flight_economy_price": 300,
+        "flight_business_price": 600,
+        "flight_first_class_price": 1000,
     }
 ]
 
 return_flights = [
     {
-        "flight_number": "XYZ456",
-        "departure_city": "Los Angeles",
-        "destination_city": "New York",
-        "departure_time": "03:00 PM",
-        "arrival_time": "08:00 PM",
-        "economy_price": 300,
-        "business_price": 600,
-        "first_class_price": 1000,
+        "flightcode": "XYZ456",
+        "flight_source": "Los Angeles",
+        "flight_destination": "New York",
+        "flight_depTime": "03:00 PM",
+        "flight_arrtime": "08:00 PM",
+        "flight_economy_price": 300,
+        "flight_business_price": 600,
+        "flight_first_class_price": 1000,
     }
 ]
 
@@ -79,7 +79,7 @@ def sign_up():
 
         if is_valid_registration_data(firstName, lastName, email, password):
             save_signup_information(firstName, lastName, email, password)
-            return redirect(url_for('flight_search'))
+            return redirect(url_for("flight_search"))
 
     return render_template("sign-up.html")
 
@@ -87,9 +87,9 @@ def sign_up():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user_type = get_user_role(username, password)
+        user_email = request.form['user_email']
+        user_password = request.form['user_password']
+        user_type = get_user_role(user_email, user_password)
 
         if user_type:
             session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.
@@ -105,16 +105,17 @@ def login():
             return redirect(url_for('login'))
     return render_template('login.html')
 
+
 @app.route('/search_flights')
 def search_flights():
     # Your logic for flight search
     return render_template('flight-search.html')
 
+
 @app.route('/manage_requests')
 def manage_requests():
     # Your logic for managing requests
     return render_template('employee-home.html')
-
 
 
 @app.route("/logout")
@@ -125,7 +126,7 @@ def logout():
 
 @app.route("/select-flight", methods=["GET"])
 def select_flight():
-    flight_number = request.args.get("flight_number")
+    flightcode = request.args.get("flightcode")
     direction = request.args.get("direction")
     departure = request.args.get("departure")
     destination = request.args.get("destination")
@@ -135,16 +136,16 @@ def select_flight():
 
     if direction == "outward":
         # Save outward flight data into session.
-        session["outward_flight"] = flight_number
+        session["outward_flight"] = flightcode
 
     if direction == "return":
         # Save return flight data into session.
-        session["return_flight"] = flight_number
+        session["return_flight"] = flightcode
         return redirect("/booking-summary")
 
     return render_template(
         "select-flight.html",
-        outward_flights=outward_flights,
+        flights=outward_flights,
         direction=direction,
         departure=departure,
         destination=destination,

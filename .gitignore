@@ -21,3 +21,6 @@ ENV/
 
 # database files created via docker compose
 data
+
+# local environment variables
+.env

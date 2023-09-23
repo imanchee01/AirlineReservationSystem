@@ -1,15 +1,18 @@
-version: '3.1'
+version: '3.4'
 services:
-  db:
-    image: mysql
-    container_name: mydb
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
-    volumes:
-      - ./data:/var/lib/mysql
+  airline_db:
+    image: mariadb:10.2
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_USER: user1
-      MYSQL_PASSWORD : mypassword
+      MYSQL_DATABASE: airline
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    restart: always
     ports:
-      - 3306:3306
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - airline_db:/var/lib/mysql
+volumes:
+  airline_db: { }

@@ -3,3 +3,5 @@ flask-sqlalchemy~=3.1.1
 SQLAlchemy~=2.0.21
 werkzeug~=2.3.7
 mysql-connector-python-rf~=2.2.2
+mariadb~=1.1.7
+python-dotenv~=1.0.0

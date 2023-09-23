@@ -2,74 +2,89 @@
 
 {% block content %}
 
-<h1>Flight Search Results</h1>
+	<h1>Flight Search Results</h1>
 
-<h2>Select {% if direction == None %}Outward{% else %}Return{% endif %} Flight:</h2>
+	<h2>Select {% if direction == None %}Outward{% else %}Return{% endif %} Flight:</h2>
 
-<form action="/select-flight" method="get">
-	{% if direction == None %}
-	<input type="hidden" name="direction" value="outward"/>
-	{% elif direction == "outward" %}
-	<input type="hidden" name="direction" value="return"/>
-	{% endif %}
+	<form action="/select-flight" method="get">
+		{% if direction == None %}
+			<input type="hidden" name="direction" value="outward"/>
+		{% elif direction == "outward" %}
+			<input type="hidden" name="direction" value="return"/>
+		{% endif %}
 
-	<input type="hidden" name="departure" value="{{ departure }}"/>
-	<input type="hidden" name="destination" value="{{ destination }}"/>
-	<input type="hidden" name="departure_date" value="{{ departure_date }}"/>
-	<input type="hidden" name="return_date" value="{{ return_date }}"/>
-	<input type="hidden" name="person_count" value="{{ person_count }}"/>
+		<input type="hidden" name="departure" value="{{ departure }}"/>
+		<input type="hidden" name="destination" value="{{ destination }}"/>
+		<input type="hidden" name="departure_date" value="{{ departure_date }}"/>
+		<input type="hidden" name="return_date" value="{{ return_date }}"/>
+		<input type="hidden" name="person_count" value="{{ person_count }}"/>
 
-	<table class="table">
-		<tr>
-			<th></th>
-			<th>Departure City</th>
-			<th>Destination City</th>
-			<th>Departure Time</th>
-			<th>Arrival Time</th>
-			<th>Economy Price</th>
-			<th>Business Price</th>
-			<th>First Class Price</th>
-			<th>Class</th>
-			<th>Extra Luggage</th>
-		</tr>
+		<table class="table">
+			<tr>
+				<th></th>
+				<th>Departure City</th>
+				<th>Destination City</th>
+				<th>Departure Time</th>
+				<th>Arrival Time</th>
+				<th>Economy Price</th>
+				<th>Business Price</th>
+				<th>First Class Price</th>
+				<th>Class</th>
+				<th>Extra Luggage</th>
+			</tr>
 
-		{% for flight in flights%}
-		<tr>
-			<td><input type="radio" name="flight_number" value="{{ flight['flightcode'] }}"/></td>
-			<td>{{ flight["flight_source"] }}</td>
-			<td>{{ flight["flight_destination"] }}</td>
-			<td>{{ flight["flight_depTime"] }}</td>
-			<td>{{ flight["flight_arrtime"] }}</td>
-			<td>${{ flight["flight_economy_price"] }}</td>
-			<td>${{ flight["flight_business_price"] }}</td>
-			<td>${{ flight["flight_first_class_price"] }}</td>
-			<td>
-				<select class="form-control" name="selected_class" id="selected-class">
-					<option>Select a class</option>
-					<option value="economy">Economy: ${{ flight["flight_economy_price"] }}</option>
-					<option value="business">Business: ${{ flight["flight_business_price"] }}</option>
-					<option value="first">First: ${{ flight["flight_first_class_price"] }}</option>
-				</select>
-			</td>
-			<td>
-				<select class="form-control" name="extra_luggage" id="extra-luggage">
-					<option value="0">No Extra Luggage</option>
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-					<option value="4">4</option>
-					<option value="5">5</option>
-				</select>
-			</td>
-		</tr>
-		{% endfor %}
-	</table>
+			{% for flight in flights %}
+				<tr>
+					<td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}"/></td>
+					<td>{{ flight["flight_source"] }}</td>
+					<td>{{ flight["flight_destination"] }}</td>
+					<td>{{ flight["flight_depTime"] }}</td>
+					<td>{{ flight["flight_arrtime"] }}</td>
+					<td>${{ flight["flight_economy_price"] }}</td>
+					<td>${{ flight["flight_business_price"] }}</td>
+					<td>${{ flight["flight_first_class_price"] }}</td>
+					<td>
+						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class">
+							<option>Select a class</option>
+							<option value="economy">Economy: ${{ flight["flight_economy_price"] }}</option>
+							<option value="business">Business: ${{ flight["flight_business_price"] }}</option>
+							<option value="first">First: ${{ flight["flight_first_class_price"] }}</option>
+						</select>
+					</td>
+					<td>
+						<select class="form-control" name="extra_luggage" id="extra-luggage">
+							<option value="0">No Extra Luggage</option>
+							{#{% if flight["distance"] == "short" %}#}
+							<option value="1">1 x $25</option>
+							<option value="2">2 x $50</option>
+							<option value="3">3 x $75</option>
+							<option value="4">4 x $100</option>
+							<option value="5">5 x $125</option>
+							{#{% elif flight["distance"] == "medium" %}#}
+							{#	<option value="1">1 x $50</option>#}
+							{#	<option value="2">2 x $100</option>#}
+							{#	<option value="3">3 x $150</option>#}
+							{#	<option value="4">4 x $200</option>#}
+							{#	<option value="5">5 x $250</option>#}
+							{#{% elif flight["distance"] == "long" %}#}
+							{#	<option value="1">1 x $75</option>#}
+							{#	<option value="2">2 x $150</option>#}
+							{#	<option value="3">3 x $225</option>#}
+							{#	<option value="4">4 x $300</option>#}
+							{#	<option value="5">5 x $375</option>#}
+							{#{% endif %}#}
+						</select>
+					</td>
 
-	<br>
-	<input class="btn btn-default" type="submit" value="Select">
-</form>
+				</tr>
+			{% endfor %}
+		</table>
 
-<br><br>
-<a href="/">Back to Home</a>
+		<br>
+		<input class="btn btn-default" type="submit" value="Select">
+	</form>
+
+	<br><br>
+	<a href="/">Back to Home</a>
 
 {% endblock %}
