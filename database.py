@@ -140,43 +140,33 @@ def get_flights_by_destination(destination):
 
 
 def save_signup_information(first_name, last_name, email, password):
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute(
-            "INSERT INTO User(user_password, user_type, user_email, user_name) VALUES (%s, 'Client', %s, %s)",
-            (password, email, f'{first_name} {last_name}')
-        )
-        connection.commit()  # Commit changes to database
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        connection.rollback()
-    finally:
-        if connection:
-            connection.close()
+    # Create a new user and add it to the database
+    new_user = User(user_name=f'{first_name} {last_name}', user_email=email, user_password=password, user_type="Client")
+    db.session.add(new_user)
+    db.session.commit()
+
+    # connection = None
+    # try:
+    #     connection = mariadb.connect(**db_config)
+    #     cursor = connection.cursor(dictionary=True)
+    #     cursor.execute(
+    #         "INSERT INTO User(user_password, user_type, user_email, user_name) VALUES (%s, 'Client', %s, %s)",
+    #         (password, email, f'{first_name} {last_name}')
+    #     )
+    #     connection.commit()  # Commit changes to database
+    # except mariadb.Error as e:
+    #     print(f"Error connecting to MariaDB Platform: {e}")
+    #     connection.rollback()
+    # finally:
+    #     if connection:
+    #         connection.close()
 
 
-def get_all_emails():
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT user_email FROM User")
-        results = cursor.fetchall()
-        return results
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
-        if connection:
-            connection.close()
-
-
-def email_list():
-    email_list = get_all_emails()
-    emails = [entry['user_email'] for entry in email_list]
-    return emails
+def user_with_email_exists(email):
+    existing_email = User.query.filter_by(user_email=email).first()
+    if existing_email:
+        return True
+    return False
 
 
 if __name__ == "__main__":

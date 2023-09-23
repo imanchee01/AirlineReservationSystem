@@ -1,6 +1,6 @@
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from database import app, User, save_signup_information, email_list
+from database import app, User, save_signup_information, user_with_email_exists
 import re
 
 outward_flights = [
@@ -55,7 +55,7 @@ def is_valid_registration_data(firstName, lastName, email, password):
         return False
 
     # if useremail already exists throw an error
-    if email in email_list():
+    if user_with_email_exists(email):
         flash('Email already in use')
         return False
 
@@ -70,9 +70,16 @@ def sign_up():
         email = request.form["email"]
         password = request.form["password"]
 
-        if is_valid_registration_data(firstName, lastName, email, password):
-            save_signup_information(firstName, lastName, email, password)
-            return redirect(url_for("flight_search"))
+        try:
+            if is_valid_registration_data(firstName, lastName, email, password):
+                save_signup_information(firstName, lastName, email, password)
+                return redirect(url_for("flight_search"))
+
+        except Exception as e:
+            app.logger.error("Error! " + str(e))
+            flash('Failed to sign up.', 'error')
+
+        return redirect(url_for("sign_up"))
 
     return render_template("sign-up.html")
 
