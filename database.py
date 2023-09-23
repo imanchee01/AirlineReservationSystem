@@ -6,8 +6,11 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# We use environment variables to configure the database.
+# Values on the right (or ...) are default values.
+# Values on the left (... or) are values fetched from a .env file.
+# See https://github.com/theskumar/python-dotenv
 load_dotenv()
-
 db_config = {
     'user': os.environ.get("DB_ROOTUSER") or 'root',
     'password': os.environ.get("DB_ROOTPASSWORD") or '',
@@ -37,11 +40,11 @@ db.init_app(app)
 class User(db.Model):
     __tablename__ = "user"
 
-    UserId = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(80), unique=True, nullable=False)
     user_email = db.Column(db.String(120), unique=True, nullable=False)
-    user_password = db.Column(db.String(128), nullable=False)
-    user_type = db.Column(db.String(50), nullable=False)
+    user_password = db.Column(db.String(256), nullable=False)
+    user_type = db.Column(db.String(8), nullable=False)
 
     def __init__(self, user_name, user_email, user_password, user_type):
         self.user_name = user_name
@@ -59,12 +62,14 @@ class User(db.Model):
         return f"<User {self.user_name}>"
 
 
-def get_user_role(user_email, user_password):
+# The get_user_role method is only responsible for returning the user role.
+# It should not be called before the user has been authenticated (not before a password check).
+def get_user_role(user_email):
     connection = None
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s AND user_password = %s",
+        cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s",
                        (user_email, user_password))
         result = cursor.fetchone()
 

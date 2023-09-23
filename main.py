@@ -1,6 +1,6 @@
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from database import app, User, get_user_role, save_signup_information, email_list
+from database import app, User, save_signup_information, email_list
 import re
 
 outward_flights = [
@@ -79,24 +79,27 @@ def sign_up():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        user_email = request.form['user_email']
-        user_password = request.form['user_password']
-        user_type = get_user_role(user_email, user_password)
+    if request.method == 'GET':
+        return render_template('login.html')
 
-        if user_type:
-            session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.
+    user_email = request.form['user_email']
+    user_password = request.form['user_password']
 
-            if user_type == 'Client':
-                return redirect(
-                    url_for('search_flights'))  # Redirect to the flight search page if the user is a client.
-            elif user_type == 'Employee':
-                return redirect(
-                    url_for('manage_requests'))  # Redirect to the manage requests page if the user is an employee.
-        else:
-            flash('Invalid login credentials. Please try again or sign up.', 'error')
-            return redirect(url_for('login'))
-    return render_template('login.html')
+    # Query the user with the provided username from the database.
+    user = User.query.filter_by(user_email=user_email).first()
+
+    if user and user.check_password(user_password):
+        # Password is correct.
+        if user.user_type == 'Client':
+            # Redirect to the flight search page if the user is a client.
+            return redirect(url_for('search_flights'))
+        if user.user_type == 'Employee':
+            # Redirect to the manage requests page if the user is an employee.
+            return redirect(url_for('manage_requests'))
+
+    # Username or password is incorrect (or we have a user who is not a client nor an employee).
+    flash('Invalid login credentials. Please try again or sign up.', 'error')
+    return redirect(url_for('login'))
 
 
 @app.route('/search_flights')
