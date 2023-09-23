@@ -31,12 +31,6 @@ return_flights = [
 ]
 
 
-@app.route("/users")
-def user_list():
-    users = db.session.execute(db.select(User)).scalars()
-    return render_template("users.html", users=users)
-
-
 @app.route("/")
 def home():
     if "user_name" in session:
