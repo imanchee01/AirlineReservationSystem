@@ -102,13 +102,13 @@ def login():
     return redirect(url_for('login'))
 
 
-@app.route('/search_flights')
+@app.route('/search-flights')
 def search_flights():
     # Your logic for flight search
     return render_template('flight-search.html')
 
 
-@app.route('/manage_requests')
+@app.route('/manage-requests')
 def manage_requests():
     # Your logic for managing requests
     return render_template('employee-home.html')
