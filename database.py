@@ -1,6 +1,10 @@
 import mariadb
 import os
 from dotenv import load_dotenv
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 
@@ -11,6 +15,48 @@ db_config = {
     'database': os.environ.get("DB_DATABASE") or 'airline',
     'port': int(os.environ.get("DB_PORT")) or 3308
 }
+
+app = Flask(__name__)
+
+# Set the secret key to some random bytes. Keep this really secret!
+app.secret_key = b"cvobidrnsuerbsifurf34ads"
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+db = SQLAlchemy(model_class=Base)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://" + db_config['user'] + ":" + db_config[
+    "password"] + "@" + db_config["host"] + ":" + str(db_config["port"]) + "/" + db_config["database"]
+
+db.init_app(app)
+
+
+class User(db.Model):
+    __tablename__ = "user"
+
+    UserId = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(80), unique=True, nullable=False)
+    user_email = db.Column(db.String(120), unique=True, nullable=False)
+    user_password = db.Column(db.String(128), nullable=False)
+    user_type = db.Column(db.String(50), nullable=False)
+
+    def __init__(self, user_name, user_email, user_password, user_type):
+        self.user_name = user_name
+        self.user_email = user_email
+        self.user_type = user_type
+        self.set_password(user_password)
+
+    def set_password(self, user_password):
+        self.user_password = generate_password_hash(user_password)
+
+    def check_password(self, user_password):
+        return check_password_hash(self.user_password, user_password)
+
+    def __repr__(self):
+        return f"<User {self.user_name}>"
 
 
 def get_user_role(user_email, user_password):

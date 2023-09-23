@@ -1,8 +1,7 @@
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from db import app, db, User
+from database import app, User, get_user_role, save_signup_information, email_list
 import re
-from database import *
 
 outward_flights = [
     {
