@@ -1,77 +1,79 @@
 {% extends "base.html" %}
 
+{% block title %}Flight Search{% endblock %}
+
 {% block content %}
-<h1>Flight Search</h1>
-<form action="/select-flight" method="get" onsubmit="return validateForm()">
-	<label for="departure">Departure City</label>
-	<input class="form-control" type="text" id="departure" name="departure" required>
+	<h1>Flight Search</h1>
+	<form action="/select-flight" method="get" onsubmit="return validateForm()">
+		<label for="departure">Departure City</label>
+		<input class="form-control" type="text" id="departure" name="departure" required>
 
-	<label for="destination">Destination City:</label>
-	<input class="form-control" type="text" id="destination" name="destination" required>
-	<div id="error-message" style="color: red;"></div>
+		<label for="destination">Destination City:</label>
+		<input class="form-control" type="text" id="destination" name="destination" required>
+		<div id="error-message" style="color: red;"></div>
+		<br><br>
+
+		<label for="departure-date">Departure Date:</label>
+		<input class="form-control" type="date" id="departure-date" name="departure_date" required>
+		<br><br>
+
+		<label for="return-date">Return Date:</label>
+		<input class="form-control" type="date" id="return-date" name="return_date" required>
+		<br><br>
+
+		<!-- Dropdown-Menü zur Auswahl der Anzahl der Personen -->
+		<label for="person-count">Number of Persons:</label>
+		<select class="form-control" id="person-count" name="person-count">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+		</select>
+		<br><br>
+
+		<input class="btn btn-default" type="submit" value="Search Flights">
+	</form>
+
 	<br><br>
+	<a href="/logout">Logout</a>
 
-	<label for="departure-date">Departure Date:</label>
-	<input class="form-control" type="date" id="departure-date" name="departure_date" required>
-	<br><br>
+	<script>
+    const departureDate = document.getElementById("departure-date");
+    const returnDate = document.getElementById("return-date");
+    const departure = document.getElementById("departure");
+    const destination = document.getElementById("destination");
+    const errorMessage = document.getElementById("error-message");
 
-	<label for="return-date">Return Date:</label>
-	<input class="form-control" type="date" id="return-date" name="return_date" required>
-	<br><br>
+    departureDate.min = new Date().toISOString().split('T')[0];
+    returnDate.min = new Date().toISOString().split('T')[0];
 
-	<!-- Dropdown-Menü zur Auswahl der Anzahl der Personen -->
-	<label for="person-count">Number of Persons:</label>
-	<select class="form-control" id="person-count" name="person-count">
-		<option value="1">1</option>
-		<option value="2">2</option>
-		<option value="3">3</option>
-		<option value="4">4</option>
-		<option value="5">5</option>
-	</select>
-	<br><br>
+    function updateDates() {
+      if (!returnDate.value || !departureDate.value) return;
 
-	<input class="btn btn-default" type="submit" value="Search Flights">
-</form>
-
-<br><br>
-<a href="/logout">Logout</a>
-
-<script>
-  const departureDate = document.getElementById("departure-date");
-  const returnDate = document.getElementById("return-date");
-  const departure = document.getElementById("departure");
-  const destination = document.getElementById("destination");
-  const errorMessage = document.getElementById("error-message");
-
-  departureDate.min = new Date().toISOString().split('T')[0];
-  returnDate.min = new Date().toISOString().split('T')[0];
-
-  function updateDates() {
-    if (!returnDate.value || !departureDate.value) return;
-
-    if (returnDate.value < departureDate.value) {
-      const returnDateValue = returnDate.value;
-      const departureDateValue = departureDate.value;
-      returnDate.value = departureDateValue;
-      departureDate.value = returnDateValue;
+      if (returnDate.value < departureDate.value) {
+        const returnDateValue = returnDate.value;
+        const departureDateValue = departureDate.value;
+        returnDate.value = departureDateValue;
+        departureDate.value = returnDateValue;
+      }
     }
-  }
 
-  returnDate.addEventListener("change", updateDates);
-  departureDate.addEventListener("change", updateDates);
+    returnDate.addEventListener("change", updateDates);
+    departureDate.addEventListener("change", updateDates);
 
-  function validateForm() {
-    if (departure.value === destination.value) {
-      errorMessage.textContent = "Departure and destination cannot be the same airport.";
-      return false; // Block form submission
-    } else {
-      errorMessage.textContent = "";
-      return true; // Allow form submission
+    function validateForm() {
+      if (departure.value === destination.value) {
+        errorMessage.textContent = "Departure and destination cannot be the same airport.";
+        return false; // Block form submission
+      } else {
+        errorMessage.textContent = "";
+        return true; // Allow form submission
+      }
     }
-  }
 
-  departure.addEventListener("input", validateForm);
-  destination.addEventListener("input", validateForm);
-</script>
+    departure.addEventListener("input", validateForm);
+    destination.addEventListener("input", validateForm);
+	</script>
 
 {% endblock %}

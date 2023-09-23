@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 
+{% block title %}Employee Home{% endblock %}
+
 {% block content %}
-<h1>Logged in as {{user_name}}.</h1>
+	<h1>Logged in as {{ user_name }}.</h1>
 
-<a href="/Make_Offer">Make Offer!</a>
+	<a href="/Make_Offer">Make Offer!</a>
 
-<br><br>
+	<br><br>
 
-<a href="/Pending_Requests">Pending Request:</a>
+	<a href="/Pending_Requests">Pending Request:</a>
 
-<br><br>
+	<br><br>
 
-<a href="/Edit_Flights">Edit Flights</a>
-<br><br><br><br>
-<a href="/logout">Logout.</a>
+	<a href="/Edit_Flights">Edit Flights</a>
+	<br><br><br><br>
+	<a href="/logout">Logout.</a>
 {% endblock %}

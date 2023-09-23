@@ -1,25 +1,29 @@
 {% extends "base.html" %}
 
+{% block title %}
+	Booking Summary
+{% endblock %}
+
 {% block content %}
 
-<h1>Booking Summary</h1>
+	<h1>Booking Summary</h1>
 
-<h2>Selected Outward Flight:</h2>
-{{ outward_flight }}
+	<h2>Selected Outward Flight:</h2>
+	{{ outward_flight }}
 
-<h2>Selected Return Flight:</h2>
-{{ return_flight }}
+	<h2>Selected Return Flight:</h2>
+	{{ return_flight }}
 
-<h2>Extra Luggage:</h2>
-{{ selected_luggage }}
-<br><br>
+	<h2>Extra Luggage:</h2>
+	{{ selected_luggage }}
+	<br><br>
 
-<h2>Total Price:</h2>
-<br><br>
+	<h2>Total Price:</h2>
+	<br><br>
 
-<a href="/checkout" class="btn btn-primary" role="button">Continue</a>
-<br><br>
+	<a href="/checkout" class="btn btn-primary" role="button">Continue</a>
+	<br><br>
 
-<a href="/">Back to Home</a>
+	<a href="/">Back to Home</a>
 
 {% endblock %}
