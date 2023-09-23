@@ -62,6 +62,10 @@ class User(db.Model):
         return f"<User {self.user_name}>"
 
 
+def get_user(user_email):
+    return User.query.filter_by(user_email=user_email).first()
+
+
 # The get_user_role method is only responsible for returning the user role.
 # It should not be called before the user has been authenticated (not before a password check).
 def get_user_role(user_email):

@@ -1,6 +1,6 @@
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from database import app, User, save_signup_information, user_with_email_exists
+from database import app, User, save_signup_information, user_with_email_exists, get_user
 import re
 
 outward_flights = [
@@ -93,7 +93,7 @@ def login():
     user_password = request.form['user_password']
 
     # Query the user with the provided username from the database.
-    user = User.query.filter_by(user_email=user_email).first()
+    user = get_user(user_email)
 
     if user and user.check_password(user_password):
         # Password is correct.
