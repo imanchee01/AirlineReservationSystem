@@ -2,6 +2,8 @@
 
 {% block title %}Flight Search Results{% endblock %}
 
+
+
 {% block content %}
 	<h1>Flight Search Results</h1>
 
@@ -19,6 +21,27 @@
 		<input type="hidden" name="departure_date" value="{{ departure_date }}"/>
 		<input type="hidden" name="return_date" value="{{ return_date }}"/>
 		<input type="hidden" name="person_count" value="{{ person_count }}"/>
+
+		<style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px auto;
+      }
+
+      th, td {
+        padding: 10px;
+        text-align: left;
+      }
+
+      tr:first-child {
+        border-bottom: 1px solid #ccc;
+      }
+
+      strong {
+        font-weight: bold;
+      }
+		</style>
 
 		<table class="table">
 			<tr>
@@ -41,6 +64,7 @@
 					<td>{{ flight["flight_destination"] }}</td>
 					<td>{{ flight["flight_depTime"] }}</td>
 					<td>{{ flight["flight_arrtime"] }}</td>
+					{# TODO: input flight price from database  #}
 					<td>${{ flight["flight_economy_price"] }}</td>
 					<td>${{ flight["flight_business_price"] }}</td>
 					<td>${{ flight["flight_first_class_price"] }}</td>
@@ -76,7 +100,6 @@
 							{#{% endif %}#}
 						</select>
 					</td>
-
 				</tr>
 			{% endfor %}
 		</table>

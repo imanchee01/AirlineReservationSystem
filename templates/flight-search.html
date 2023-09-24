@@ -28,7 +28,7 @@
 		<div class="row">
 			<div class="col-xs-6">
 				<label for="person-count">Number of Persons:</label>
-				<select class="form-control" id="person-count" name="person-count">
+				<select class="form-control" id="person-count" name="person_count">
 					<option value="1">1</option>
 					<option value="2">2</option>
 					<option value="3">3</option>
@@ -47,35 +47,35 @@
 	<a href="/logout">Logout</a>
 
 	<script>
-    const departureDate = document.getElementById("departure-date");
-    const returnDate = document.getElementById("return-date");
+    const departure_date = document.getElementById("departure-date");
+    const return_date = document.getElementById("return-date");
     const departure = document.getElementById("departure");
     const destination = document.getElementById("destination");
-    const errorMessage = document.getElementById("error-message");
+    const error_message = document.getElementById("error-message");
 
-    departureDate.min = new Date().toISOString().split('T')[0];
-    returnDate.min = new Date().toISOString().split('T')[0];
+    departure_date.min = new Date().toISOString().split('T')[0];
+    return_date.min = new Date().toISOString().split('T')[0];
 
-    function updateDates() {
-      if (!returnDate.value || !departureDate.value) return;
+    function update_dates() {
+      if (!return_date.value || !departure_date.value) return;
 
-      if (returnDate.value < departureDate.value) {
-        const returnDateValue = returnDate.value;
-        const departureDateValue = departureDate.value;
-        returnDate.value = departureDateValue;
-        departureDate.value = returnDateValue;
+      if (return_date.value < departure_date.value) {
+        const return_date_value = return_date.value;
+        const departure_date_value = departure_date.value;
+        return_date.value = departure_date.value;
+        departure_date.value = return_date.value;
       }
     }
 
-    returnDate.addEventListener("change", updateDates);
-    departureDate.addEventListener("change", updateDates);
+    return_date.addEventListener("change", update_dates);
+    departure_date.addEventListener("change", update_dates);
 
     function validateForm() {
       if (departure.value === destination.value) {
-        errorMessage.textContent = "Departure and destination cannot be the same airport.";
+        error_message.textContent = "Departure and destination cannot be the same airport.";
         return false; // Block form submission
       } else {
-        errorMessage.textContent = "";
+        error_message.textContent = "";
         return true; // Allow form submission
       }
     }
