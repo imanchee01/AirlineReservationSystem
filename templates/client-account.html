@@ -46,10 +46,15 @@
 					<td>12:00 PM</td>
 					<td>2</td>
 					<td>
-						<button>Stornieren</button>
+						<button id="stornierenButton1"
+						        onclick="toggleButton('stornierenButton1', 'Pending', 'yellow', 'checkInButton1')">Stornieren
+						</button>
 					</td>
 					<td>
-						<button style="width: 100px;">Check-In</button>
+						<button id="checkInButton1"
+						        onclick="toggleButton('checkInButton1', 'Checked In', 'green', 'stornierenButton1')"
+						        style="width: 100px;">Check-In
+						</button>
 					</td>
 				</tr>
 				<tr>
@@ -62,21 +67,53 @@
 					<td>02:30 PM</td>
 					<td>3</td>
 					<td>
-						<button>Stornieren</button>
+						<button id="stornierenButton2"
+						        onclick="toggleButton('stornierenButton2', 'Pending', 'yellow', 'checkInButton2')">Stornieren
+						</button>
 					</td>
 					<td>
-						<button style="width: 100px;">Check-In</button>
+						<button id="checkInButton2"
+						        onclick="toggleButton('checkInButton2', 'Checked In', 'green', 'stornierenButton2')"
+						        style="width: 100px;">Check-In
+						</button>
 					</td>
 				</tr>
 				<!-- Weitere Flugdaten hier einfügen -->
 			</table>
 		</div>
 
-
 		<br>
 
 	</div>
 	<br><br>
 	<a href="/logout">Logout</a>
+
+	<script>
+    // Initialisiere den Status der Buttons
+    const buttonStatus = {
+      'stornierenButton1': false,
+      'checkInButton1': false,
+      'stornierenButton2': false,
+      'checkInButton2': false,
+    };
+
+    function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
+      // Überprüfe, ob der gegnerische Button aktiv ist
+      if (!buttonStatus[oppositeButtonId]) {
+        const button = document.getElementById(buttonId);
+        button.innerHTML = newText;
+        button.style.backgroundColor = newColor;
+        button.disabled = true;
+        buttonStatus[buttonId] = true;
+
+        // Deaktiviere den gegnerischen Button
+        const oppositeButton = document.getElementById(oppositeButtonId);
+        oppositeButton.disabled = false;
+        oppositeButton.style.backgroundColor = '';
+        buttonStatus[oppositeButtonId] = false;
+      }
+    }
+	</script>
+
 
 {% endblock %}
