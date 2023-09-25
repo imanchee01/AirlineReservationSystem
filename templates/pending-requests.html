@@ -1,7 +1,59 @@
 {% extends "base.html" %}
 
-{% block title %}Pending Requests{% endblock %}
-
 {% block content %}
-	<a href="/employee">Employee Home</a>
+    <title>Pending Requests</title>
+<body>
+<h1>Pending Requests</h1>
+<form action="/select-flight" method="get">
+	{% if direction == None %}
+	<input type="hidden" name="direction" value="outward"/>
+	{% elif direction == "outward" %}
+	<input type="hidden" name="direction" value="return"/>
+	{% endif %}
+
+	<input type="hidden" name="departure" value="{{ departure }}"/>
+	<input type="hidden" name="destination" value="{{ destination }}"/>
+	<input type="hidden" name="departure_date" value="{{ departure_date }}"/>
+	<input type="hidden" name="return_date" value="{{ return_date }}"/>
+	<input type="hidden" name="person_count" value="{{ person_count }}"/>
+
+	<table class="table">
+		<tr>
+			<th></th>
+			<th>Departure City</th>
+			<th>Destination City</th>
+			<th>Departure Time</th>
+			<th>Arrival Time</th>
+			<th>Economy Price</th>
+			<th>Business Price</th>
+			<th>First Class Price</th>
+			<th>Class</th>
+		</tr>
+		{% for flight in flights%}
+		<tr>
+			<td><input type="radio" name="flight_number" value="{{ flight['flight_number'] }}"/></td>
+			<td>{{ flight["departure_city"] }}</td>
+			<td>{{ flight["destination_city"] }}</td>
+			<td>{{ flight["departure_time"] }}</td>
+			<td>{{ flight["arrival_time"] }}</td>
+			<td>${{ flight["economy_price"] }}</td>
+			<td>${{ flight["business_price"] }}</td>
+			<td>${{ flight["first_class_price"] }}</td>
+			<td>
+				<select class="form-control" name="selected_class" id="selected-class">
+					<option>Select a class</option>
+					<option value="economy">Economy: $300</option>
+					<option value="business">Business: $600</option>
+					<option value="first">First: $1,000</option>
+				</select>
+			</td>
+		</tr>
+		{% endfor %}
+	</table>
+<br><br>
+
+<a href="/employee_home">Employee Home</a>
+<br><br><br><br>
+<a href="/logout">Logout.</a>
+</body>
 {% endblock %}

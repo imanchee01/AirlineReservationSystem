@@ -13,10 +13,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 db_config = {
     'user': os.environ.get("DB_ROOTUSER") or 'root',
-    'password': os.environ.get("DB_ROOTPASSWORD") or '',
+    'password': os.environ.get("DB_ROOTPASSWORD") or '' or 'gertimare',
     'host': os.environ.get("DB_HOST") or 'localhost',
     'database': os.environ.get("DB_DATABASE") or 'airline',
-    'port': int(os.environ.get("DB_PORT")) or 3308
+    'port': os.environ.get("DB_PORT") or 3306 or 3308
 }
 
 app = Flask(__name__)
