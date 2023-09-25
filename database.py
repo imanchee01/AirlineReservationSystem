@@ -6,7 +6,7 @@ db_config = {
     'password': '',
     'host': 'localhost',
     'database': 'airline',
-    'port': 3308
+    'port': 3306
 }
 
 def get_user_role(username, password):
