@@ -132,7 +132,6 @@ def logout():
 
 @app.route('/search-flights')
 def search_flights():
-    # Your logic for flight search
     return render_template("flight-search.html")
 
 
@@ -216,9 +215,8 @@ def order_confirmation():
     return render_template("order-confirmation.html")
 
 
-@app.route('/manage-requests')
-def manage_requests():
-    # Your logic for managing requests
+@app.route("/employee-home", methods=["GET"])
+def employee_home():
     return render_template('employee-home.html')
 
 

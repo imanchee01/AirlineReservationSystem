@@ -3,17 +3,24 @@
 {% block title %}Employee Home{% endblock %}
 
 {% block content %}
-	<h1>Logged in as {{ user_name }}.</h1>
 
-	<a href="/Make_Offer">Make Offer!</a>
+
+	<h1>You're logged in as {{ user_name }}.</h1>
+	<br><br>
+
+	<a href="/Make_Offer" class="btn btn-default" style="width: 200px; height: 40px; text-align: center">Make Offer</a>
 
 	<br><br>
 
-	<a href="/Pending_Requests">Pending Request:</a>
+	<a href="/Cancellation_Request" class="btn btn-default" style="width: 200px; height: 40px; text-align: center">Cancellation
+		Request</a>
 
 	<br><br>
 
-	<a href="/Edit_Flights">Edit Flights</a>
+	<a href="/Edit_Flight" class="btn btn-default" style="width: 200px; height: 40px; text-align: center">Edit Flight</a>
+
 	<br><br><br><br>
-	<a href="/logout">Logout.</a>
+
+	<a href="/logout" class="btn btn-secondary equal-size-button">Logout</a>
+
 {% endblock %}
