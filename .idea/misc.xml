@@ -4,5 +4,5 @@
     <option name="executionMode" value="BINARY" />
     <option name="pathToExecutable" value="$USER_HOME$/anaconda3/bin/black" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (DatenbankenPraktikum)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.9 (AirlineReservationSystem)" project-jdk-type="Python SDK" />
 </project>
