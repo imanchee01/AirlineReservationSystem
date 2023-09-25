@@ -58,9 +58,9 @@ def is_valid_registration_data(firstName, lastName, email, password):
         flash('Password must be 8 characters or longer')
         return False
 
-    # if useremail already exists throw an error
+    # if useremail already exists in database throw an error
     if email in email_list():
-        flash('Email already in use')
+        flash('Email already in use. Please try again with a different email or log in.')
         return False
 
     return True
@@ -100,6 +100,7 @@ def login():
         else:
             flash('Invalid login credentials. Please try again or sign up.', 'error')
             return redirect(url_for('login'))
+
     return render_template('login.html')
 
 @app.route('/search_flights')
