@@ -18,3 +18,9 @@ ENV/
 !.idea
 .idea/*
 !.idea/runConfigurations
+
+# database files created via docker compose
+data
+
+# local environment variables
+.env
