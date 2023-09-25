@@ -1,13 +1,11 @@
-from flask import Flask, request, session, redirect
-from flask import render_template
+from flask import Flask, request, session, redirect, render_template, url_for, flash
 import re
-import mariadb
+from database import *
 
 app = Flask(__name__)
 
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b"cvobidrnsuerbsifurf34ads"
-
 
 outward_flights = [
     {
@@ -57,6 +55,12 @@ def is_valid_registration_data(firstName, lastName, email, password):
         return False
 
     if len(password) < 8:
+        flash('Password must be 8 characters or longer')
+        return False
+
+    # if useremail already exists throw an error
+    if email in email_list():
+        flash('Email already in use')
         return False
 
     return True
@@ -71,18 +75,43 @@ def sign_up():
         password = request.form["password"]
 
         if is_valid_registration_data(firstName, lastName, email, password):
-            return redirect("/flight-search")
+            save_signup_information(firstName, lastName, email, password)
+            return redirect(url_for('flight_search'))
 
     return render_template("sign-up.html")
 
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
-        # TODO: check if user exists and password is valid
-        session["username"] = request.form["username"]
-        return redirect("/flight-search")
-    return render_template("login.html")
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user_type = get_user_role(username, password)
+
+        if user_type:
+            session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.
+
+            if user_type == 'Client':
+                return redirect(
+                    url_for('search_flights'))  # Redirect to the flight search page if the user is a client.
+            elif user_type == 'Employee':
+                return redirect(
+                    url_for('manage_requests'))  # Redirect to the manage requests page if the user is an employee.
+        else:
+            flash('Invalid login credentials. Please try again or sign up.', 'error')
+            return redirect(url_for('login'))
+    return render_template('login.html')
+
+@app.route('/search_flights')
+def search_flights():
+    # Your logic for flight search
+    return render_template('flight-search.html')
+
+@app.route('/manage_requests')
+def manage_requests():
+    # Your logic for managing requests
+    return render_template('employee-home.html')
+
 
 
 @app.route("/logout")
