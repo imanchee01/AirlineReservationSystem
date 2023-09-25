@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Client Account{% endblock %}
+
+{% block content %}
+
+	<div class="container">
+		<h1>Client Account</h1>
+		<br>
+		{# TODO <p>E-Mail: {{ client.email }}</p> #}
+		<div class="personal-info">
+			<p style="font-weight: bold; font-size: 18px;">Personal Data</p>
+			<p>Name: John Doe</p>
+			<p>Email: john.doe@example.com</p>
+			<p>Addresse: 123 Musterstraße, Beispielstadt</p>
+		</div>
+		<br>
+
+		<div class="flight-history">
+			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
+			<table>
+				<tr>
+					<th style="width: 30%;">Flugnummer</th>
+					<th style="width: 30%;">Datum</th>
+					<th style="width: 30%;">Ziel</th>
+				</tr>
+				<tr>
+					<td>FL123</td>
+					<td>01.01.2023</td>
+					<td>New York</td>
+				</tr>
+				<tr>
+					<td>FL456</td>
+					<td>02.15.2023</td>
+					<td>Los Angeles</td>
+				</tr>
+				<!-- Weitere Flugdaten hier einfügen -->
+			</table>
+		</div>
+		<br>
+
+		<div class="tier">
+			<p p style="font-weight: bold; font-size: 18px;">Tier</p>
+			<p>Level: Silver</p>
+			<p>Total miles: 5000</p>
+		</div>
+		<br>
+
+	</div>
+	<br><br>
+	<a href="/logout">Logout</a>
+
+{% endblock %}

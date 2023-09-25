@@ -51,8 +51,29 @@
 			<td>{{ return_selected_class }}</td>
 		</tr>
 		<tr>
-			<td><strong>Total Price:</strong></td>
+			<td><strong>Extra Luggage Outward Flight:</strong></td>
 			<td></td>
+			<td></td>
+			<td></td>
+			<td>{{ outward_extra_luggage }}</td>
+		</tr>
+		<tr>
+			<td><strong>Extra Luggage Return Flight:</strong></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td>{{ return_extra_luggage }}</td>
+		</tr>
+		<tr>
+			<td colspan="5" style="border-top: 1px solid #ccc;"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><strong>Total Price:</strong></td>
+			<td>
+				${{ (outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int) }}</td>
 		</tr>
 	</table>
 

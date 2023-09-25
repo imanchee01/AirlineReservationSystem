@@ -42,6 +42,11 @@ def flight_search():
     return render_template("flight-search.html")
 
 
+@app.route("/client-account", methods=["GET"])
+def client_account():
+    return render_template("client-account.html")
+
+
 def is_valid_registration_data(firstName, lastName, email, password):
     if not firstName or not lastName:
         return False
@@ -109,22 +114,16 @@ def login():
     return redirect(url_for("login"))
 
 
-@app.route('/search-flights')
-def search_flights():
-    # Your logic for flight search
-    return render_template("flight-search.html")
-
-
-@app.route('/manage-requests')
-def manage_requests():
-    # Your logic for managing requests
-    return render_template('employee-home.html')
-
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
+
+
+@app.route('/search-flights')
+def search_flights():
+    # Your logic for flight search
+    return render_template("flight-search.html")
 
 
 @app.route("/select-flight", methods=["GET"])
@@ -137,22 +136,24 @@ def select_flight():
     return_date = request.args.get("return_date")
     person_count = request.args.get("person_count")
     selected_class = request.args.get("selected_class")
-
+    extra_luggage = request.args.get("extra_luggage")
+    # Save departure and return date and number of passengers into session.
     session["departure_date"] = departure_date
     session["return_date"] = return_date
     session["person_count"] = person_count
 
     if direction == "outward":
-        # Save outward flight data into session.
+        # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
         session["outward_selected_class"] = selected_class
-        # TODO: add more session data: time, price, number of passengers
+        session["outward_extra_luggage"] = extra_luggage
 
     if direction == "return":
-        # Save return flight data into session.
+        # Save return flight data(code, pirce, luggage) into session.
         session["return_flight"] = flight_code
         session["return_selected_class"] = selected_class
-        # TODO: more data: time, price, number of passengers
+        session["return_extra_luggage"] = extra_luggage
+
         return redirect("booking-summary")
 
     return render_template(
@@ -169,13 +170,15 @@ def select_flight():
 
 @app.route("/booking-summary", methods=["GET"])
 def booking_summary():
-    # TODO: get price for combination of flight and class from DB
+    # TODO: get price for flight and luggage from DB
     return render_template(
         "booking-summary.html",
         outward_flight=session["outward_flight"],
         return_flight=session["return_flight"],
         outward_selected_class=session["outward_selected_class"],
         return_selected_class=session["return_selected_class"],
+        outward_extra_luggage=session["outward_extra_luggage"],
+        return_extra_luggage=session["return_extra_luggage"],
         departure_date=session["departure_date"],
         return_date=session["return_date"],
         person_count=session["person_count"],
@@ -201,6 +204,12 @@ def check_out():
 @app.route("/order-confirmation", methods=["GET", "POST"])
 def order_confirmation():
     return render_template("order-confirmation.html")
+
+
+@app.route('/manage-requests')
+def manage_requests():
+    # Your logic for managing requests
+    return render_template('employee-home.html')
 
 
 if __name__ == "__main__":
