@@ -1,78 +1,119 @@
 {% extends "base.html" %}
 
+{% block title %}Client Account{% endblock %}
+
 {% block content %}
-<h1>Flight Search</h1>
-<form action="/select-flight" method="get">
-	<label for="departure">Departure City</label>
-	<input class="form-control" type="text" id="departure" name="departure" required>
 
-	<label for="destination">Destination City:</label>
-	<input class="form-control" type="text" id="destination" name="destination" required>
+	<div class="container">
+		<h1>Client Account</h1>
+		<br>
+		<div class="personal-info">
+			<p style="font-weight: bold; font-size: 18px;">Personal Data</p>
+			<p>Name: John Doe</p>
+			<p>Email: john.doe@example.com</p>
+		</div>
+		<br>
+
+		<div class="tier">
+			<p p style="font-weight: bold; font-size: 18px;">Tier</p>
+			<p>Level: Silver</p>
+			<p>Total miles: 5000</p>
+		</div>
+		<br>
+
+		<div class="flight-history">
+			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
+			<table>
+				<tr>
+					<th style="width: 10%;">Flight code</th>
+					<th style="width: 10%;">Miles</th>
+					<th style="width: 15%;">Departure</th>
+					<th style="width: 15%;">Destination</th>
+					<th style="width: 10%;">Date</th>
+					<th style="width: 10%;">Departure Time</th>
+					<th style="width: 10%;">Arrival Time</th>
+					<th style="width: 10%;">Passengers</th>
+					<th style="width: 15%;">Stornieren</th>
+					<th style="width: 15%;">Check-In</th>
+				</tr>
+				<tr>
+					<td>FL123</td>
+					<td>1000</td>
+					<td>New York</td>
+					<td>Los Angeles</td>
+					<td>01.01.2023</td>
+					<td>08:00 AM</td>
+					<td>12:00 PM</td>
+					<td>2</td>
+					<td>
+						<button id="stornierenButton1"
+						        onclick="toggleButton('stornierenButton1', 'Pending', 'yellow', 'checkInButton1')">Stornieren
+						</button>
+					</td>
+					<td>
+						<button id="checkInButton1"
+						        onclick="toggleButton('checkInButton1', 'Checked In', 'green', 'stornierenButton1')"
+						        style="width: 100px;">Check-In
+						</button>
+					</td>
+				</tr>
+				<tr>
+					<td>FL456</td>
+					<td>2000</td>
+					<td>Los Angeles</td>
+					<td>Chicago</td>
+					<td>02.15.2023</td>
+					<td>10:30 AM</td>
+					<td>02:30 PM</td>
+					<td>3</td>
+					<td>
+						<button id="stornierenButton2"
+						        onclick="toggleButton('stornierenButton2', 'Pending', 'yellow', 'checkInButton2')">Stornieren
+						</button>
+					</td>
+					<td>
+						<button id="checkInButton2"
+						        onclick="toggleButton('checkInButton2', 'Checked In', 'green', 'stornierenButton2')"
+						        style="width: 100px;">Check-In
+						</button>
+					</td>
+				</tr>
+				<!-- Weitere Flugdaten hier einfügen -->
+			</table>
+		</div>
+
+		<br>
+
+	</div>
 	<br><br>
+	<a href="/logout">Logout</a>
 
-	<label for="departure-date">Departure Date:</label>
-	<input class="form-control" type="date" id="departure-date" name="departure_date" required>
+	<script>
+    // Initialisiere den Status der Buttons
+    const buttonStatus = {
+      'stornierenButton1': false,
+      'checkInButton1': false,
+      'stornierenButton2': false,
+      'checkInButton2': false,
+    };
 
-	<label for="return-date">Return Date:</label>
-	<input class="form-control" type="date" id="return-date" name="return_date" required>
-	<br><br>
+    function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
+      // Überprüfe, ob der gegnerische Button aktiv ist
+      if (!buttonStatus[oppositeButtonId]) {
+        const button = document.getElementById(buttonId);
+        button.innerHTML = newText;
+        button.style.backgroundColor = newColor;
+        button.disabled = true;
+        buttonStatus[buttonId] = true;
 
-	<!-- Dropdown-Menü zur Auswahl der Anzahl der Personen -->
-	<label for="person-count">Number of Persons:</label>
-	<select class="form-control" id="person-count" name="person-count">
-		<option value="1">1</option>
-		<option value="2">2</option>
-		<option value="3">3</option>
-		<option value="4">4</option>
-		<option value="5">5</option>
-	</select>
-	<br><br>
-
-	<!-- Add the following dropdowns for departure and destination airports -->
-	<label for="departure-airport">Departure Airport:</label>
-	<select class="form-control" id="departure-airport" name="departure_airport">
-		<option value="" disabled selected>Select an airport</option>
-		{% for airport in airports %}
-			<option value="{{ airport[0] }}">{{ airport[1] }}</option>
-		{% endfor %}
-	</select>
-	<br><br>
-
-	<label for="destination-airport">Destination Airport:</label>
-	<select class="form-control" id="destination-airport" name="destination_airport">
-		<option value="" disabled selected>Select an airport</option>
-		{% for airport in airports %}
-			<option value="{{ airport[0] }}">{{ airport[1] }}</option>
-		{% endfor %}
-	</select>
-	<br><br>
-
-	<input class="btn btn-default" type="submit" value="Search Flights">
-</form>
-
-<br><br>
-<a href="/logout">Logout</a>
-
-<script>
-  const departureDate = document.getElementById("departure-date");
-  const returnDate = document.getElementById("return-date");
-
-  departureDate.min = new Date().toISOString().split('T').at(0)
-  returnDate.min = new Date().toISOString().split('T').at(0)
-
-  function updateDates() {
-    if (!returnDate.value || !departureDate.value) return
-
-    if (returnDate.value < departureDate.value) {
-      const returnDateValue = returnDate.value;
-      const departureDateValue = departureDate.value;
-      returnDate.value = departureDateValue
-      departureDate.value = returnDateValue
+        // Deaktiviere den gegnerischen Button
+        const oppositeButton = document.getElementById(oppositeButtonId);
+        oppositeButton.disabled = false;
+        oppositeButton.style.backgroundColor = '';
+        buttonStatus[oppositeButtonId] = false;
+      }
     }
-  }
+	</script>
 
-  returnDate.addEventListener("change", updateDates);
-  departureDate.addEventListener("change", updateDates);
-</script>
 
 {% endblock %}
