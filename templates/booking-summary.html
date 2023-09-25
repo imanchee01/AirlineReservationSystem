@@ -1,19 +1,65 @@
 {% extends "base.html" %}
 
+{% block title %}
+	Booking Summary
+{% endblock %}
+
 {% block content %}
+	<h1>Booking Summary</h1>
 
-<h1>Booking Summary</h1>
+	<style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px auto;
+    }
 
-<h2>Selected Outward Flight:</h2>
-{{ outward_flight }}
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
 
-<h2>Selected Return Flight:</h2>
-{{ return_flight }}
+    tr:first-child {
+      border-bottom: 1px solid #ccc;
+    }
 
-<h2>Total Price:</h2>
+    strong {
+      font-weight: bold;
+    }
+	</style>
 
-<br><br>
-<a href="/">Back to Home</a>
+	<table>
+		<tr>
+			<th></th>
+			<th>Flight Code</th>
+			<th>Date</th>
+			<th>Passengers</th>
+			<th>Price</th>
+		</tr>
+		<tr>
+			<td><strong>Outward Flight:</strong></td>
+			<td>{{ outward_flight }}</td>
+			<td>{{ departure_date }}</td>
+			<td>{{ person_count }}</td>
+			<td>{{ outward_selected_class }}</td>
+		</tr>
+		<tr>
+			<td><strong>Return Flight:</strong></td>
+			<td>{{ return_flight }}</td>
+			<td>{{ return_date }}</td>
+			<td>{{ person_count }}</td>
+			<td>{{ return_selected_class }}</td>
+		</tr>
+		<tr>
+			<td><strong>Total Price:</strong></td>
+			<td></td>
+		</tr>
+	</table>
 
+	<br><br>
 
+	<a href="/check-out" class="btn btn-default" role="button">Continue To Buy</a>
+	<br><br>
+
+	<a href="/">Back to Home</a>
 {% endblock %}

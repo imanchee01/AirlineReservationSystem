@@ -1,43 +1,39 @@
-from flask import Flask, request, session, redirect, render_template, url_for, flash
+from flask import request, session, redirect, flash, url_for
+from flask import render_template
+from database import app, User, save_signup_information, user_with_email_exists, get_user
 import re
-from database import *
-
-app = Flask(__name__)
-
-# Set the secret key to some random bytes. Keep this really secret!
-app.secret_key = b"cvobidrnsuerbsifurf34ads"
 
 outward_flights = [
     {
-        "flight_number": "ABC123",
-        "departure_city": "New York",
-        "destination_city": "Los Angeles",
-        "departure_time": "09:00 AM",
-        "arrival_time": "02:00 PM",
-        "economy_price": 300,
-        "business_price": 600,
-        "first_class_price": 1000,
+        "flightcode": "ABC123",
+        "flight_source": "New York",
+        "flight_destination": "Los Angeles",
+        "flight_depTime": "09:00 AM",
+        "flight_arrtime": "02:00 PM",
+        "flight_economy_price": 300,
+        "flight_business_price": 600,
+        "flight_first_class_price": 1000,
     }
 ]
 
 return_flights = [
     {
-        "flight_number": "XYZ456",
-        "departure_city": "Los Angeles",
-        "destination_city": "New York",
-        "departure_time": "03:00 PM",
-        "arrival_time": "08:00 PM",
-        "economy_price": 300,
-        "business_price": 600,
-        "first_class_price": 1000,
+        "flightcode": "XYZ456",
+        "flight_source": "Los Angeles",
+        "flight_destination": "New York",
+        "flight_depTime": "03:00 PM",
+        "flight_arrtime": "08:00 PM",
+        "flight_economy_price": 300,
+        "flight_business_price": 600,
+        "flight_first_class_price": 1000,
     }
 ]
 
 
 @app.route("/")
 def home():
-    if "username" in session:
-        return render_template("user-home.html", username=session["username"])
+    if "user_name" in session:
+        return render_template("user-home.html", user_name=session["user_name"])
     return render_template("no-session.html")
 
 
@@ -59,7 +55,7 @@ def is_valid_registration_data(firstName, lastName, email, password):
         return False
 
     # if useremail already exists throw an error
-    if email in email_list():
+    if user_with_email_exists(email):
         flash('Email already in use')
         return False
 
@@ -74,44 +70,55 @@ def sign_up():
         email = request.form["email"]
         password = request.form["password"]
 
-        if is_valid_registration_data(firstName, lastName, email, password):
-            save_signup_information(firstName, lastName, email, password)
-            return redirect(url_for('flight_search'))
+        try:
+            if is_valid_registration_data(firstName, lastName, email, password):
+                save_signup_information(firstName, lastName, email, password)
+                return redirect(url_for("flight_search"))
+
+        except Exception as e:
+            app.logger.error("Error! " + str(e))
+            flash('Failed to sign up.', 'error')
+
+        return redirect(url_for("sign_up"))
 
     return render_template("sign-up.html")
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user_type = get_user_role(username, password)
+    if request.method == 'GET':
+        return render_template('login.html')
 
-        if user_type:
-            session['user_type'] = user_type  # Store user_role in session to recognize the user across requests.
+    user_email = request.form['user_email']
+    user_password = request.form['user_password']
 
-            if user_type == 'Client':
-                return redirect(
-                    url_for('search_flights'))  # Redirect to the flight search page if the user is a client.
-            elif user_type == 'Employee':
-                return redirect(
-                    url_for('manage_requests'))  # Redirect to the manage requests page if the user is an employee.
-        else:
-            flash('Invalid login credentials. Please try again or sign up.', 'error')
-            return redirect(url_for('login'))
-    return render_template('login.html')
+    # Query the user with the provided username from the database.
+    user = get_user(user_email)
 
-@app.route('/search_flights')
+    if user and user.check_password(user_password):
+        # Password is correct.
+        if user.user_type == "Client":
+            # Redirect to the flight search page if the user is a client.
+            return redirect(url_for("search_flights"))
+        if user.user_type == "Employee":
+            # Redirect to the manage requests page if the user is an employee.
+            return redirect(url_for("manage_requests"))
+
+    # Username or password is incorrect (or we have a user who is not a client nor an employee).
+    flash('Invalid login credentials. Please try again or sign up.', 'error')
+    return redirect(url_for("login"))
+
+
+@app.route('/search-flights')
 def search_flights():
     # Your logic for flight search
-    return render_template('flight-search.html')
+    return render_template("flight-search.html")
 
-@app.route('/manage_requests')
+
+@app.route('/manage-requests')
 def manage_requests():
     # Your logic for managing requests
     return render_template('employee-home.html')
-
 
 
 @app.route("/logout")
@@ -122,26 +129,35 @@ def logout():
 
 @app.route("/select-flight", methods=["GET"])
 def select_flight():
-    flight_number = request.args.get("flight_number")
+    flight_code = request.args.get("flightcode")
     direction = request.args.get("direction")
     departure = request.args.get("departure")
     destination = request.args.get("destination")
     departure_date = request.args.get("departure_date")
     return_date = request.args.get("return_date")
     person_count = request.args.get("person_count")
+    selected_class = request.args.get("selected_class")
+
+    session["departure_date"] = departure_date
+    session["return_date"] = return_date
+    session["person_count"] = person_count
 
     if direction == "outward":
         # Save outward flight data into session.
-        session["outward_flight"] = flight_number
+        session["outward_flight"] = flight_code
+        session["outward_selected_class"] = selected_class
+        # TODO: add more session data: time, price, number of passengers
 
     if direction == "return":
         # Save return flight data into session.
-        session["return_flight"] = flight_number
-        return redirect("/booking-summary")
+        session["return_flight"] = flight_code
+        session["return_selected_class"] = selected_class
+        # TODO: more data: time, price, number of passengers
+        return redirect("booking-summary")
 
     return render_template(
         "select-flight.html",
-        outward_flights=outward_flights,
+        flights=outward_flights,
         direction=direction,
         departure=departure,
         destination=destination,
@@ -153,11 +169,38 @@ def select_flight():
 
 @app.route("/booking-summary", methods=["GET"])
 def booking_summary():
+    # TODO: get price for combination of flight and class from DB
     return render_template(
         "booking-summary.html",
         outward_flight=session["outward_flight"],
         return_flight=session["return_flight"],
+        outward_selected_class=session["outward_selected_class"],
+        return_selected_class=session["return_selected_class"],
+        departure_date=session["departure_date"],
+        return_date=session["return_date"],
+        person_count=session["person_count"],
     )
+
+
+@app.route("/check-out", methods=["GET", "POST"])
+def check_out():
+    if request.method == 'GET':
+        return render_template('check-out.html')
+
+    salutation = request.form.get("salutation")
+    last_name = request.form.get("last_name")
+    first_name = request.form.get("first_name")
+    email = request.form.get("email")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    payment_option = request.form.get("payment_option")
+
+    return redirect(url_for("order_confirnation"))
+
+
+@app.route("/order-confirmation", methods=["GET", "POST"])
+def order_confirmation():
+    return render_template("order-confirmation.html")
 
 
 if __name__ == "__main__":
