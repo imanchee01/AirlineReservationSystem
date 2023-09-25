@@ -1,6 +1,6 @@
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from database import app, User, save_signup_information, user_with_email_exists, get_user
+from database import *
 import re
 
 outward_flights = [
@@ -44,8 +44,18 @@ def flight_search():
 
 @app.route("/client-account", methods=["GET"])
 def client_account():
-    return render_template("client-account.html")
+    user_id = session.get(userId)
 
+    # Call the get_client_data function to fetch user-specific data.
+    clientData = get_client_data(user_id)
+    flightHistory = get_flighthistory(userId)
+
+    if clientData and flightHistory:
+        # If data was retrieved successfully, render the template with the data.
+        return render_template("client-account.html", client_data=clientData, flight_history = flightHistory)
+    else:
+        # Handle the case where data retrieval fails.
+        return "Error retrieving client data from the database"
 
 def is_valid_registration_data(firstName, lastName, email, password):
     if not firstName or not lastName:
