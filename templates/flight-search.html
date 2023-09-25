@@ -3,6 +3,19 @@
 {% block title %}Flight Search{% endblock %}
 
 {% block content %}
+	<!-- Button zum Client-Account -->
+	<style>
+    .client-account-button {
+      position: relative;
+      right: 10px;
+      top: 10px;
+    }
+	</style>
+
+	<form action="/client-account" method="GET">
+		<button type="submit">Zum Client-Account</button>
+	</form>
+
 	<h1>Flight Search</h1>
 	<form action="/select-flight" method="get" onsubmit="return validateForm()">
 		<div class="row">
@@ -39,12 +52,12 @@
 		</div>
 		<br><br>
 
-
 		<input class="btn btn-default" type="submit" value="Search Flights">
 	</form>
 
 	<br><br>
 	<a href="/logout">Logout</a>
+
 
 	<script>
     const departure_date = document.getElementById("departure-date");
