@@ -7,35 +7,10 @@
 	<div class="container">
 		<h1>Client Account</h1>
 		<br>
-		{# TODO <p>E-Mail: {{ client.email }}</p> #}
 		<div class="personal-info">
 			<p style="font-weight: bold; font-size: 18px;">Personal Data</p>
 			<p>Name:</p>
 			<p>Email: john.doe@example.com</p>
-			<p>Addresse: 123 Musterstraße, Beispielstadt</p>
-		</div>
-		<br>
-
-		<div class="flight-history">
-			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
-			<table>
-				<tr>
-					<th style="width: 30%;">Flugnummer</th>
-					<th style="width: 30%;">Datum</th>
-					<th style="width: 30%;">Ziel</th>
-				</tr>
-				<tr>
-					<td>FL123</td>
-					<td>01.01.2023</td>
-					<td>New York</td>
-				</tr>
-				<tr>
-					<td>FL456</td>
-					<td>02.15.2023</td>
-					<td>Los Angeles</td>
-				</tr>
-				<!-- Weitere Flugdaten hier einfügen -->
-			</table>
 		</div>
 		<br>
 
@@ -46,8 +21,99 @@
 		</div>
 		<br>
 
+		<div class="flight-history">
+			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
+			<table>
+				<tr>
+					<th style="width: 10%;">Flight code</th>
+					<th style="width: 10%;">Miles</th>
+					<th style="width: 15%;">Departure</th>
+					<th style="width: 15%;">Destination</th>
+					<th style="width: 10%;">Date</th>
+					<th style="width: 10%;">Departure Time</th>
+					<th style="width: 10%;">Arrival Time</th>
+					<th style="width: 10%;">Passengers</th>
+					<th style="width: 15%;">Stornieren</th>
+					<th style="width: 15%;">Check-In</th>
+				</tr>
+				<tr>
+					<td>FL123</td>
+					<td>1000</td>
+					<td>New York</td>
+					<td>Los Angeles</td>
+					<td>01.01.2023</td>
+					<td>08:00 AM</td>
+					<td>12:00 PM</td>
+					<td>2</td>
+					<td>
+						<button id="stornierenButton1"
+						        onclick="toggleButton('stornierenButton1', 'Pending', 'yellow', 'checkInButton1')">Stornieren
+						</button>
+					</td>
+					<td>
+						<button id="checkInButton1"
+						        onclick="toggleButton('checkInButton1', 'Checked In', 'green', 'stornierenButton1')"
+						        style="width: 100px;">Check-In
+						</button>
+					</td>
+				</tr>
+				<tr>
+					<td>FL456</td>
+					<td>2000</td>
+					<td>Los Angeles</td>
+					<td>Chicago</td>
+					<td>02.15.2023</td>
+					<td>10:30 AM</td>
+					<td>02:30 PM</td>
+					<td>3</td>
+					<td>
+						<button id="stornierenButton2"
+						        onclick="toggleButton('stornierenButton2', 'Pending', 'yellow', 'checkInButton2')">Stornieren
+						</button>
+					</td>
+					<td>
+						<button id="checkInButton2"
+						        onclick="toggleButton('checkInButton2', 'Checked In', 'green', 'stornierenButton2')"
+						        style="width: 100px;">Check-In
+						</button>
+					</td>
+				</tr>
+				<!-- Weitere Flugdaten hier einfügen -->
+			</table>
+		</div>
+
+		<br>
+
 	</div>
 	<br><br>
 	<a href="/logout">Logout</a>
+
+	<script>
+    // Initialisiere den Status der Buttons
+    const buttonStatus = {
+      'stornierenButton1': false,
+      'checkInButton1': false,
+      'stornierenButton2': false,
+      'checkInButton2': false,
+    };
+
+    function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
+      // Überprüfe, ob der gegnerische Button aktiv ist
+      if (!buttonStatus[oppositeButtonId]) {
+        const button = document.getElementById(buttonId);
+        button.innerHTML = newText;
+        button.style.backgroundColor = newColor;
+        button.disabled = true;
+        buttonStatus[buttonId] = true;
+
+        // Deaktiviere den gegnerischen Button
+        const oppositeButton = document.getElementById(oppositeButtonId);
+        oppositeButton.disabled = false;
+        oppositeButton.style.backgroundColor = '';
+        buttonStatus[oppositeButtonId] = false;
+      }
+    }
+	</script>
+
 
 {% endblock %}
