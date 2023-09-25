@@ -71,33 +71,25 @@
 					<td>
 						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class">
 							<option>Select a class</option>
-							<option value="economy">Economy: ${{ flight["flight_economy_price"] }}</option>
-							<option value="business">Business: ${{ flight["flight_business_price"] }}</option>
-							<option value="first">First: ${{ flight["flight_first_class_price"] }}</option>
+							<option value="$300">Economy: ${{ flight["flight_economy_price"] }}</option>
+							<option value="$600">Business: ${{ flight["flight_business_price"] }}</option>
+							<option value="$1000">First: ${{ flight["flight_first_class_price"] }}</option>
 						</select>
 					</td>
 					<td>
 						<select class="form-control" name="extra_luggage" id="extra-luggage">
+							{# TODO: input luggage pric from database  #}
 							<option value="0">No Extra Luggage</option>
 							{#{% if flight["distance"] == "short" %}#}
-							<option value="1">1 x $25</option>
-							<option value="2">2 x $50</option>
-							<option value="3">3 x $75</option>
-							<option value="4">4 x $100</option>
-							<option value="5">5 x $125</option>
+							<option value="$25">1 x $25</option>
+							<option value="$50">2 x $25</option>
+							<option value="$75">3 x $25</option>
+							<option value="$100">4 x $25</option>
+							<option value="$125">5 x $25</option>
 							{#{% elif flight["distance"] == "medium" %}#}
-							{#	<option value="1">1 x $50</option>#}
-							{#	<option value="2">2 x $100</option>#}
-							{#	<option value="3">3 x $150</option>#}
-							{#	<option value="4">4 x $200</option>#}
-							{#	<option value="5">5 x $250</option>#}
-							{#{% elif flight["distance"] == "long" %}#}
-							{#	<option value="1">1 x $75</option>#}
-							{#	<option value="2">2 x $150</option>#}
-							{#	<option value="3">3 x $225</option>#}
-							{#	<option value="4">4 x $300</option>#}
-							{#	<option value="5">5 x $375</option>#}
+							{#{% else flight["distance"] == "long" %}#}
 							{#{% endif %}#}
+
 						</select>
 					</td>
 				</tr>
