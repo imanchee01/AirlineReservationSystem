@@ -1,78 +1,107 @@
 {% extends "base.html" %}
 
+{% block title %}Flight Search{% endblock %}
+
 {% block content %}
-<h1>Flight Search</h1>
-<form action="/select-flight" method="get">
-    <label for="departure">Departure City</label>
-    <input class="form-control" type="text" id="departure" name="departure" required>
+	<!-- Button zum Client-Account -->
+	<style>
+    .client-account-button {
+        position: absolute;
+        top: 10px; /* Abstand vom oberen Rand */
+        right: 10px; /* Abstand vom rechten Rand */
+        z-index: 1; /* Um sicherzustellen, dass der Button über anderen Inhalten liegt */
+    }
+    </style>
 
-    <label for="destination">Destination City:</label>
-    <input class="form-control" type="text" id="destination" name="destination" required>
-    <br><br>
 
-    <label for="departure-date">Departure Date:</label>
-    <input class="form-control" type="date" id="departure-date" name="departure_date" required>
 
-    <label for="return-date">Return Date:</label>
-    <input class="form-control" type="date" id="return-date" name="return_date" required>
-    <br><br>
 
-    <!-- Dropdown-Menü zur Auswahl der Anzahl der Personen -->
-    <label for="person-count">Number of Persons:</label>
-    <select class="form-control" id="person-count" name="person-count">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-    </select>
-    <br><br>
-
-    <!-- Add the following dropdowns for departure and destination airports -->
-    <label for="departure-airport">Departure Airport:</label>
-    <select class="form-control" id="departure-airport" name="departure_airport">
-        <option value="" disabled selected>Select an airport</option>
-        {% for airport in airports %}
-            <option value="{{ airport[0] }}">{{ airport[1] }}</option>
-        {% endfor %}
-    </select>
-    <br><br>
-
-    <label for="destination-airport">Destination Airport:</label>
-    <select class="form-control" id="destination-airport" name="destination_airport">
-        <option value="" disabled selected>Select an airport</option>
-        {% for airport in airports %}
-            <option value="{{ airport[0] }}">{{ airport[1] }}</option>
-        {% endfor %}
-    </select>
-    <br><br>
-
-    <input class="btn btn-default" type="submit" value="Search Flights">
+	<form action="/client-account" method="GET">
+    <button type="submit" class="client-account-button">
+        <i class="fas fa-user"></i> <!-- Das Icon für den Benutzer -->
+        My Account
+    </button>
 </form>
 
-<br><br>
-<a href="/logout">Logout</a>
+	<h1>Flight Search</h1>
+	<form action="/select-flight" method="get" onsubmit="return validateForm()">
+		<div class="row">
+			<div class="col-xs-6">
+				<label for="departure">Departure City</label>
+				<input class="form-control" type="text" id="departure" name="departure" required>
+				<br>
+				<label for="destination">Destination City:</label>
+				<input class="form-control" type="text" id="destination" name="destination" required>
+				<div id="error-message" style="color: red;"></div>
+				<br><br>
+			</div>
+			<div class="col-xs-6">
+				<label for="departure-date">Departure Date:</label>
+				<input class="form-control" type="date" id="departure-date" name="departure_date" required>
+				<br>
+				<label for="return-date">Return Date:</label>
+				<input class="form-control" type="date" id="return-date" name="return_date" required>
+				<br><br>
+			</div>
+		</div>
 
-<script>
-  const departureDate = document.getElementById("departure-date");
-  const returnDate = document.getElementById("return-date");
+		<div class="row">
+			<div class="col-xs-6">
+				<label for="person-count">Number of Persons:</label>
+				<select class="form-control" id="person-count" name="person_count">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+			</div>
+		</div>
+		<br><br>
 
-  departureDate.min = new Date().toISOString().split('T').at(0)
-  returnDate.min = new Date().toISOString().split('T').at(0)
+		<input class="btn btn-default" type="submit" value="Search Flights">
+	</form>
 
-  function updateDates() {
-    if (!returnDate.value || !departureDate.value) return
+	<br><br>
+	<a href="/logout">Logout</a>
 
-    if (returnDate.value < departureDate.value) {
-      const returnDateValue = returnDate.value;
-      const departureDateValue = departureDate.value;
-      returnDate.value = departureDateValue
-      departureDate.value = returnDateValue
+
+	<script>
+    const departure_date = document.getElementById("departure-date");
+    const return_date = document.getElementById("return-date");
+    const departure = document.getElementById("departure");
+    const destination = document.getElementById("destination");
+    const error_message = document.getElementById("error-message");
+
+    departure_date.min = new Date().toISOString().split('T')[0];
+    return_date.min = new Date().toISOString().split('T')[0];
+
+    function update_dates() {
+      if (!return_date.value || !departure_date.value) return;
+
+      if (return_date.value < departure_date.value) {
+        const return_date_value = return_date.value;
+        const departure_date_value = departure_date.value;
+        return_date.value = departure_date.value;
+        departure_date.value = return_date.value;
+      }
     }
-  }
 
-  returnDate.addEventListener("change", updateDates);
-  departureDate.addEventListener("change", updateDates);
-</script>
+    return_date.addEventListener("change", update_dates);
+    departure_date.addEventListener("change", update_dates);
+
+    function validateForm() {
+      if (departure.value === destination.value) {
+        error_message.textContent = "Departure and destination cannot be the same airport.";
+        return false; // Block form submission
+      } else {
+        error_message.textContent = "";
+        return true; // Allow form submission
+      }
+    }
+
+    departure.addEventListener("input", validateForm);
+    destination.addEventListener("input", validateForm);
+	</script>
 
 {% endblock %}
