@@ -13,7 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 db_config = {
     'user': 'root',
-    'password': '',
+    'password': 'gertimare',
     'host': 'localhost',
     'database': 'airline',
     'port': 3306
