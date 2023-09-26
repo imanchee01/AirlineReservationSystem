@@ -15,17 +15,25 @@
     .logout-link {
         position: absolute;
         top: 50px; /* Passen Sie den Abstand nach Bedarf an */
-        right: 35px; /* Abstand vom rechten Rand */
+        right: 20px; /* Abstand vom rechten Rand */
         z-index: 1; /* Um sicherzustellen, dass der Link über anderen Inhalten liegt */
+    }
+
+    .back-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
     }
     </style>
 
-	<form action="/client-account" method="GET">
-    <button type="submit" class="client-account-button">
-        <i class="fas fa-user"></i> <!-- Das Icon für den Benutzer -->
-        My Account
-    </button>
-    </form>
+
+    <div class="container">
+        <a href="/client-account" class="back-button">
+        <button class="btn btn-primary">
+            <i class="fas fa-user"></i> My Account
+        </button>
+        </a>
+
 
      <a href="/logout" class="logout-link">Logout</a>
 
