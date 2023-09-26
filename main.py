@@ -37,7 +37,6 @@ def flight_search():
         flight_code_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flightcode')
         flight_code_return = get_all_items_by_name__from_directionary(return_flights_data, 'flightcode')
 
-        print(flight_code_out, flight_code_return)
 
         aircraft_class_out = []
         for k in flight_code_out:
@@ -46,8 +45,6 @@ def flight_search():
         aircraft_class_ret = []
         for j in flight_code_return:
             aircraft_class_ret.append(has_firstclass(f'{j}'))
-
-        print(aircraft_class_out, aircraft_class_ret)
 
 
         direction = None
