@@ -101,6 +101,7 @@ def login():
     user = get_user(user_email)
 
     if user and user.check_password(user_password):
+        session['user_name'] = user.user_name
         # Password is correct.
         if user.user_type == "Client":
             # Redirect to the flight search page if the user is a client.
@@ -208,7 +209,7 @@ def order_confirmation():
 # manage request opens employee home
 @app.route('/manage-requests')
 def manage_requests():
-    return render_template('employee-home.html')
+    return render_template('employee-home.html', user_name=session.get("user_name"))
 
 @app.route('/edit-aircraft')
 def edit_aircraft():
