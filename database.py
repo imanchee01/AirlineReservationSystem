@@ -163,14 +163,15 @@ def user_with_email_exists(email):
     return False
 
 
-def add_flight(miles, source, destination, weekday, arrival, departure):
+def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor()
-        query = """INSERT INTO flights (miles, source, destination, weekday, arrival, departure) 
-                   VALUES (%s, %s, %s, %s, %s, %s)"""
-        params = (miles, source, destination, weekday, arrival, departure)
+        query = """INSERT INTO flights (flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        params = (miles, source, destination, weekday, arrival, departure, aircraft_id)
         try:
+
             cursor.execute(query, params)
             conn.commit()
         except mariadb.Error as e:
@@ -182,7 +183,23 @@ def add_flight(miles, source, destination, weekday, arrival, departure):
     return True
 
 
+def aircraft_exists(aircraft_id):
+    conn = get_db_connection()
+    if not conn:
+        return False
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM aircraft WHERE aircraftId = %s", (aircraft_id,))
+        return bool(cursor.fetchone())
+    except mariadb.Error as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_data_for_client(userId)
     print(client_data)  # This will print the data returned by the function
+    print(add_flight(409, "AMS", "ARN", "monday", "09:20:00", "12:20:00", 28))

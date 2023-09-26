@@ -205,29 +205,37 @@ def check_out():
 def order_confirmation():
     return render_template("order-confirmation.html")
 
-
+# manage request opens employee home
 @app.route('/manage-requests')
 def manage_requests():
-    # Your logic for managing requests
     return render_template('employee-home.html')
 
+@app.route('/edit-aircraft')
+def edit_aircraft():
+    return render_template('edit-aircraft.html')
 @app.route("/edit-flights", methods=["GET", "POST"])
 def edit_flights():
     return render_template("edit-flights.html")
 
-@app.route('/add_flight', methods=['POST'])
+@app.route("/cancellation-requests", methods=["GET", "POST"])
+def cancellation_requests():
+    return render_template("cancellation-requests.html")
+@app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
-    if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure')):
+    if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
         return 'All fields are required', 400
-
+    aircraft_id = request.form['aircraft_id']
+    if not aircraft_exists(aircraft_id):
+        return 'Invalid aircraft_id', 400
     miles = request.form['miles']
     source = request.form['source']
     destination = request.form['destination']
     weekday = request.form['weekday']
     arrival = request.form['arrival']
     departure = request.form['departure']
+    aircraft_id = request.form['aircraft_id']
 
-    if add_flight(miles, source, destination, weekday, arrival, departure):
+    if add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
         return 'Flight added successfully', 201
     else:
         return 'Internal Server Error', 500

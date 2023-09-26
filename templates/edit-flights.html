@@ -2,23 +2,55 @@
 {% block content %}
 
 <body>
-<form action="http://127.0.0.1:5000/add_flight" method="post">
-    <br>
-    Miles: <input type="text" name="miles"><br>
-    <br>
-    Source: <input type="text" name="source"><br>
-    <br>
-    Destination: <input type="text" name="destination"><br>
-    <br>
-    Weekday: <input type="text" name="weekday"><br>
-    <br>
-    Arrival: <input type="time" name="arrival"><br>
-    <br>
-    Departure: <input type="time" name="departure"><br>
-    <br>
-    <input type="submit" value="Add Flight">
-</form>
+<style>
+    input[type="text"],
+    input[type="time"],
+    input[type="number"] {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+      text-align: -webkit-left;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+    }
+</style>
+<h1 style="font-weight: bold; font-size: 18px;">Add Flight</h1>
 <br>
+<form action="http://127.0.0.1:5000/add_flight_route" method="post">
+    <div class="row">
+     <div class="col-xs-6">
+      <label for="miles">Miles:</label>
+      <br>
+      Miles: <input type="text" name="miles" required><br>
+      <br>
+         <label for="source">Source:</label>
+      Source: <input type="text" name="source" required><br>
+      <br>
+         <label for="destination">Destination:</label>
+      Destination: <input type="text" name="destination" required><br>
+      <br>
+         <label for="weekday">Weekday:</label>
+      Weekday: <input type="text" name="weekday" required><br>
+     </div>
+        <div class="col-xs-6">
+     <label for="arrival">Arrival:</label>
+      <br>
+      Arrival: <input type="time" name="arrival" required><br>
+      <br>
+            <label for="departure">Departure:</label>
+      Departure: <input type="time" name="departure" required><br>
+      <br>
+            <label for="aircraft">Aircraft:</label>
+      Aircraft: <input type="number" name="aircraft_id" required><br>
+            </div>
+   </div>
+      <br><br>
+      <input type="submit" value="Add Flight">
+</form>
+<br><br>
 <a href="/employee-home">Employee Home</a>
 </body>
 
