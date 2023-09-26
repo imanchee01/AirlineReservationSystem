@@ -175,6 +175,54 @@ def user_with_email_exists(email):
         return True
     return False
 
+def all_airports():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT airportId FROM airport")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+def airport_exists(airport):
+    airports = [entry['airportId'] for entry in all_airports()]
+    if airport in airports:
+        return True
+    return False
+
+def get_pricecategory(miles):
+    list = []
+    for i in miles:
+        if i > 450:
+            list.append('short distance')
+        elif i < 450 and i > 800:
+            list.append('middle distance')
+        else:
+            list.append('long distance')
+
+    return list
+
+def get_prices(pricecategory):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM ticketprice WHERE pricecategory =%s",
+                       (pricecategory,))
+        results = cursor.fetchone()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
 def find_flights(source, destination):
     connection = None
     try:
@@ -191,6 +239,15 @@ def find_flights(source, destination):
         if connection:
             connection.close()
 
+def get_all_items_by_name__from_directionary(directionary, item_name):
+    list = []
+
+    for item in directionary:
+        if item_name in item:
+            list.append(item[item_name])
+
+    return list
+
 if __name__ == "__main__":
-    print(get_data_for_client('28'))
-    print(find_flights('FRA', 'ARN'))
+    print(get_data_for_client(28))
+    print(get_prices('short distance'))

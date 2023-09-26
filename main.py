@@ -1,33 +1,9 @@
+import shutil
+
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from database import app, User, save_signup_information, user_with_email_exists, get_user
+from database import *
 import re
-
-outward_flights = [
-    {
-        "flightcode": "ABC123",
-        "flight_source": "New York",
-        "flight_destination": "Los Angeles",
-        "flight_depTime": "09:00 AM",
-        "flight_arrtime": "02:00 PM",
-        "flight_economy_price": 300,
-        "flight_business_price": 600,
-        "flight_first_class_price": 1000,
-    }
-]
-
-return_flights = [
-    {
-        "flightcode": "XYZ456",
-        "flight_source": "Los Angeles",
-        "flight_destination": "New York",
-        "flight_depTime": "03:00 PM",
-        "flight_arrtime": "08:00 PM",
-        "flight_economy_price": 300,
-        "flight_business_price": 600,
-        "flight_first_class_price": 1000,
-    }
-]
 
 
 @app.route("/")
@@ -37,9 +13,59 @@ def home():
     return render_template("no-session.html")
 
 
-@app.route("/flight-search", methods=["GET"])
+@app.route("/flight-search", methods=["GET", "POST"])
 def flight_search():
-    return render_template("flight-search.html")
+    departure = request.form["departure"]
+    destination = request.form["destination"]
+    departure_date = request.form['departure_date']
+    return_date = request.form['return_date']
+    person_count = request.form['person_count']
+
+    if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
+
+        outward_flights_data = find_flights(departure, destination)
+        return_flights_data = find_flights(destination, departure)
+
+        if outward_flights_data is None or return_flights_data is None:
+            flash('no flights found')
+
+        flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+        price_category = get_pricecategory(flight_miles)
+        prices = []
+        for i in price_category:
+            prices.append(get_prices(i))
+
+        direction = None
+
+        outward_flights = []
+
+        for i in range(0, len(outward_flights_data)):
+            combined_data_out = {} 
+            combined_data_out.update(outward_flights_data[i])
+            combined_data_out.update(prices[i])
+            outward_flights.append(combined_data_out)
+
+        return_flights = []
+        for i in range(0, len(return_flights_data)):
+            combined_data_ret = {}
+            combined_data_ret.update(return_flights_data[i])
+            combined_data_ret.update(prices[i])
+            return_flights.append(combined_data_ret)
+
+        return render_template(
+            "select-flight.html",
+            flights=outward_flights,
+            direction=direction,
+            departure=departure,
+            destination=destination,
+            departure_date=departure_date,
+            return_date=return_date,
+            person_count=person_count
+        )
+
+    else:
+        flash('The selected airport was not found. Please try again with a different airport.')
+        return render_template("flight-search.html")
 
 
 @app.route("/client-account", methods=["GET"])
@@ -122,7 +148,6 @@ def logout():
 
 @app.route('/search-flights')
 def search_flights():
-    # Your logic for flight search
     return render_template("flight-search.html")
 
 
@@ -130,6 +155,7 @@ def search_flights():
 def select_flight():
     flight_code = request.args.get("flightcode")
     direction = request.args.get("direction")
+    print(direction)
     departure = request.args.get("departure")
     destination = request.args.get("destination")
     departure_date = request.args.get("departure_date")
@@ -141,6 +167,29 @@ def select_flight():
     session["departure_date"] = departure_date
     session["return_date"] = return_date
     session["person_count"] = person_count
+
+    outward_flights_data = find_flights(departure, destination)
+    return_flights_data = find_flights(destination, departure)
+
+    flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+    price_category = get_pricecategory(flight_miles)
+    prices = []
+    for i in price_category:
+        prices.append(get_prices(i))
+
+    outward_flights = []
+    for i in range(0, len(outward_flights_data)):
+        combined_data_out = {}
+        combined_data_out.update(outward_flights_data[i])
+        combined_data_out.update(prices[i])
+        outward_flights.append(combined_data_out)
+
+    return_flights = []
+    for i in range(0, len(return_flights_data)):
+        combined_data_ret = {}
+        combined_data_ret.update(return_flights_data[i])
+        combined_data_ret.update(prices[i])
+        return_flights.append(combined_data_ret)
 
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
@@ -156,15 +205,16 @@ def select_flight():
 
         return redirect("booking-summary")
 
+    #pass flight data to the template
     return render_template(
         "select-flight.html",
-        flights=outward_flights,
+        flights=return_flights if direction == "outward" else outward_flights,
         direction=direction,
         departure=departure,
         destination=destination,
         departure_date=departure_date,
         return_date=return_date,
-        person_count=person_count,
+        person_count=person_count
     )
 
 
@@ -206,9 +256,8 @@ def order_confirmation():
     return render_template("order-confirmation.html")
 
 
-@app.route('/manage-requests')
-def manage_requests():
-    # Your logic for managing requests
+@app.route("/employee-home", methods=["GET"])
+def employee_home():
     return render_template('employee-home.html')
 
 

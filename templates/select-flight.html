@@ -11,9 +11,9 @@
 
 	<form action="/select-flight" method="get">
 		{% if direction == None %}
-			<input type="hidden" name="direction" value="outward"/>
+			<input type="hidden" name="direction" value="outward" />
 		{% elif direction == "outward" %}
-			<input type="hidden" name="direction" value="return"/>
+			<input type="hidden" name="direction" value="return" />
 		{% endif %}
 
 		<input type="hidden" name="departure" value="{{ departure }}"/>
@@ -59,28 +59,29 @@
 
 			{% for flight in flights %}
 				<tr>
-					<td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}"/></td>
+					<td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}" required pattern = ".{1,}" title = "Please select flight"/></td>
 					<td>{{ flight["flight_source"] }}</td>
 					<td>{{ flight["flight_destination"] }}</td>
 					<td>{{ flight["flight_depTime"] }}</td>
-					<td>{{ flight["flight_arrtime"] }}</td>
+					<td>{{ flight["flight_arrTime"] }}</td>
 					{# TODO: input flight price from database  #}
-					<td>${{ flight["flight_economy_price"] }}</td>
-					<td>${{ flight["flight_business_price"] }}</td>
-					<td>${{ flight["flight_first_class_price"] }}</td>
+					<td>${{ flight["economy_price"] }}</td>
+					<td>${{ flight["business_price"] }}</td>
+					<td>${{ flight["first_class_price"] }}</td>
 					<td>
-						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class">
-							<option>Select a class</option>
-							<option value="$300">Economy: ${{ flight["flight_economy_price"] }}</option>
+						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class" required>
+							<option value="" disable selected>Select a class</option>
+							<option value="$300">Economy: ${{ flight["economy_price"] }}</option>
 							<option value="$600">Business: ${{ flight["flight_business_price"] }}</option>
-							<option value="$1000">First: ${{ flight["flight_first_class_price"] }}</option>
+							<option value="$1000">First: ${{ flight["first_class_price"] }}</option>
 						</select>
 					</td>
 					<td>
-						<select class="form-control" name="extra_luggage" id="extra-luggage">
-							{# TODO: input luggage pric from database  #}
-							<option value="0">No Extra Luggage</option>
+						<select class="form-control" name="extra_luggage" id="extra-luggage" required>
+							{# TODO: input luggage price from database  #}
+							<option value="" disable selected>Select Luggage</option>
 							{#{% if flight["distance"] == "short" %}#}
+                            <option value = "$0">No Extra Luggage</option>
 							<option value="$25">1 x $25</option>
 							<option value="$50">2 x $25</option>
 							<option value="$75">3 x $25</option>
@@ -89,7 +90,7 @@
 							{#{% elif flight["distance"] == "medium" %}#}
 							{#{% else flight["distance"] == "long" %}#}
 							{#{% endif %}#}
-
+                        required
 						</select>
 					</td>
 				</tr>
@@ -100,6 +101,16 @@
 		<input class="btn btn-default" type="submit" value="Select">
 	</form>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- Jinja2 code, call flashed messages with caogories and store them in the 'messages' variable -->
+        {% if messages %}
+            <ul class="list-group">
+                {% for category, message in messages %}
+                    <li class="list-group-item {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 	<br><br>
 	<a href="/">Back to Home</a>
 

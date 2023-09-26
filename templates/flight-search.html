@@ -17,14 +17,14 @@
 	</form>
 
 	<h1>Flight Search</h1>
-	<form action="/select-flight" method="get" onsubmit="return validateForm()">
+	<form action="/flight-search" method="post">
 		<div class="row">
 			<div class="col-xs-6">
 				<label for="departure">Departure City</label>
-				<input class="form-control" type="text" id="departure" name="departure" required>
+				<input class="form-control" type="text" id="departure" name="departure" required/>
 				<br>
 				<label for="destination">Destination City:</label>
-				<input class="form-control" type="text" id="destination" name="destination" required>
+				<input class="form-control" type="text" id="destination" name="destination" required/>
 				<div id="error-message" style="color: red;"></div>
 				<br><br>
 			</div>
@@ -54,6 +54,17 @@
 
 		<input class="btn btn-default" type="submit" value="Search Flights">
 	</form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- Jinja2 code, call flashed messages with caogories and store them in the 'messages' variable -->
+            {% if messages %}
+                <ul class="list-group">
+                    {% for category, message in messages %}
+                        <li class="list-group-item {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+    {% endwith %}
 
 	<br><br>
 	<a href="/logout">Logout</a>
