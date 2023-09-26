@@ -1,15 +1,11 @@
 import mariadb
-import os
 from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# We use environment variables to configure the database.
-# Values on the right (or ...) are default values.
-# Values on the left (... or) are values fetched from a .env file.
-# See https://github.com/theskumar/python-dotenv
+
 load_dotenv()
 db_config = {
     'user': 'root',
@@ -195,11 +191,7 @@ def get_flighthistory(userId):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("""SELECT ticket_name, ticket_date, ticket_miles, ticket_flightcode, ticket_class, flight_miles, 
-                                    flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime
-                          FROM tickets T
-                          RIGHT OUTER JOIN flights F ON F.flightcode = T.ticket_flightcode
-                          WHERE ticket_userId = %s;""", (userId,))
+        cursor.execute("SELECT  T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime FROM tickets T LEFT JOIN flights F On T.ticket_flightcode = F.flightcode WHERE ticket_userId = %s", (userId,))
         results = cursor.fetchall()
         return results
     except mariadb.Error as e:
@@ -208,6 +200,7 @@ def get_flighthistory(userId):
     finally:
         if connection:
             connection.close()
+
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.

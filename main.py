@@ -44,18 +44,21 @@ def flight_search():
 
 @app.route("/client-account", methods=["GET"])
 def client_account():
-    user_id = session.get(userId)
+    user_id = session["userId"]
 
-    # Call the get_client_data function to fetch user-specific data.
-    clientData = get_client_data(user_id)
-    flightHistory = get_flighthistory(userId)
+    # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
+    client_data = get_client_data(user_id)
+    print(client_data)
+    flight_history = get_flighthistory(user_id)
+    print(flight_history)
 
-    if clientData and flightHistory:
-        # If data was retrieved successfully, render the template with the data.
-        return render_template("client-account.html", client_data=clientData, flight_history = flightHistory)
+    if client_data and flight_history:
+        # Wenn die Daten erfolgreich abgerufen wurden, rendern Sie die Vorlage mit den Daten.
+        return render_template("client-account.html", client_data=client_data, flight_history=flight_history)
     else:
-        # Handle the case where data retrieval fails.
-        return "Error retrieving client data from the database"
+        # Behandeln Sie den Fall, in dem das Abrufen der Daten fehlschlägt.
+        return "Fehler beim Abrufen der Client-Daten aus der Datenbank"
+
 
 def is_valid_registration_data(firstName, lastName, email, password):
     if not firstName or not lastName:
@@ -111,6 +114,7 @@ def login():
     user = get_user(user_email)
 
     if user and user.check_password(user_password):
+        session["userId"] = user.userId
         # Password is correct.
         if user.user_type == "Client":
             # Redirect to the flight search page if the user is a client.
@@ -218,6 +222,8 @@ def order_confirmation():
 @app.route("/employee-home", methods=["GET"])
 def employee_home():
     return render_template('employee-home.html')
+
+
 
 
 if __name__ == "__main__":
