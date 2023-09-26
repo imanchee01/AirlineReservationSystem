@@ -11,17 +11,23 @@
         right: 10px; /* Abstand vom rechten Rand */
         z-index: 1; /* Um sicherzustellen, dass der Button über anderen Inhalten liegt */
     }
+
+    .logout-link {
+        position: absolute;
+        top: 50px; /* Passen Sie den Abstand nach Bedarf an */
+        right: 35px; /* Abstand vom rechten Rand */
+        z-index: 1; /* Um sicherzustellen, dass der Link über anderen Inhalten liegt */
+    }
     </style>
-
-
-
 
 	<form action="/client-account" method="GET">
     <button type="submit" class="client-account-button">
         <i class="fas fa-user"></i> <!-- Das Icon für den Benutzer -->
         My Account
     </button>
-</form>
+    </form>
+
+     <a href="/logout" class="logout-link">Logout</a>
 
 	<h1>Flight Search</h1>
 	<form action="/select-flight" method="get" onsubmit="return validateForm()">
@@ -63,7 +69,6 @@
 	</form>
 
 	<br><br>
-	<a href="/logout">Logout</a>
 
 
 	<script>
