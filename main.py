@@ -3,31 +3,7 @@ from flask import render_template
 from database import *
 import re
 
-outward_flights = [
-    {
-        "flightcode": "ABC123",
-        "flight_source": "New York",
-        "flight_destination": "Los Angeles",
-        "flight_depTime": "09:00 AM",
-        "flight_arrtime": "02:00 PM",
-        "flight_economy_price": 300,
-        "flight_business_price": 600,
-        "flight_first_class_price": 1000,
-    }
-]
 
-return_flights = [
-    {
-        "flightcode": "XYZ456",
-        "flight_source": "Los Angeles",
-        "flight_destination": "New York",
-        "flight_depTime": "03:00 PM",
-        "flight_arrtime": "08:00 PM",
-        "flight_economy_price": 300,
-        "flight_business_price": 600,
-        "flight_first_class_price": 1000,
-    }
-]
 
 
 @app.route("/")
