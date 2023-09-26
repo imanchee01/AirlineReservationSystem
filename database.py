@@ -186,6 +186,7 @@ def get_client_data(userId):
         if connection:
             connection.close()
 
+
 def get_flighthistory(userId):
     connection = None
     try:

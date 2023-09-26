@@ -24,25 +24,25 @@
             {% for client in client_data %}
             <p>Name: {{ client.user_name }}</p>
             <p>Email: {{ client.user_email }}</p>
-            <p>Tier: {{ client.tier }}</p>
+            <p>Tier: {{ client.tier }}
+                <button class="info-button" onclick="toggleInfo('info{{ loop.index }}')">i</button>
+            </p>
+                <div class="tier-info" id="info{{ loop.index }}" style="display: none;">
+                    ---------------------------------------------------------------------------------------------------------<br>
+                    You earn 1 mile for every mile flown. Different tiers come with different benefits.
+                    <br>
+                    Bronze Tier: You start as a Bronze member
+                    <br>
+                    Silver Tier: With 1.000 flown miles, you reach the Silver tier
+                    <br>
+                    Gold Tier: You achieve Gold status with 10.000 flown miles.
+                    <br>
+                    ---------------------------------------------------------------------------------------------------------<br>
+                </div>
 			<p>Total miles: {{client.miles }}</p>
             {% endfor %}
 		</div>
-		<br>
-            <div class="tier">
-            <p style="font-weight: bold; font-size: 18px;">Tier</p>
-            {% for client in client_data %}
-            <p>
-                Level: {{ client.tier }}
-                <button class="info-button" onclick="toggleInfo('info{{ loop.index }}')">i</button>
-            </p>
-            <div class="tier-info" id="info{{ loop.index }}" style="display: none;">
-            <!-- hier kommt noch Text hin -->
-                Information about Tier {{ client.tier }} benefits goes here.
-            </div>
-            <p>Total miles: {{client.miles }}</p>
-            {% endfor %}
-        </div>
+
         <br>
 		<div class="flight-history">
 			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
