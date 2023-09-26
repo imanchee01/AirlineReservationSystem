@@ -1,6 +1,6 @@
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
-from database import app, User, save_signup_information, user_with_email_exists, get_user
+from database import *
 import re
 
 outward_flights = [
@@ -210,6 +210,29 @@ def order_confirmation():
 def manage_requests():
     # Your logic for managing requests
     return render_template('employee-home.html')
+
+@app.route("/edit-flights", methods=["GET", "POST"])
+def edit_flights():
+    return render_template("edit-flights.html")
+
+@app.route('/add_flight', methods=['POST'])
+def add_flight_route():
+    if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure')):
+        return 'All fields are required', 400
+
+    miles = request.form['miles']
+    source = request.form['source']
+    destination = request.form['destination']
+    weekday = request.form['weekday']
+    arrival = request.form['arrival']
+    departure = request.form['departure']
+
+    if add_flight(miles, source, destination, weekday, arrival, departure):
+        return 'Flight added successfully', 201
+    else:
+        return 'Internal Server Error', 500
+
+
 
 
 if __name__ == "__main__":

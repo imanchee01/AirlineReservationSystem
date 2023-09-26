@@ -16,7 +16,7 @@ db_config = {
     'password': os.environ.get("DB_ROOTPASSWORD") or '1111',
     'host': os.environ.get("DB_HOST") or 'localhost',
     'database': os.environ.get("DB_DATABASE") or 'airline',
-    'port': os.environ.get("DB_PORT") or "3307"
+    'port': os.environ.get("DB_PORT") or 3307
 }
 
 app = Flask(__name__)
@@ -66,81 +66,71 @@ def get_user(user_email):
     return User.query.filter_by(user_email=user_email).first()
 
 
+def get_db_connection():
+    try:
+        conn = mariadb.connect(**db_config)
+        return conn
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+
 # The get_user_role method is only responsible for returning the user role.
 # It should not be called before the user has been authenticated (not before a password check).
 def get_user_role(user_email, user_password):
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
+    connection = get_db_connection()
+    if connection:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s",
-                       (user_email, user_password))
-        result = cursor.fetchone()
-
-        if result:
-            return result['user_type']
-
-        else:
-            return None
-
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
-        if connection:
+        try:
+            cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s AND user_password = %s",
+                           (user_email, user_password))
+            result = cursor.fetchone()
+            return result['user_type'] if result else None
+        finally:
             connection.close()
+    return None
 
 
 def get_data_for_employee():
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
+    connection = get_db_connection()
+    if connection:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM airline.request")
-        results = cursor.fetchall()
-        return results
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
-        if connection:
+        try:
+            cursor.execute("SELECT * FROM airline.request")
+            results = cursor.fetchall()
+            return results
+        finally:
             connection.close()
+    return None
 
 
 # returns miles and tier after figuring out that user is client
 def get_data_for_client(userId):
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("""SELECT clientId, miles, tier
-                          FROM client
-                          WHERE clientId = %s;""", (userId,))
-
-        results = cursor.fetchall()
-        return results
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
+    def get_data_for_client(userId):
+        connection = get_db_connection()
         if connection:
-            connection.close()
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("""SELECT clientId, miles, tier
+                                  FROM client
+                                  WHERE clientId = %s;""", (userId, ))
+                results = cursor.fetchall()
+                return results
+            finally:
+                connection.close()
+        return None
 
 
 def get_flights_by_destination(destination):
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
+    connection = get_db_connection()
+    if connection:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM flights WHERE flight_destination = %s", (destination,))
-        results = cursor.fetchall()
-        return results
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
-        if connection:
+        try:
+            cursor.execute("SELECT * FROM flights WHERE flight_destination = %s", (destination,))
+            results = cursor.fetchall()
+            return results
+        finally:
             connection.close()
+    return None
 
 
 def save_signup_information(first_name, last_name, email, password):
@@ -171,6 +161,25 @@ def user_with_email_exists(email):
     if existing_email:
         return True
     return False
+
+
+def add_flight(miles, source, destination, weekday, arrival, departure):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """INSERT INTO flights (miles, source, destination, weekday, arrival, departure) 
+                   VALUES (%s, %s, %s, %s, %s, %s)"""
+        params = (miles, source, destination, weekday, arrival, departure)
+        try:
+            cursor.execute(query, params)
+            conn.commit()
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+    return True
 
 
 if __name__ == "__main__":

@@ -1,7 +1,25 @@
 {% extends "base.html" %}
-
-{% block title %}Edit Flights{% endblock %}
-
 {% block content %}
-	<a href="/employee">Employee Home</a>
+
+<body>
+<form action="http://127.0.0.1:5000/add_flight" method="post">
+    <br>
+    Miles: <input type="text" name="miles"><br>
+    <br>
+    Source: <input type="text" name="source"><br>
+    <br>
+    Destination: <input type="text" name="destination"><br>
+    <br>
+    Weekday: <input type="text" name="weekday"><br>
+    <br>
+    Arrival: <input type="time" name="arrival"><br>
+    <br>
+    Departure: <input type="time" name="departure"><br>
+    <br>
+    <input type="submit" value="Add Flight">
+</form>
+<br>
+<a href="/employee-home">Employee Home</a>
+</body>
+
 {% endblock %}
