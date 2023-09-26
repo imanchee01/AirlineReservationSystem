@@ -8,11 +8,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 db_config = {
-    'user': 'root',
-    'password': '',
-    'host': 'localhost',
-    'database': 'airline',
-    'port': 3306
+    'user': os.environ.get("DB_ROOTUSER") or 'root',
+    'password': os.environ.get("DB_ROOTPASSWORD") or '',
+    'host': os.environ.get("DB_HOST") or 'localhost',
+    'database': os.environ.get("DB_DATABASE") or 'airline',
+    'port': int(os.environ.get("DB_PORT")) or 3308
 }
 
 app = Flask(__name__)
@@ -64,7 +64,7 @@ def get_user(user_email):
 
 # The get_user_role method is only responsible for returning the user role.
 # It should not be called before the user has been authenticated (not before a password check).
-def get_user_role(user_email):
+def get_user_role(user_email, user_password):
     connection = None
     try:
         connection = mariadb.connect(**db_config)
