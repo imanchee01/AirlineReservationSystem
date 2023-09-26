@@ -6,15 +6,22 @@
 	<!-- Button zum Client-Account -->
 	<style>
     .client-account-button {
-      position: relative;
-      right: 10px;
-      top: 10px;
+        position: absolute;
+        top: 10px; /* Abstand vom oberen Rand */
+        right: 10px; /* Abstand vom rechten Rand */
+        z-index: 1; /* Um sicherzustellen, dass der Button über anderen Inhalten liegt */
     }
-	</style>
+    </style>
+
+
+
 
 	<form action="/client-account" method="GET">
-		<button type="submit">Zum Client-Account</button>
-	</form>
+    <button type="submit" class="client-account-button">
+        <i class="fas fa-user"></i> <!-- Das Icon für den Benutzer -->
+        My Account
+    </button>
+</form>
 
 	<h1>Flight Search</h1>
 	<form action="/select-flight" method="get" onsubmit="return validateForm()">
