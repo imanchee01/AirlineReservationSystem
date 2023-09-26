@@ -71,9 +71,9 @@
 					<td>
 						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class" required>
 							<option value="" disable selected>Select a class</option>
-							<option value="$300">Economy: ${{ flight["economy_price"] }}</option>
-							<option value="$600">Business: ${{ flight["flight_business_price"] }}</option>
-							<option value="$1000">First: ${{ flight["first_class_price"] }}</option>
+							<option value="${{ flight["economy_price"] }}">Economy: ${{ flight["economy_price"] }}</option>
+							<option value="${{ flight["business_price"] }}">Business: ${{ flight["business_price"] }}</option>
+							<option value="${{ flight["first_class_price"] }}">First: ${{ flight["first_class_price"] }}</option>
 						</select>
 					</td>
 					<td>
@@ -82,11 +82,11 @@
 							<option value="" disable selected>Select Luggage</option>
 							{#{% if flight["distance"] == "short" %}#}
                             <option value = "$0">No Extra Luggage</option>
-							<option value="$25">1 x $25</option>
-							<option value="$50">2 x $25</option>
-							<option value="$75">3 x $25</option>
-							<option value="$100">4 x $25</option>
-							<option value="$125">5 x $25</option>
+							<option value="${{ flight['luggage_price'] }}">1 x ${{ flight['luggage_price'] }}</option>
+							<option value="${{ flight['luggage_price'] * 2 }}">2 x ${{ flight['luggage_price'] }}</option>
+							<option value="${{ flight['luggage_price'] * 3 }}">3 x ${{ flight['luggage_price'] }}</option>
+							<option value="${{ flight['luggage_price'] * 4 }}">4 x ${{ flight['luggage_price'] }}</option>
+							<option value="${{ flight['luggage_price'] * 5 }}">5 x ${{ flight['luggage_price'] }}</option>
 							{#{% elif flight["distance"] == "medium" %}#}
 							{#{% else flight["distance"] == "long" %}#}
 							{#{% endif %}#}
@@ -113,5 +113,11 @@
     {% endwith %}
 	<br><br>
 	<a href="/">Back to Home</a>
+
+    <script>
+        function multiplyNumbers(num1, num2) {
+            return num1 * num2
+        }
+    </script>
 
 {% endblock %}
