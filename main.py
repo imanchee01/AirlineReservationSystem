@@ -207,7 +207,7 @@ def select_flight():
         combined_data_out = {}
         combined_data_out.update(outward_flights_data[i])
         combined_data_out.update(prices[i])
-        combined_data_out.update(aicraft_class_out[i])
+        combined_data_out.update(aircraft_class_out[i])
         outward_flights.append(combined_data_out)
 
     return_flights = []
