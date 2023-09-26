@@ -1,8 +1,6 @@
-from flask import request, session, redirect, flash, url_for
-from flask import render_template
+from flask import request, session, redirect, flash, url_for, jsonify, render_template
 from database import *
 import re
-
 
 
 
@@ -24,10 +22,7 @@ def client_account():
 
     # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
     client_data = get_client_data(user_id)
-    print(client_data)
     flight_history = get_flighthistory(user_id)
-    print(flight_history)
-
     if client_data and flight_history:
         # Wenn die Daten erfolgreich abgerufen wurden, rendern Sie die Vorlage mit den Daten.
         return render_template("client-account.html", client_data=client_data, flight_history=flight_history)
@@ -198,8 +193,6 @@ def order_confirmation():
 @app.route("/employee-home", methods=["GET"])
 def employee_home():
     return render_template('employee-home.html')
-
-
 
 
 if __name__ == "__main__":
