@@ -12,11 +12,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # See https://github.com/theskumar/python-dotenv
 load_dotenv()
 db_config = {
-    'user': os.environ.get("DB_ROOTUSER") or 'root',
-    'password': os.environ.get("DB_ROOTPASSWORD") or '' or 'gertimare',
-    'host': os.environ.get("DB_HOST") or 'localhost',
-    'database': os.environ.get("DB_DATABASE") or 'airline',
-    'port': os.environ.get("DB_PORT") or 3306 or 3308
+    'user': 'root',
+    'password': '',
+    'host': 'localhost',
+    'database': 'airline',
+    'port': 3306
 }
 
 app = Flask(__name__)
@@ -172,8 +172,44 @@ def user_with_email_exists(email):
         return True
     return False
 
+def get_client_data(userId):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""SELECT user_name, user_email, miles, tier 
+                          FROM client
+                          JOIN user on clientId = userId
+                          WHERE clientId = %s;""", (userId,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def get_flighthistory(userId):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""SELECT ticket_name, ticket_date, ticket_miles, ticket_flightcode, ticket_class, flight_miles, 
+                                    flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime
+                          FROM tickets T
+                          RIGHT OUTER JOIN flights F ON F.flightcode = T.ticket_flightcode
+                          WHERE ticket_userId = %s;""", (userId,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
-    client_data = get_data_for_client(userId)
+    client_data = get_client_data(userId)
     print(client_data)  # This will print the data returned by the function
