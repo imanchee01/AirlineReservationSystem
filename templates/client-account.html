@@ -84,7 +84,7 @@
                     <th style="width: auto;">Stornieren</th>
                     <th style="width: auto;">Check-In</th>
 				</tr>
-				<tr>
+
                     {% for flight in flight_history %}
                     <td>{{ flight.ticket_name }}</td>
                     <td> {{ flight.ticket_date }}</td>
@@ -95,24 +95,25 @@
 					<td>{{ flight.ticket_class}}</td>
                     <td> {{ flight.ticket_miles }}</td>
 					<td>
-
-                        <button id="stornierenButton{{ loop.index }}"
-                            onclick="toggleButton('stornierenButton{{ loop.index }}', 'Pending', 'yellow', 'checkInButton{{ loop.index }}')"
-                            style="width: 100px;">Stornieren
-                        </button>
-                    </td>
+                        <td>
+                            <button class="cancellation-button"
+                                    data-ticket-id="{{ flight.ticketId }}"
+                                    onclick="stornierenButtonClick(this)"
+                                    style="width: 100px;">
+                                Stornieren
                     <td>
+
                         <button id="checkInButton{{ loop.index }}"
                             onclick="toggleButton('checkInButton{{ loop.index }}', 'Checked In', 'green', 'stornierenButton{{ loop.index }}')"
                             style="width: 100px;">Check-In
                         </button>
                     </td>
+
                         <tr>
                         {% endfor %}
                     </tr>
 
 
-                </tr>
 
 		<br>
 
@@ -123,6 +124,7 @@
 
 
 	<script>
+
     // Initialisiere den Status der Buttons
     const buttonStatus = {
       'stornierenButton1': false,
@@ -156,7 +158,36 @@
             infoElement.style.display = "none";
         }
     }
+
+
+function stornierenButtonClick(button) {
+    const ticketId = button.getAttribute("data-ticket-id");
+
+    // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
+    const data = {
+        ticket_id: ticketId
+    };
+
+    // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
+    fetch("/cancel-ticket", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
+        },
+        body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
+    })
+    .then((response) => {
+        if (response.ok) {
+            showNotification("Ticket cancellation request submitted successfully.", "success");
+        } else {
+            showNotification("Failed to submit ticket cancellation request.", "error");
+        }
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+    });
+}
+
 	</script>
     </div>
-
 {% endblock %}

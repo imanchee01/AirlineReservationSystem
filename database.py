@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 load_dotenv()
 db_config = {
     'user': 'root',
@@ -31,6 +30,25 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://" + db_config['u
     "password"] + "@" + db_config["host"] + ":" + str(db_config["port"]) + "/" + db_config["database"]
 
 db.init_app(app)
+
+
+class Request(db.Model):
+    __tablename__ = "request"
+
+    # Fügen Sie Ihre Modellspalten hier hinzu
+    request_id = db.Column(db.Integer, primary_key=True)
+    request_status = db.Column(db.String(50), nullable=False)
+    request_ticketId = db.Column(db.Integer, nullable=False)
+    request_clientId = db.Column(db.Integer, nullable=False)
+    request_information = db.Column(db.String(255), nullable=False)
+
+    # Weitere Modellspalten hinzufügen, wenn nötig
+
+    def __init__(self, request_status, request_ticketId, request_clientId, request_information):
+        self.request_status = request_status
+        self.request_ticketId = request_ticketId
+        self.request_clientId = request_clientId
+        self.request_information = request_information
 
 
 class User(db.Model):
@@ -168,6 +186,7 @@ def user_with_email_exists(email):
         return True
     return False
 
+
 def get_client_data(userId):
     connection = None
     try:
@@ -192,7 +211,12 @@ def get_flighthistory(userId):
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT  T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime FROM tickets T LEFT JOIN flights F On T.ticket_flightcode = F.flightcode WHERE ticket_userId = %s", (userId,))
+        cursor.execute("""
+            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            FROM tickets T
+            LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
+            WHERE ticket_userId = %s
+        """, (userId,))
         results = cursor.fetchall()
         return results
     except mariadb.Error as e:
@@ -201,6 +225,33 @@ def get_flighthistory(userId):
     finally:
         if connection:
             connection.close()
+
+
+def create_ticket_cancellation_request(ticket_id, client_id):
+    print('database')
+    print(ticket_id, client_id)
+    try:
+        # Erstellen Sie eine neue Anfrage zur Stornierung des Tickets in der Datenbank.
+        new_request = Request(
+            request_status="pending",
+            request_ticketId=ticket_id,
+            request_clientId=client_id,
+            request_information="ticket cancellation"
+        )
+        print(new_request)
+
+        # Fügen Sie die neue Anfrage zur Datenbank hinzu und commiten Sie die Änderungen.
+        db.session.add(new_request)
+        db.session.commit()
+
+        return True  # Erfolgreich erstellt
+    except Exception as e:
+        # Behandeln Sie Fehler, wenn die Anfrage nicht erstellt werden kann.
+        print("Error creating cancellation request:", str(e))
+        db.session.rollback()
+        return False  # Fehler bei der Erstellung
+
+
 
 
 if __name__ == "__main__":

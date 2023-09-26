@@ -195,5 +195,20 @@ def employee_home():
     return render_template('employee-home.html')
 
 
+from flask import request, jsonify
+
+
+@app.route("/cancel-ticket", methods=["POST"])
+def cancel_ticket():
+    client_id = session["userId"]
+    data = request.get_json()  # Holen Sie sich die JSON-Daten aus dem Request.
+    ticket_id = data["ticket_id"]
+    if "ticket_id" in data:
+        create_ticket_cancellation_request(ticket_id, client_id)
+        return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
+    else:
+        return jsonify({"message": "Invalid data"}), 400
+
+
 if __name__ == "__main__":
     app.run(debug=True)
