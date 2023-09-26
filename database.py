@@ -248,6 +248,23 @@ def get_all_items_by_name__from_directionary(directionary, item_name):
 
     return list
 
+def has_firstclass(flightcode):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT aircraft_firstclass FROM aircraft JOIN flights ON aircraftId = flight_aircraftId WHERE flightcode = %s",
+                       (flightcode, ))
+        results = cursor.fetchone()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
 if __name__ == "__main__":
     print(get_data_for_client(28))
     print(get_prices('short distance'))
+    print(has_firstclass(9))

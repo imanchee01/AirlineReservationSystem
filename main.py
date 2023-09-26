@@ -1,5 +1,3 @@
-import shutil
-
 from flask import request, session, redirect, flash, url_for
 from flask import render_template
 from database import *
@@ -31,9 +29,26 @@ def flight_search():
 
         flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
         price_category = get_pricecategory(flight_miles)
+
         prices = []
         for i in price_category:
             prices.append(get_prices(i))
+
+        flight_code_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flightcode')
+        flight_code_return = get_all_items_by_name__from_directionary(return_flights_data, 'flightcode')
+
+        print(flight_code_out, flight_code_return)
+
+        aircraft_class_out = []
+        for k in flight_code_out:
+            aircraft_class_out.append(has_firstclass(f'{k}'))
+
+        aircraft_class_ret = []
+        for j in flight_code_return:
+            aircraft_class_ret.append(has_firstclass(f'{j}'))
+
+        print(aircraft_class_out, aircraft_class_ret)
+
 
         direction = None
 
@@ -43,6 +58,7 @@ def flight_search():
             combined_data_out = {} 
             combined_data_out.update(outward_flights_data[i])
             combined_data_out.update(prices[i])
+            combined_data_out.update(aircraft_class_out[i])
             outward_flights.append(combined_data_out)
 
         return_flights = []
@@ -50,7 +66,9 @@ def flight_search():
             combined_data_ret = {}
             combined_data_ret.update(return_flights_data[i])
             combined_data_ret.update(prices[i])
+            combined_data_ret.update(aircraft_class_ret[i])
             return_flights.append(combined_data_ret)
+
 
         return render_template(
             "select-flight.html",
@@ -155,7 +173,6 @@ def search_flights():
 def select_flight():
     flight_code = request.args.get("flightcode")
     direction = request.args.get("direction")
-    print(direction)
     departure = request.args.get("departure")
     destination = request.args.get("destination")
     departure_date = request.args.get("departure_date")
@@ -177,18 +194,32 @@ def select_flight():
     for i in price_category:
         prices.append(get_prices(i))
 
+    flight_code_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flightcode')
+    flight_code_return = get_all_items_by_name__from_directionary(return_flights_data, 'flightcode')
+
+    aircraft_class_out = []
+    for k in flight_code_out:
+        aircraft_class_out.append(has_firstclass(k))
+
+    aircraft_class_ret = []
+    for j in flight_code_return:
+        aircraft_class_ret.append(has_firstclass(j))
+
     outward_flights = []
     for i in range(0, len(outward_flights_data)):
         combined_data_out = {}
         combined_data_out.update(outward_flights_data[i])
         combined_data_out.update(prices[i])
+        combined_data_out.update(aicraft_class_out[i])
         outward_flights.append(combined_data_out)
 
     return_flights = []
+
     for i in range(0, len(return_flights_data)):
         combined_data_ret = {}
         combined_data_ret.update(return_flights_data[i])
         combined_data_ret.update(prices[i])
+        combined_data_ret.update(aircraft_class_ret[i])
         return_flights.append(combined_data_ret)
 
     if direction == "outward":
@@ -247,6 +278,7 @@ def check_out():
     address = request.form.get("address")
     phone = request.form.get("phone")
     payment_option = request.form.get("payment_option")
+
 
     return redirect(url_for("order_confirnation"))
 

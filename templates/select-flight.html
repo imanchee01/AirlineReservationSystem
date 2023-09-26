@@ -67,14 +67,22 @@
 					{# TODO: input flight price from database  #}
 					<td>${{ flight["economy_price"] }}</td>
 					<td>${{ flight["business_price"] }}</td>
-					<td>${{ flight["first_class_price"] }}</td>
+					<td>
+                        {% if flight['aircraft_firstclass'] == "y" %}
+                            ${{ flight["firstclass_price"] }}
+                        {% else %}
+                            not available
+                        {% endif %}
+                    </td>
 					<td>
 						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class" required>
 							<option value="" disable selected>Select a class</option>
 							<option value="${{ flight["economy_price"] }}">Economy: ${{ flight["economy_price"] }}</option>
 							<option value="${{ flight["business_price"] }}">Business: ${{ flight["business_price"] }}</option>
-							<option value="${{ flight["first_class_price"] }}">First: ${{ flight["first_class_price"] }}</option>
-						</select>
+							{% if flight["aircraft_firstclass"] == 'y' %}
+                                <option value="${{ flight["firstclass_price"] }}">First: ${{ flight["firstclass_price"] }}</option>
+						    {% endif  %}
+                        </select>
 					</td>
 					<td>
 						<select class="form-control" name="extra_luggage" id="extra-luggage" required>
