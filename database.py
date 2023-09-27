@@ -85,6 +85,7 @@ class User(db.Model):
 def get_user(user_email):
     return User.query.filter_by(user_email=user_email).first()
 
+
 def get_db_connection():
     try:
         conn = mariadb.connect(**db_config)
@@ -92,6 +93,7 @@ def get_db_connection():
     except mariadb.Error as e:
         print(f"Error connecting to MariaDB Platform: {e}")
         return None
+
 
 # The get_user_role method is only responsible for returning the user role.
 # It should not be called before the user has been authenticated (not before a password check).
@@ -200,6 +202,7 @@ def user_with_email_exists(email):
         return True
     return False
 
+
 def all_airports():
     connection = None
     try:
@@ -215,11 +218,13 @@ def all_airports():
         if connection:
             connection.close()
 
+
 def airport_exists(airport):
     airports = [entry['airportId'] for entry in all_airports()]
     if airport in airports:
         return True
     return False
+
 
 def get_pricecategory(miles):
     list = []
@@ -232,6 +237,7 @@ def get_pricecategory(miles):
             list.append('long distance')
 
     return list
+
 
 def get_prices(pricecategory):
     connection = None
@@ -249,6 +255,7 @@ def get_prices(pricecategory):
         if connection:
             connection.close()
 
+
 def get_flights(source, destination):
     connection = None
     try:
@@ -265,6 +272,7 @@ def get_flights(source, destination):
         if connection:
             connection.close()
 
+
 def get_all_items_by_name__from_directionary(directionary, item_name):
     list = []
 
@@ -273,6 +281,7 @@ def get_all_items_by_name__from_directionary(directionary, item_name):
             list.append(item[item_name])
 
     return list
+
 
 def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
     conn = get_db_connection()
@@ -291,6 +300,7 @@ def add_flight(miles, source, destination, weekday, arrival, departure, aircraft
             cursor.close()
             conn.close()
 
+
 def aircraft_exists(aircraft_id):
     conn = get_db_connection()
     if not conn:
@@ -305,11 +315,13 @@ def aircraft_exists(aircraft_id):
     finally:
         conn.close()
 
+
 def user_with_email_exists(email):
     existing_email = User.query.filter_by(user_email=email).first()
     if existing_email:
         return True
     return False
+
 
 def get_client_data(userId):
     connection = None
@@ -373,6 +385,7 @@ def create_ticket_cancellation_request(ticket_id, client_id):
         db.session.rollback()
         return False  # Fehler bei der Erstellung
 
+
 # Nehmen wir an, Ihre Stornierungsanfragen sind in einer separaten Tabelle namens 'cancellation_requests'.
 def get_cancellation_requests():
     connection = None
@@ -389,6 +402,7 @@ def get_cancellation_requests():
         if connection:
             connection.close()
 
+
 def get_all_aircrafts():
     conn = get_db_connection()
     if conn:
@@ -399,6 +413,7 @@ def get_all_aircrafts():
         finally:
             conn.close()
 
+
 def get_aircraft_by_id(id):
     conn = get_db_connection()
     if conn:
@@ -408,6 +423,7 @@ def get_aircraft_by_id(id):
             return cursor.fetchone()
         finally:
             conn.close()
+
 
 def update_aircraft(id, model, capacity, firstclass):
     conn = get_db_connection()

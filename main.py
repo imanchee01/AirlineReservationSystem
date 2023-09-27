@@ -40,7 +40,7 @@ def home():
 
 
 @app.route("/flight-search", methods=["GET", "POST"])
-def flight_search():
+def flight   _search():
     departure = request.form["departure"]
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
