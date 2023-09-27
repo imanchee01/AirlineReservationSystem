@@ -119,6 +119,7 @@
                     <td>
                         <button
                             id="checkInButton{{ loop.index }}"
+                            check-in-id="{{ flight.ticketId }}"
                             onclick="checkInButtonClick(this, {{ flight.ticketId }})"
                             style="width: 100px;"
                             {% if flight.ticketId in cancellation_requests or flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
@@ -138,7 +139,6 @@
 
 		<br>
 
-    </table>
 
 	</div>
 	<br><br>
@@ -212,6 +212,12 @@ function stornierenButtonClick(button) {
         .catch((error) => {
             console.error("Error:", error);
         });
+
+        // Disable the corresponding "CheckIn" button.
+        const checkIn = document.querySelector(`.checkInButton[check-in-id="${ticketId}"]`);
+        if (checkIn) {
+            checkIn.disabled = true;
+        }
     }
 
 	</script>

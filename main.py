@@ -4,6 +4,7 @@ from database import *
 import re
 import json
 from datetime import timedelta
+import datetime
 
 # Custom JSON encoder to handle timedelta objects
 class TimedeltaEncoder(json.JSONEncoder):
@@ -12,11 +13,26 @@ class TimedeltaEncoder(json.JSONEncoder):
             return str(obj)
         return super().default(obj)
 
+
 # Custom JSON decoder to handle timedelta strings
 def custom_decoder(obj):
     if "__timedelta__" in obj:
         return timedelta(seconds=obj["__timedelta__"])
     return obj
+
+
+def check_flight_availability(date, flight_schedule):
+    input_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()  # Parse the string into a date
+    weekday = input_date.strftime("%A").lower()  # Get the full weekday name
+    #check for every flight if its on the same weekday as the selected date, if not remove the flight
+    valid_flights = []
+    for flight_info in flight_schedule:
+        if flight_info['flight_weekday'] == weekday:
+            valid_flights.append(flight_info)
+    return valid_flights
+
+
+
 
 @app.route("/")
 def home():
@@ -31,18 +47,28 @@ def flight_search():
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
     return_date = request.form['return_date']
+    print(departure_date, return_date)
     person_count = request.form['person_count']
 
     # cheking if tho chosen airport exists
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
 
         # if it exists get the flight data
-        outward_flights_data = get_flights(departure, destination)
-        return_flights_data = get_flights(destination, departure)
+        outward_flights_data = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
+        return_flights_data = check_flight_availability(f'{return_date}', get_flights(destination, departure))
 
         # checking if there are any flights available
         if outward_flights_data is None or return_flights_data is None:
             flash('no flights found')
+            return redirect(url_for("search_flights"))
+
+        if outward_flights_data == []:
+            flash('No flights found on the selected departure date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        if return_flights_data == []:
+            flash('No flights found on the selected return date. Please select a different date.')
+            return redirect(url_for("search_flights"))
 
         # getting the flight miles to check if flight is short, middle or long distance
         flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
@@ -109,8 +135,6 @@ def client_account():
     else:
         # Behandeln Sie den Fall, in dem das Abrufen der Daten fehlschlägt.
         return "Fehler beim Abrufen der Client-Daten aus der Datenbank"
-
-
 
 
 def is_valid_registration_data(firstName, lastName, email, password):
@@ -279,20 +303,51 @@ def check_out():
 def order_confirmation():
     return render_template("order-confirmation.html")
 
+
 # manage request opens employee home
 @app.route('/manage-requests')
 def manage_requests():
     return render_template('employee-home.html', user_name=session.get("user_name"))
-@app.route('/edit-aircraft')
-def edit_aircraft():
-    return render_template('edit-aircraft.html')
+
+
+@app.route('/edit-aircrafts', methods=['GET'])
+def edit_aircrafts():
+    aircrafts = get_all_aircrafts()
+    return render_template('edit-aircrafts.html', aircrafts=aircrafts)
+
+
+@app.route('/edit-aircraft/<int:id>', methods=['GET'])
+def edit_aircraft(id):
+    # Your logic here, for example:
+    aircraft = get_aircraft_by_id(id)
+    if aircraft:
+        return render_template('edit-aircraft-form.html', aircraft=aircraft)
+    else:
+        return 'Aircraft not found', 404
+
+
+@app.route('/save_aircraft/<int:id>', methods=['POST'])
+def save_aircraft(id):
+    model = request.form['aircraft_model']
+    capacity = request.form['aircraft_capacity']
+    firstclass = request.form['firstclass']
+
+    if update_aircraft(id, model, capacity, firstclass):  # Define this method in database.py to update the aircraft.
+        return redirect(url_for('edit_aircrafts'))
+    else:
+        return 'Error updating aircraft', 500
+
+
 @app.route("/edit-flights", methods=["GET", "POST"])
 def edit_flights():
     return render_template("edit-flights.html")
 
+
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
     return render_template("cancellation-requests.html")
+
+
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
     if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
