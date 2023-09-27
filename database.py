@@ -36,6 +36,25 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://" + db_config['u
 
 db.init_app(app)
 
+class Request(db.Model):
+    __tablename__ = "request"
+
+    # Fügen Sie Ihre Modellspalten hier hinzu
+    request_id = db.Column(db.Integer, primary_key=True)
+    request_status = db.Column(db.String(50), nullable=False)
+    request_ticketId = db.Column(db.Integer, nullable=False)
+    request_clientId = db.Column(db.Integer, nullable=False)
+    request_information = db.Column(db.String(255), nullable=False)
+
+    # Weitere Modellspalten hinzufügen, wenn nötig
+
+    def __init__(self, request_status, request_ticketId, request_clientId, request_information):
+        self.request_status = request_status
+        self.request_ticketId = request_ticketId
+        self.request_clientId = request_clientId
+        self.request_information = request_information
+
+
 
 class User(db.Model):
     __tablename__ = "user"
@@ -234,6 +253,87 @@ def update_aircraft(id, model, capacity, firstclass):
             return False
         finally:
             conn.close()
+
+def get_client_data(userId):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""SELECT user_name, user_email, miles, tier 
+                          FROM client
+                          JOIN user on clientId = userId
+                          WHERE clientId = %s;""", (userId,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_flighthistory(userId):
+    connection = get_db_connection()
+    if connection is None:  # Check if the connection is successful, if not return None immediately.
+        return None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            FROM tickets T
+            LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
+            WHERE T.ticket_date >= CURDATE() and T.ticket_userId = %s
+        """, (userId,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        connection.close()
+
+
+def create_ticket_cancellation_request(ticket_id, client_id):
+    try:
+        # Erstellen Sie eine neue Anfrage zur Stornierung des Tickets in der Datenbank.
+        new_request = Request(
+            request_status="pending",
+            request_ticketId=ticket_id,
+            request_clientId=client_id,
+            request_information="ticket cancellation"
+        )
+        print(new_request)
+
+        # Fügen Sie die neue Anfrage zur Datenbank hinzu und commiten Sie die Änderungen.
+        db.session.add(new_request)
+        db.session.commit()
+
+        return True  # Erfolgreich erstellt
+    except Exception as e:
+        # Behandeln Sie Fehler, wenn die Anfrage nicht erstellt werden kann.
+        print("Error creating cancellation request:", str(e))
+        db.session.rollback()
+        return False  # Fehler bei der Erstellung
+
+
+# Nehmen wir an, Ihre Stornierungsanfragen sind in einer separaten Tabelle namens 'cancellation_requests'.
+def get_cancellation_requests():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT request_ticketId FROM request")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.

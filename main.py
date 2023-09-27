@@ -1,4 +1,4 @@
-from flask import request, session, redirect, flash, url_for
+from flask import request, session, redirect, flash, url_for, jsonify
 from flask import render_template
 from database import *
 import re
@@ -44,7 +44,19 @@ def flight_search():
 
 @app.route("/client-account", methods=["GET"])
 def client_account():
-    return render_template("client-account.html")
+    user_id = session["userId"]
+
+    # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
+    client_data2 = get_client_data(user_id)
+    print(client_data2)
+    cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
+    print(cancellation_requests)
+    flight_history = get_flighthistory(user_id)
+    print(flight_history)
+    return render_template("client-account.html", client_data=client_data2,
+                               flight_history=flight_history, cancellation_requests=cancellation_requests)
+
+
 
 
 def is_valid_registration_data(firstName, lastName, email, password):
@@ -102,6 +114,7 @@ def login():
 
     if user and user.check_password(user_password):
         session['user_name'] = user.user_name
+        session['userId'] = user.userId
         # Password is correct.
         if user.user_type == "Client":
             # Redirect to the flight search page if the user is a client.
@@ -264,6 +277,17 @@ def add_flight_route():
         return 'Flight added successfully', 201
     else:
         return 'Internal Server Error', 500
+
+@app.route("/cancel-ticket", methods=["POST"])
+def cancel_ticket():
+    client_id = session["userId"]
+    data = request.get_json()  # Holen Sie sich die JSON-Daten aus dem Request.
+    ticket_id = data["ticket_id"]
+    if "ticket_id" in data:
+        create_ticket_cancellation_request(ticket_id, client_id)
+        return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
+    else:
+        return jsonify({"message": "Invalid data"}), 400
 
 
 
