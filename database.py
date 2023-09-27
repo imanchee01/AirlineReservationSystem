@@ -75,9 +75,18 @@ class User(db.Model):
     def __repr__(self):
         return f"<User {self.user_name}>"
 
+def get_db_connection():
+    try:
+        conn = mariadb.connect(**db_config)
+        return conn
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+
 
 def get_user(user_email):
     return User.query.filter_by(user_email=user_email).first()
+
 
 
 # The get_user_role method is only responsible for returning the user role.
@@ -185,6 +194,79 @@ def user_with_email_exists(email):
     if existing_email:
         return True
     return False
+
+def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """INSERT INTO flights (flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        params = (miles, source, destination, weekday, arrival, departure, aircraft_id)
+        try:
+
+            cursor.execute(query, params)
+            conn.commit()
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+    return True
+
+
+def aircraft_exists(aircraft_id):
+    conn = get_db_connection()
+    if not conn:
+        return False
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM aircraft WHERE aircraftId = %s", (aircraft_id,))
+        return bool(cursor.fetchone())
+    except mariadb.Error as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_all_aircrafts():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM aircraft")
+            return cursor.fetchall()
+        finally:
+            conn.close()
+
+def get_aircraft_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM aircraft WHERE aircraftId = %s", (id,))
+            return cursor.fetchone()
+        finally:
+            conn.close()
+def update_aircraft(id, model, capacity, firstclass):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""UPDATE aircraft SET 
+                              aircraft_model = %s,
+                              aircraft_capacity = %s,
+                              aircraft_firstclass = %s 
+                              WHERE aircraftId = %s""", (model, capacity, firstclass, id))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            conn.close()
+
 
 
 def get_client_data(userId):
@@ -366,6 +448,22 @@ def get_all_items_by_name__from_directionary(directionary, item_name):
             list.append(item[item_name])
 
     return list
+
+def get_pending_requests():
+    conn = get_db_connection()
+    if not conn:
+        return None
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT * FROM request WHERE request_status='pending'
+    """)
+
+    requests = cursor.fetchall()
+    conn.close()
+
+    return requests
+
 
 
 if __name__ == "__main__":
