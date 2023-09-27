@@ -97,17 +97,22 @@
 
 
                         <td>
-                        {% if flight.ticketId not in  cancellation_requests%}
-                            <button class="cancellation-button"
-                                    data-ticket-id="{{ flight.ticketId }}"
-                                    onclick="stornierenButtonClick(this)"
-                                    style="width: 100px;">
-                                Stornieren
+                        {% if flight.ticketId not in cancellation_requests %}
+                            <button
+                                class="cancellation-button"
+                                data-ticket-id="{{ flight.ticketId }}"
+                                onclick="stornierenButtonClick(this)"
+                                style="width: 100px;"
+                                {% if flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
+                                {% if flight.ticketId not in cancellation_requests %}
+                                    Stornieren
+                                {% else %}
+                                    Pending
+                                {% endif %}
                             </button>
                         {% else %}
-                            <button class="cancellation-button"
-                                style="width: 100px; background-color: yellow;">
-                            Pending
+                            <button class="cancellation-button" style="width: 100px; background-color: yellow;">
+                                Pending
                             </button>
                         {% endif %}
                         </td>
@@ -143,59 +148,70 @@
     const check_in_status = {}; // Use this object to keep track of check-in status.
 
 function checkInButtonClick(button, ticketId) {
-    if (button.disabled) {
-        // If the "Stornieren" button was already clicked, do nothing.
-        return;
+        if (button.disabled) {
+            // If the "Stornieren" button was already clicked, do nothing.
+            return;
+        }
+
+        // Change the text and color of the "Check-In" button.
+        button.innerHTML = "Checked In";
+        button.style.backgroundColor = "green";
+        button.disabled = true; // Disable the button to prevent further clicks.
+
+        // Update the check-in status in the object.
+        check_in_status[ticketId] = true;
+
+        // Disable the corresponding "Stornieren" button.
+        const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
+        if (stornierenButton) {
+            stornierenButton.disabled = true;
+        }
     }
-
-    // Change the text and color of the "Check-In" button.
-    button.innerHTML = "Checked In";
-    button.style.backgroundColor = "green";
-    button.disabled = true; // Disable the button to prevent further clicks.
-
-    // Update the check-in status in the object.
-    check_in_status[ticketId] = true;
-}
 
 function stornierenButtonClick(button) {
-    const ticketId = button.getAttribute("data-ticket-id");
+        const ticketId = button.getAttribute("data-ticket-id");
 
-    // Überprüfen Sie, ob der Button bereits auf "Pending" gesetzt ist.
-    if (button.innerHTML.trim() === "Pending") {
-        // Wenn ja, ändern Sie ihn zurück zu "Stornieren" und entfernen Sie die Hintergrundfarbe.
-        button.innerHTML = "Stornieren";
-        button.style.backgroundColor = '';
-    } else {
-        // Andernfalls setzen Sie den Button auf "Pending" und ändern Sie die Hintergrundfarbe auf Gelb.
-        button.innerHTML = "Pending";
-        button.style.backgroundColor = 'yellow';
-    }
-
-    // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
-    const data = {
-        ticket_id: ticketId
-    };
-
-    // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
-    fetch("/cancel-ticket", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
-        },
-        body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
-    })
-    .then((response) => {
-        if (response.ok) {
-            showNotification("Ticket cancellation request submitted successfully.", "success");
-        } else {
-            showNotification("Failed to submit ticket cancellation request.", "error");
+        // Check if the "Check-In" button was already clicked.
+        if (check_in_status[ticketId]) {
+            // If the "Check-In" button was already clicked, do nothing.
+            return;
         }
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-    });
-}
 
+        // Check if the button is already in "Pending" state.
+        if (button.innerHTML.trim() === "Pending") {
+            // If yes, change it back to "Stornieren" and remove the background color.
+            button.innerHTML = "Stornieren";
+            button.style.backgroundColor = "";
+        } else {
+            // Otherwise, set the button to "Pending" and change the background color to yellow.
+            button.innerHTML = "Pending";
+            button.style.backgroundColor = "yellow";
+        }
+
+        // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
+        const data = {
+            ticket_id: ticketId
+        };
+
+        // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
+        fetch("/cancel-ticket", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
+            },
+            body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
+        })
+        .then((response) => {
+            if (response.ok) {
+                showNotification("Ticket cancellation request submitted successfully.", "success");
+            } else {
+                showNotification("Failed to submit ticket cancellation request.", "error");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+    }
 
 	</script>
     </div>
