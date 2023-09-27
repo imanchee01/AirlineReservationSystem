@@ -139,7 +139,6 @@
 
 		<br>
 
-    </table>
 
 	</div>
 	<br><br>
@@ -213,8 +212,9 @@ function stornierenButtonClick(button) {
         .catch((error) => {
             console.error("Error:", error);
         });
-        // Disable the corresponding "Stornieren" button.
-        const checkIn = document.querySelector(`.checkIn-Button[check-in-id="${ticketId}"]`);
+
+        // Disable the corresponding "CheckIn" button.
+        const checkIn = document.querySelector(`.checkInButton[check-in-id="${ticketId}"]`);
         if (checkIn) {
             checkIn.disabled = true;
         }
