@@ -118,8 +118,8 @@
                     </td>
                     <td>
                         <button
-                            id="checkInButton{{ loop.index }}"
-                            check-in-id="{{ flight.ticketId }}"
+                            data-check-in-id="{{ flight.ticketId }}"
+                            class="checkInButton"
                             onclick="checkInButtonClick(this, {{ flight.ticketId }})"
                             style="width: 100px;"
                             {% if flight.ticketId in cancellation_requests or flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
@@ -178,6 +178,12 @@ function stornierenButtonClick(button) {
             return;
         }
 
+        // Disable the corresponding "CheckIn" button.
+        const checkIn = document.querySelector(`.checkInButton[data-check-in-id="${ticketId}"]`);
+        if (checkIn) {
+            checkIn.disabled = true;
+        }
+
         // Check if the button is already in "Pending" state.
         if (button.innerHTML.trim() === "Pending") {
             // If yes, change it back to "Stornieren" and remove the background color.
@@ -213,11 +219,7 @@ function stornierenButtonClick(button) {
             console.error("Error:", error);
         });
 
-        // Disable the corresponding "CheckIn" button.
-        const checkIn = document.querySelector(`.checkInButton[check-in-id="${ticketId}"]`);
-        if (checkIn) {
-            checkIn.disabled = true;
-        }
+
     }
 
 	</script>

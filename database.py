@@ -215,7 +215,7 @@ def get_flighthistory(userId):
             SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
             FROM tickets T
             LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
-            WHERE ticket_userId = %s
+            WHERE T.ticket_date>= CURDATE() and ticket_userId = %s
         """, (userId,))
         results = cursor.fetchall()
         return results
