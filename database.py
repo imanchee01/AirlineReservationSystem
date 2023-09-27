@@ -335,6 +335,22 @@ def get_cancellation_requests():
             connection.close()
 
 
+def get_pending_requests():
+    conn = get_db_connection()
+    if not conn:
+        return None
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT * FROM request WHERE request_status='pending'
+    """)
+
+    requests = cursor.fetchall()
+    conn.close()
+
+    return requests
+
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_data_for_client(userId)

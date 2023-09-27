@@ -289,7 +289,10 @@ def cancel_ticket():
     else:
         return jsonify({"message": "Invalid data"}), 400
 
-
+@app.route('/view-requests', methods=['GET'])
+def view_requests():
+    requests = get_pending_requests()
+    return render_template('cancellation-requests.html', requests=requests)
 
 
 if __name__ == "__main__":
