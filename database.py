@@ -198,6 +198,43 @@ def aircraft_exists(aircraft_id):
     finally:
         conn.close()
 
+def get_all_aircrafts():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM aircraft")
+            return cursor.fetchall()
+        finally:
+            conn.close()
+
+def get_aircraft_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM aircraft WHERE aircraftId = %s", (id,))
+            return cursor.fetchone()
+        finally:
+            conn.close()
+def update_aircraft(id, model, capacity, firstclass):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""UPDATE aircraft SET 
+                              aircraft_model = %s,
+                              aircraft_capacity = %s,
+                              aircraft_firstclass = %s 
+                              WHERE aircraftId = %s""", (model, capacity, firstclass, id))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            conn.close()
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_data_for_client(userId)

@@ -211,9 +211,33 @@ def order_confirmation():
 def manage_requests():
     return render_template('employee-home.html', user_name=session.get("user_name"))
 
-@app.route('/edit-aircraft')
-def edit_aircraft():
-    return render_template('edit-aircraft.html')
+@app.route('/edit-aircrafts', methods=['GET'])
+def edit_aircrafts():
+    aircrafts = get_all_aircrafts()
+    return render_template('edit-aircrafts.html', aircrafts=aircrafts)
+@app.route('/edit-aircraft/<int:id>', methods=['GET'])
+def edit_aircraft(id):
+    # Your logic here, for example:
+    aircraft = get_aircraft_by_id(id)
+    if aircraft:
+        return render_template('edit-aircraft-form.html', aircraft=aircraft)
+    else:
+        return 'Aircraft not found', 404
+
+
+
+@app.route('/save_aircraft/<int:id>', methods=['POST'])
+def save_aircraft(id):
+    model = request.form['aircraft_model']
+    capacity = request.form['aircraft_capacity']
+    firstclass = request.form['firstclass']
+
+    if update_aircraft(id, model, capacity, firstclass):  # Define this method in database.py to update the aircraft.
+        return redirect(url_for('edit_aircrafts'))
+    else:
+        return 'Error updating aircraft', 500
+
+
 @app.route("/edit-flights", methods=["GET", "POST"])
 def edit_flights():
     return render_template("edit-flights.html")
