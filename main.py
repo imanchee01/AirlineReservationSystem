@@ -2,7 +2,21 @@ from flask import request, session, redirect, flash, url_for
 from flask import render_template
 from database import *
 import re
+import json
+from datetime import timedelta
 
+# Custom JSON encoder to handle timedelta objects
+class TimedeltaEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, timedelta):
+            return str(obj)
+        return super().default(obj)
+
+# Custom JSON decoder to handle timedelta strings
+def custom_decoder(obj):
+    if "__timedelta__" in obj:
+        return timedelta(seconds=obj["__timedelta__"])
+    return obj
 
 @app.route("/")
 def home():
@@ -21,8 +35,8 @@ def flight_search():
 
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
 
-        outward_flights_data = find_flights(departure, destination)
-        return_flights_data = find_flights(destination, departure)
+        outward_flights_data = get_flights(departure, destination)
+        return_flights_data = get_flights(destination, departure)
 
         if outward_flights_data is None or return_flights_data is None:
             flash('no flights found')
@@ -34,28 +48,13 @@ def flight_search():
         for i in price_category:
             prices.append(get_prices(i))
 
-        flight_code_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flightcode')
-        flight_code_return = get_all_items_by_name__from_directionary(return_flights_data, 'flightcode')
-
-
-        aircraft_class_out = []
-        for k in flight_code_out:
-            aircraft_class_out.append(has_firstclass(f'{k}'))
-
-        aircraft_class_ret = []
-        for j in flight_code_return:
-            aircraft_class_ret.append(has_firstclass(f'{j}'))
-
-
         direction = None
 
         outward_flights = []
-
         for i in range(0, len(outward_flights_data)):
             combined_data_out = {} 
             combined_data_out.update(outward_flights_data[i])
             combined_data_out.update(prices[i])
-            combined_data_out.update(aircraft_class_out[i])
             outward_flights.append(combined_data_out)
 
         return_flights = []
@@ -63,9 +62,12 @@ def flight_search():
             combined_data_ret = {}
             combined_data_ret.update(return_flights_data[i])
             combined_data_ret.update(prices[i])
-            combined_data_ret.update(aircraft_class_ret[i])
             return_flights.append(combined_data_ret)
 
+        print(outward_flights, return_flights)
+
+        session['outward_flights'] = json.dumps(outward_flights, cls=TimedeltaEncoder)
+        session['return_flights'] = json.dumps(return_flights, cls=TimedeltaEncoder)
 
         return render_template(
             "select-flight.html",
@@ -85,7 +87,21 @@ def flight_search():
 
 @app.route("/client-account", methods=["GET"])
 def client_account():
-    return render_template("client-account.html")
+    user_id = session["userId"]
+
+    # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
+    client_data = get_client_data(user_id)
+    print(client_data)
+    flight_history = get_flighthistory(user_id)
+    print(flight_history)
+
+    if client_data and flight_history:
+        # Wenn die Daten erfolgreich abgerufen wurden, rendern Sie die Vorlage mit den Daten.
+        return render_template("client-account.html", client_data=client_data, flight_history=flight_history)
+    else:
+        # Behandeln Sie den Fall, in dem das Abrufen der Daten fehlschlägt.
+        return "Fehler beim Abrufen der Client-Daten aus der Datenbank"
+
 
 
 def is_valid_registration_data(firstName, lastName, email, password):
@@ -142,6 +158,8 @@ def login():
     user = get_user(user_email)
 
     if user and user.check_password(user_password):
+        session['username'] = user.user_name
+        session['userId'] = user.userId
         # Password is correct.
         if user.user_type == "Client":
             # Redirect to the flight search page if the user is a client.
@@ -182,43 +200,11 @@ def select_flight():
     session["return_date"] = return_date
     session["person_count"] = person_count
 
-    outward_flights_data = find_flights(departure, destination)
-    return_flights_data = find_flights(destination, departure)
+    outward_flights = json.loads(session.get('outward_flights', '[]'))
+    return_flights = json.loads(session.get('return_flights', '[]'))
 
-    flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
-    price_category = get_pricecategory(flight_miles)
-    prices = []
-    for i in price_category:
-        prices.append(get_prices(i))
-
-    flight_code_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flightcode')
-    flight_code_return = get_all_items_by_name__from_directionary(return_flights_data, 'flightcode')
-
-    aircraft_class_out = []
-    for k in flight_code_out:
-        aircraft_class_out.append(has_firstclass(k))
-
-    aircraft_class_ret = []
-    for j in flight_code_return:
-        aircraft_class_ret.append(has_firstclass(j))
-
-    outward_flights = []
-    for i in range(0, len(outward_flights_data)):
-        combined_data_out = {}
-        combined_data_out.update(outward_flights_data[i])
-        combined_data_out.update(prices[i])
-        combined_data_out.update(aircraft_class_out[i])
-        outward_flights.append(combined_data_out)
-
-    return_flights = []
-
-    for i in range(0, len(return_flights_data)):
-        combined_data_ret = {}
-        combined_data_ret.update(return_flights_data[i])
-        combined_data_ret.update(prices[i])
-        combined_data_ret.update(aircraft_class_ret[i])
-        return_flights.append(combined_data_ret)
-
+    outward_flights = json.loads(session.get('outward_flights', '[]'), object_hook=custom_decoder)
+    return_flights = json.loads(session.get('return_flights', '[]'), object_hook=custom_decoder)
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
@@ -283,6 +269,40 @@ def check_out():
 @app.route("/order-confirmation", methods=["GET", "POST"])
 def order_confirmation():
     return render_template("order-confirmation.html")
+
+# manage request opens employee home
+@app.route('/manage-requests')
+def manage_requests():
+    return render_template('employee-home.html', user_name=session.get("user_name"))
+@app.route('/edit-aircraft')
+def edit_aircraft():
+    return render_template('edit-aircraft.html')
+@app.route("/edit-flights", methods=["GET", "POST"])
+def edit_flights():
+    return render_template("edit-flights.html")
+
+@app.route("/cancellation-requests", methods=["GET", "POST"])
+def cancellation_requests():
+    return render_template("cancellation-requests.html")
+@app.route('/add_flight_route', methods=["GET", "POST"])
+def add_flight_route():
+    if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
+        return 'All fields are required', 400
+    aircraft_id = request.form['aircraft_id']
+    if not aircraft_exists(aircraft_id):
+        return 'Invalid aircraft_id', 400
+    miles = request.form['miles']
+    source = request.form['source']
+    destination = request.form['destination']
+    weekday = request.form['weekday']
+    arrival = request.form['arrival']
+    departure = request.form['departure']
+    aircraft_id = request.form['aircraft_id']
+
+    if add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
+        return 'Flight added successfully', 201
+    else:
+        return 'Internal Server Error', 500
 
 
 @app.route("/employee-home", methods=["GET"])

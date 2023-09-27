@@ -59,7 +59,7 @@
 
 			{% for flight in flights %}
 				<tr>
-					<td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}" required pattern = ".{1,}" title = "Please select flight"/></td>
+					<td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}" required pattern = ".{1,}" title = "Please select flight" /></td>
 					<td>{{ flight["flight_source"] }}</td>
 					<td>{{ flight["flight_destination"] }}</td>
 					<td>{{ flight["flight_depTime"] }}</td>
@@ -75,7 +75,7 @@
                         {% endif %}
                     </td>
 					<td>
-						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class" required>
+						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class" required disabled>
 							<option value="" disable selected>Select a class</option>
 							<option value="${{ flight["economy_price"] }}">Economy: ${{ flight["economy_price"] }}</option>
 							<option value="${{ flight["business_price"] }}">Business: ${{ flight["business_price"] }}</option>
@@ -85,7 +85,7 @@
                         </select>
 					</td>
 					<td>
-						<select class="form-control" name="extra_luggage" id="extra-luggage" required>
+						<select class="form-control" name="extra_luggage" id="extra-luggage" required disabled>
 							{# TODO: input luggage price from database  #}
 							<option value="" disable selected>Select Luggage</option>
 							{#{% if flight["distance"] == "short" %}#}
@@ -123,9 +123,26 @@
 	<a href="/">Back to Home</a>
 
     <script>
-        function multiplyNumbers(num1, num2) {
-            return num1 * num2
+    // Function to enable or disable ticket and luggage selection fields based on flight selection
+    function toggleTicketAndLuggageFields() {
+        var selectedFlight = document.querySelector('input[name="flightcode"]:checked');
+        var ticketSelect = document.getElementById('selected-class');
+        var luggageSelect = document.getElementById('extra-luggage');
+
+        if (selectedFlight) {
+            ticketSelect.removeAttribute('disabled');
+            luggageSelect.removeAttribute('disabled');
+        } else {
+            ticketSelect.setAttribute('disabled', 'disabled');
+            luggageSelect.setAttribute('disabled', 'disabled');
         }
-    </script>
+    }
+
+    // Attach the onchange event handler to the radio buttons
+    var radioButtons = document.querySelectorAll('input[name="flightcode"]');
+    for (var i = 0; i < radioButtons.length; i++) {
+        radioButtons[i].addEventListener('change', toggleTicketAndLuggageFields);
+    }
+</script>
 
 {% endblock %}

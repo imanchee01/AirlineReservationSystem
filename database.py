@@ -38,6 +38,24 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://" + db_config['u
 
 db.init_app(app)
 
+class Request(db.Model):
+    __tablename__ = "request"
+
+    # Fügen Sie Ihre Modellspalten hier hinzu
+    request_id = db.Column(db.Integer, primary_key=True)
+    request_status = db.Column(db.String(50), nullable=False)
+    request_ticketId = db.Column(db.Integer, nullable=False)
+    request_clientId = db.Column(db.Integer, nullable=False)
+    request_information = db.Column(db.String(255), nullable=False)
+
+    # Weitere Modellspalten hinzufügen, wenn nötig
+
+    def __init__(self, request_status, request_ticketId, request_clientId, request_information):
+        self.request_status = request_status
+        self.request_ticketId = request_ticketId
+        self.request_clientId = request_clientId
+        self.request_information = request_information
+
 
 class User(db.Model):
     __tablename__ = "user"
@@ -67,6 +85,13 @@ class User(db.Model):
 def get_user(user_email):
     return User.query.filter_by(user_email=user_email).first()
 
+def get_db_connection():
+    try:
+        conn = mariadb.connect(**db_config)
+        return conn
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
 
 # The get_user_role method is only responsible for returning the user role.
 # It should not be called before the user has been authenticated (not before a password check).
@@ -189,6 +214,7 @@ def all_airports():
     finally:
         if connection:
             connection.close()
+
 def airport_exists(airport):
     airports = [entry['airportId'] for entry in all_airports()]
     if airport in airports:
@@ -223,12 +249,12 @@ def get_prices(pricecategory):
         if connection:
             connection.close()
 
-def find_flights(source, destination):
+def get_flights(source, destination):
     connection = None
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM flights WHERE flight_source = %s AND flight_destination = %s",
+        cursor.execute("SELECT flightcode, flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId, aircraft_firstclass  FROM flights JOIN aircraft ON flight_aircraftId = aircraftId WHERE flight_source = %s AND flight_destination = %s",
                        (source, destination))
         results = cursor.fetchall()
         return results
@@ -248,14 +274,53 @@ def get_all_items_by_name__from_directionary(directionary, item_name):
 
     return list
 
-def has_firstclass(flightcode):
+def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """INSERT INTO flights (flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        params = (miles, source, destination, weekday, arrival, departure, aircraft_id)
+        try:
+            cursor.execute(query, params)
+            conn.commit()
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
+def aircraft_exists(aircraft_id):
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM aircraft WHERE aircraftId = %s", (aircraft_id,))
+        return bool(cursor.fetchone())
+    except mariadb.Error as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
+def user_with_email_exists(email):
+    existing_email = User.query.filter_by(user_email=email).first()
+    if existing_email:
+        return True
+    return False
+
+def get_client_data(userId):
     connection = None
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT aircraft_firstclass FROM aircraft JOIN flights ON aircraftId = flight_aircraftId WHERE flightcode = %s",
-                       (flightcode, ))
-        results = cursor.fetchone()
+        cursor.execute("""SELECT user_name, user_email, miles, tier 
+                          FROM client
+                          JOIN user on clientId = userId
+                          WHERE clientId = %s;""", (userId,))
+        results = cursor.fetchall()
         return results
     except mariadb.Error as e:
         print(f"Error connecting to MariaDB Platform: {e}")
@@ -264,7 +329,55 @@ def has_firstclass(flightcode):
         if connection:
             connection.close()
 
+
+def get_flighthistory(userId):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            FROM tickets T
+            LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
+            WHERE ticket_userId = %s
+        """, (userId,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def create_ticket_cancellation_request(ticket_id, client_id):
+    print('database')
+    print(ticket_id, client_id)
+    try:
+        # Erstellen Sie eine neue Anfrage zur Stornierung des Tickets in der Datenbank.
+        new_request = Request(
+            request_status="pending",
+            request_ticketId=ticket_id,
+            request_clientId=client_id,
+            request_information="ticket cancellation"
+        )
+        print(new_request)
+
+        # Fügen Sie die neue Anfrage zur Datenbank hinzu und commiten Sie die Änderungen.
+        db.session.add(new_request)
+        db.session.commit()
+
+        return True  # Erfolgreich erstellt
+    except Exception as e:
+        # Behandeln Sie Fehler, wenn die Anfrage nicht erstellt werden kann.
+        print("Error creating cancellation request:", str(e))
+        db.session.rollback()
+        return False  # Fehler bei der Erstellung
+
+
 if __name__ == "__main__":
     print(get_data_for_client(28))
     print(get_prices('short distance'))
     print(has_firstclass(9))
+    print(add_flight(409, "AMS", "ARN", "monday", "09:20:00", "12:20:00", 28))
