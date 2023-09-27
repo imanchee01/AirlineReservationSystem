@@ -297,7 +297,60 @@ def employee_home():
     return render_template('employee-home.html')
 
 
-from flask import request, jsonify
+@app.route('/edit-aircrafts', methods=['GET'])
+def edit_aircrafts():
+    aircrafts = get_all_aircrafts()
+    return render_template('edit-aircrafts.html', aircrafts=aircrafts)
+@app.route('/edit-aircraft/<int:id>', methods=['GET'])
+def edit_aircraft(id):
+    # Your logic here, for example:
+    aircraft = get_aircraft_by_id(id)
+    if aircraft:
+        return render_template('edit-aircraft-form.html', aircraft=aircraft)
+    else:
+        return 'Aircraft not found', 404
+
+
+
+@app.route('/save_aircraft/<int:id>', methods=['POST'])
+def save_aircraft(id):
+    model = request.form['aircraft_model']
+    capacity = request.form['aircraft_capacity']
+    firstclass = request.form['firstclass']
+
+    if update_aircraft(id, model, capacity, firstclass):  # Define this method in database.py to update the aircraft.
+        return redirect(url_for('edit_aircrafts'))
+    else:
+        return 'Error updating aircraft', 500
+
+
+@app.route("/edit-flights", methods=["GET", "POST"])
+def edit_flights():
+    return render_template("edit-flights.html")
+
+@app.route("/cancellation-requests", methods=["GET", "POST"])
+def cancellation_requests():
+    return render_template("cancellation-requests.html")
+@app.route('/add_flight_route', methods=["GET", "POST"])
+def add_flight_route():
+    if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
+        return 'All fields are required', 400
+    aircraft_id = request.form['aircraft_id']
+    if not aircraft_exists(aircraft_id):
+        return 'Invalid aircraft_id', 400
+    miles = request.form['miles']
+    source = request.form['source']
+    destination = request.form['destination']
+    weekday = request.form['weekday']
+    arrival = request.form['arrival']
+    departure = request.form['departure']
+    aircraft_id = request.form['aircraft_id']
+
+    if add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
+        return 'Flight added successfully', 201
+    else:
+        return 'Internal Server Error', 500
+
 
 
 @app.route("/cancel-ticket", methods=["POST"])
@@ -310,6 +363,12 @@ def cancel_ticket():
         return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
     else:
         return jsonify({"message": "Invalid data"}), 400
+
+@app.route('/view-requests', methods=['GET'])
+def view_requests():
+    requests = get_pending_requests()
+    return render_template('cancellation-requests.html', requests=requests)
+
 
 
 if __name__ == "__main__":
