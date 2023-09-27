@@ -33,16 +33,22 @@ def flight_search():
     return_date = request.form['return_date']
     person_count = request.form['person_count']
 
+    # cheking if tho chosen airport exists
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
 
+        # if it exists get the flight data
         outward_flights_data = get_flights(departure, destination)
         return_flights_data = get_flights(destination, departure)
 
+        # checking if there are any flights available
         if outward_flights_data is None or return_flights_data is None:
             flash('no flights found')
 
+        # getting the flight miles to check if flight is short, middle or long distance
         flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+        # getting the prices for the pricecategory the flights are in
         price_category = get_pricecategory(flight_miles)
+
 
         prices = []
         for i in price_category:
@@ -50,6 +56,7 @@ def flight_search():
 
         direction = None
 
+        # adding the prices to the flight information dictionaries
         outward_flights = []
         for i in range(0, len(outward_flights_data)):
             combined_data_out = {} 
@@ -64,8 +71,7 @@ def flight_search():
             combined_data_ret.update(prices[i])
             return_flights.append(combined_data_ret)
 
-        print(outward_flights, return_flights)
-
+        # saving the flight information
         session['outward_flights'] = json.dumps(outward_flights, cls=TimedeltaEncoder)
         session['return_flights'] = json.dumps(return_flights, cls=TimedeltaEncoder)
 
@@ -200,11 +206,11 @@ def select_flight():
     session["return_date"] = return_date
     session["person_count"] = person_count
 
-    outward_flights = json.loads(session.get('outward_flights', '[]'))
-    return_flights = json.loads(session.get('return_flights', '[]'))
-
+    # loading the flight information
     outward_flights = json.loads(session.get('outward_flights', '[]'), object_hook=custom_decoder)
     return_flights = json.loads(session.get('return_flights', '[]'), object_hook=custom_decoder)
+
+
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
