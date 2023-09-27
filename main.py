@@ -32,8 +32,6 @@ def check_flight_availability(date, flight_schedule):
     return valid_flights
 
 
-
-
 @app.route("/")
 def home():
     if "user_name" in session:
@@ -47,7 +45,6 @@ def flight_search():
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
     return_date = request.form['return_date']
-    print(departure_date, return_date)
     person_count = request.form['person_count']
 
     # cheking if tho chosen airport exists
@@ -124,9 +121,7 @@ def client_account():
     # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
     client_data2 = get_client_data(user_id)
     cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
-    print(cancellation_requests)
     flight_history = get_flighthistory(user_id)
-    print(flight_history)
 
     if client_data2 and flight_history:
         # Wenn die Daten erfolgreich abgerufen wurden, rendern Sie die Vorlage mit den Daten.
@@ -294,6 +289,8 @@ def check_out():
     address = request.form.get("address")
     phone = request.form.get("phone")
     payment_option = request.form.get("payment_option")
+
+
 
 
     return redirect(url_for("order_confirnation"))

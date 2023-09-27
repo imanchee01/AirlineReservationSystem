@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Aircraft{% endblock %}
+
+{% block content %}
+
+<style>
+    .edit-aircraft-form {
+        width: 50%;
+        margin: 20px auto;
+    }
+
+    label, input {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    button {
+        padding: 5px 10px;
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: white;
+        color: black;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+</style>
+
+<div class="edit-aircraft-form">
+    <h1 style="font-weight: bold; font-size: 18px;">Edit Aircraft Form</h1>
+    <br>
+    <form method="post" action="{{ url_for('save_aircraft', id=aircraft.aircraftId) }}">
+        <label for="aircraft_model">Aircraft Model:</label>
+        <input type="text" id="aircraft_model" name="aircraft_model" value="{{ aircraft.aircraft_model }}" required>
+
+        <label for="aircraft_capacity">Aircraft Capacity:</label>
+        <input type="number" id="aircraft_capacity" name="aircraft_capacity" value="{{ aircraft.aircraft_capacity }}" required>
+
+        <label for="firstclass">First Class:</label>
+        <select name="firstclass" id="firstclass" required>
+            <option value="y" {% if aircraft.aircraft_firstclass == 'y' %}selected{% endif %}>Yes</option>
+            <option value="n" {% if aircraft.aircraft_firstclass == 'n' %}selected{% endif %}>No</option>
+        </select>
+      <br>
+
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<a href="/edit-aircrafts">Back to Edit Aircrafts</a>
+
+{% endblock %}
+

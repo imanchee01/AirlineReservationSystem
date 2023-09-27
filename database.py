@@ -408,6 +408,7 @@ def get_aircraft_by_id(id):
             return cursor.fetchone()
         finally:
             conn.close()
+
 def update_aircraft(id, model, capacity, firstclass):
     conn = get_db_connection()
     if conn:
