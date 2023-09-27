@@ -23,17 +23,12 @@ def client_account():
     # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
     client_data2 = get_client_data(user_id)
     cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
-    print(cancellation_requests)
     flight_history = get_flighthistory(user_id)
-    print(flight_history)
+    old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
-    if client_data2 and flight_history:
-        # Wenn die Daten erfolgreich abgerufen wurden, rendern Sie die Vorlage mit den Daten.
-        return render_template("client-account.html", client_data=client_data2,
-                               flight_history=flight_history, cancellation_requests=cancellation_requests)
-    else:
-        # Behandeln Sie den Fall, in dem das Abrufen der Daten fehlschlägt.
-        return "Fehler beim Abrufen der Client-Daten aus der Datenbank"
+    return render_template("client-account.html", client_data=client_data2,
+                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
+
 
 
 def is_valid_registration_data(firstName, lastName, email, password):
