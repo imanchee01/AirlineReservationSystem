@@ -189,7 +189,7 @@ def login():
             return redirect(url_for("search_flights"))
         if user.user_type == "Employee":
             # Redirect to the manage requests page if the user is an employee.
-            return redirect(url_for("manage_requests"))
+            return redirect(url_for("employee_home"))
 
     # Username or password is incorrect (or we have a user who is not a client nor an employee).
     flash('Invalid login credentials. Please try again or sign up.', 'error')
@@ -327,6 +327,46 @@ def save_aircraft(id):
 @app.route("/edit-flights", methods=["GET", "POST"])
 def edit_flights():
     return render_template("edit-flights.html")
+
+'''
+@app.route("/add-flight", methods=["GET", "POST"])
+def add_flight_route():
+    if request.method == 'GET':
+        return render_template("edit-flights.html")
+
+    if not request.form or not all(key in request.form for key in (
+        "miles",
+        "source",
+        "destination",
+        "weekday",
+        "arrival",
+        "departure",
+        "aircraft"
+    )):
+        return 'All fields are required', 400
+
+    aircraft_id = request.form['aircraft']
+    if not aircraft_exists(aircraft_id):
+        return 'Invalid aircraft_id', 400
+
+    miles = request.form['miles']
+    source = request.form['source']
+    destination = request.form['destination']
+    weekday = request.form['weekday']
+    arrival = request.form['arrival']
+    departure = request.form['departure']
+    aircraft_id = request.form['aircraft']
+
+    try:
+        add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id)
+        flash('Flight created successfully.')
+        return redirect(url_for("add_flight_route"))
+    except Exception as e:
+        app.logger.error("Error! " + str(e))
+        flash('Failed to add flight.', 'error')
+
+    return redirect(url_for("add_flight_route"))
+'''
 
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
