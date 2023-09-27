@@ -1,34 +1,35 @@
-from flask import request, session, redirect, flash, url_for, jsonify
-from flask import render_template
+from flask import request, session, redirect, flash, url_for, jsonify, render_template
 from database import *
 import re
+import json
+import datetime
+from datetime import timedelta
 
-outward_flights = [
-    {
-        "flightcode": "ABC123",
-        "flight_source": "New York",
-        "flight_destination": "Los Angeles",
-        "flight_depTime": "09:00 AM",
-        "flight_arrtime": "02:00 PM",
-        "flight_economy_price": 300,
-        "flight_business_price": 600,
-        "flight_first_class_price": 1000,
-    }
-]
 
-return_flights = [
-    {
-        "flightcode": "XYZ456",
-        "flight_source": "Los Angeles",
-        "flight_destination": "New York",
-        "flight_depTime": "03:00 PM",
-        "flight_arrtime": "08:00 PM",
-        "flight_economy_price": 300,
-        "flight_business_price": 600,
-        "flight_first_class_price": 1000,
-    }
-]
+# Custom JSON encoder to handle timedelta objects
+class TimedeltaEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, timedelta):
+            return str(obj)
+        return super().default(obj)
 
+
+# Custom JSON decoder to handle timedelta strings
+def custom_decoder(obj):
+    if "__timedelta__" in obj:
+        return timedelta(seconds=obj["__timedelta__"])
+    return obj
+
+
+def check_flight_availability(date, flight_schedule):
+    input_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()  # Parse the string into a date
+    weekday = input_date.strftime("%A").lower()  # Get the full weekday name
+    #check for every flight if its on the same weekday as the selected date, if not remove the flight
+    valid_flights = []
+    for flight_info in flight_schedule:
+        if flight_info['flight_weekday'] == weekday:
+            valid_flights.append(flight_info)
+    return valid_flights
 
 @app.route("/")
 def home():
@@ -37,9 +38,79 @@ def home():
     return render_template("no-session.html")
 
 
-@app.route("/flight-search", methods=["GET"])
+@app.route("/flight-search", methods=["GET", "POST"])
 def flight_search():
-    return render_template("flight-search.html")
+    departure = request.form["departure"]
+    destination = request.form["destination"]
+    departure_date = request.form['departure_date']
+    return_date = request.form['return_date']
+    person_count = request.form['person_count']
+
+    # cheking if tho chosen airport exists
+    if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
+
+        # if it exists get the flight data
+        outward_flights_data = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
+        return_flights_data = check_flight_availability(f'{return_date}', get_flights(destination, departure))
+
+        # checking if there are any flights available
+        if outward_flights_data is None or return_flights_data is None:
+            flash('no flights found')
+            return redirect(url_for("search_flights"))
+
+        if outward_flights_data == []:
+            flash('No flights found on the selected departure date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        if return_flights_data == []:
+            flash('No flights found on the selected return date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        # getting the flight miles to check if flight is short, middle or long distance
+        flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+        # getting the prices for the pricecategory the flights are in
+        price_category = get_pricecategory(flight_miles)
+
+
+        prices = []
+        for i in price_category:
+            prices.append(get_prices(i))
+
+        direction = None
+
+        # adding the prices to the flight information dictionaries
+        outward_flights = []
+        for i in range(0, len(outward_flights_data)):
+            combined_data_out = {}
+            combined_data_out.update(outward_flights_data[i])
+            combined_data_out.update(prices[i])
+            outward_flights.append(combined_data_out)
+
+        return_flights = []
+        for i in range(0, len(return_flights_data)):
+            combined_data_ret = {}
+            combined_data_ret.update(return_flights_data[i])
+            combined_data_ret.update(prices[i])
+            return_flights.append(combined_data_ret)
+
+        # saving the flight information
+        session['outward_flights'] = json.dumps(outward_flights, cls=TimedeltaEncoder)
+        session['return_flights'] = json.dumps(return_flights, cls=TimedeltaEncoder)
+
+        return render_template(
+            "select-flight.html",
+            flights=outward_flights,
+            direction=direction,
+            departure=departure,
+            destination=destination,
+            departure_date=departure_date,
+            return_date=return_date,
+            person_count=person_count
+        )
+
+    else:
+        flash('The selected airport was not found. Please try again with a different airport.')
+        return render_template("flight-search.html")
 
 
 @app.route("/client-account", methods=["GET"])
@@ -48,14 +119,12 @@ def client_account():
 
     # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
     client_data2 = get_client_data(user_id)
-    print(client_data2)
     cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
-    print(cancellation_requests)
     flight_history = get_flighthistory(user_id)
-    print(flight_history)
-    return render_template("client-account.html", client_data=client_data2,
-                               flight_history=flight_history, cancellation_requests=cancellation_requests)
+    old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
+    return render_template("client-account.html", client_data=client_data2,
+                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
 
 
 
@@ -113,15 +182,14 @@ def login():
     user = get_user(user_email)
 
     if user and user.check_password(user_password):
-        session['user_name'] = user.user_name
-        session['userId'] = user.userId
+        session["userId"] = user.userId
         # Password is correct.
         if user.user_type == "Client":
             # Redirect to the flight search page if the user is a client.
             return redirect(url_for("search_flights"))
         if user.user_type == "Employee":
             # Redirect to the manage requests page if the user is an employee.
-            return redirect(url_for("manage_requests"))
+            return redirect(url_for("employee_home"))
 
     # Username or password is incorrect (or we have a user who is not a client nor an employee).
     flash('Invalid login credentials. Please try again or sign up.', 'error')
@@ -136,7 +204,6 @@ def logout():
 
 @app.route('/search-flights')
 def search_flights():
-    # Your logic for flight search
     return render_template("flight-search.html")
 
 
@@ -156,6 +223,11 @@ def select_flight():
     session["return_date"] = return_date
     session["person_count"] = person_count
 
+    # loading the flight information
+    outward_flights = json.loads(session.get('outward_flights', '[]'), object_hook=custom_decoder)
+    return_flights = json.loads(session.get('return_flights', '[]'), object_hook=custom_decoder)
+
+
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
@@ -170,17 +242,17 @@ def select_flight():
 
         return redirect("booking-summary")
 
+    #pass flight data to the template
     return render_template(
         "select-flight.html",
-        flights=outward_flights,
+        flights=return_flights if direction == "outward" else outward_flights,
         direction=direction,
         departure=departure,
         destination=destination,
         departure_date=departure_date,
         return_date=return_date,
-        person_count=person_count,
+        person_count=person_count
     )
-
 
 @app.route("/booking-summary", methods=["GET"])
 def booking_summary():
@@ -219,10 +291,11 @@ def check_out():
 def order_confirmation():
     return render_template("order-confirmation.html")
 
-# manage request opens employee home
-@app.route('/manage-requests')
-def manage_requests():
-    return render_template('employee-home.html', user_name=session.get("user_name"))
+
+@app.route("/employee-home", methods=["GET"])
+def employee_home():
+    return render_template('employee-home.html')
+
 
 @app.route('/edit-aircrafts', methods=['GET'])
 def edit_aircrafts():
@@ -255,6 +328,46 @@ def save_aircraft(id):
 def edit_flights():
     return render_template("edit-flights.html")
 
+'''
+@app.route("/add-flight", methods=["GET", "POST"])
+def add_flight_route():
+    if request.method == 'GET':
+        return render_template("edit-flights.html")
+
+    if not request.form or not all(key in request.form for key in (
+        "miles",
+        "source",
+        "destination",
+        "weekday",
+        "arrival",
+        "departure",
+        "aircraft"
+    )):
+        return 'All fields are required', 400
+
+    aircraft_id = request.form['aircraft']
+    if not aircraft_exists(aircraft_id):
+        return 'Invalid aircraft_id', 400
+
+    miles = request.form['miles']
+    source = request.form['source']
+    destination = request.form['destination']
+    weekday = request.form['weekday']
+    arrival = request.form['arrival']
+    departure = request.form['departure']
+    aircraft_id = request.form['aircraft']
+
+    try:
+        add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id)
+        flash('Flight created successfully.')
+        return redirect(url_for("add_flight_route"))
+    except Exception as e:
+        app.logger.error("Error! " + str(e))
+        flash('Failed to add flight.', 'error')
+
+    return redirect(url_for("add_flight_route"))
+'''
+
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
     return render_template("cancellation-requests.html")
@@ -278,6 +391,8 @@ def add_flight_route():
     else:
         return 'Internal Server Error', 500
 
+
+
 @app.route("/cancel-ticket", methods=["POST"])
 def cancel_ticket():
     client_id = session["userId"]
@@ -293,6 +408,7 @@ def cancel_ticket():
 def view_requests():
     requests = get_pending_requests()
     return render_template('cancellation-requests.html', requests=requests)
+
 
 
 if __name__ == "__main__":

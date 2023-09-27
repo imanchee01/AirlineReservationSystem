@@ -1,12 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <title>Make Offer</title>
-
-<h1>Make Offer</h1>
-
+    <title>Pending Requests</title>
 <body>
-
+<h1>Pending Requests</h1>
 <form action="/select-flight" method="get">
 	{% if direction == None %}
 	<input type="hidden" name="direction" value="outward"/>
@@ -53,10 +50,10 @@
 		</tr>
 		{% endfor %}
 	</table>
+<br><br>
 
 <a href="/employee_home">Employee Home</a>
 <br><br><br><br>
 <a href="/logout">Logout.</a>
 </body>
 {% endblock %}
-

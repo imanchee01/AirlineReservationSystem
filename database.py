@@ -1,22 +1,17 @@
 import mariadb
-import os
 from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# We use environment variables to configure the database.
-# Values on the right (or ...) are default values.
-# Values on the left (... or) are values fetched from a .env file.
-# See https://github.com/theskumar/python-dotenv
 load_dotenv()
 db_config = {
-    'user': os.environ.get("DB_ROOTUSER") or 'dbuser',
-    'password': os.environ.get("DB_ROOTPASSWORD") or '1111',
-    'host': os.environ.get("DB_HOST") or 'localhost',
-    'database': os.environ.get("DB_DATABASE") or 'airline',
-    'port': os.environ.get("DB_PORT") or 3307
+    'user': 'root',
+    'password': '',
+    'host': 'localhost',
+    'database': 'airline',
+    'port': 3306
 }
 
 app = Flask(__name__)
@@ -36,6 +31,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://" + db_config['u
 
 db.init_app(app)
 
+
 class Request(db.Model):
     __tablename__ = "request"
 
@@ -53,7 +49,6 @@ class Request(db.Model):
         self.request_ticketId = request_ticketId
         self.request_clientId = request_clientId
         self.request_information = request_information
-
 
 
 class User(db.Model):
@@ -80,11 +75,6 @@ class User(db.Model):
     def __repr__(self):
         return f"<User {self.user_name}>"
 
-
-def get_user(user_email):
-    return User.query.filter_by(user_email=user_email).first()
-
-
 def get_db_connection():
     try:
         conn = mariadb.connect(**db_config)
@@ -93,63 +83,87 @@ def get_db_connection():
         print(f"Error connecting to MariaDB Platform: {e}")
         return None
 
+
+def get_user(user_email):
+    return User.query.filter_by(user_email=user_email).first()
+
+
+
 # The get_user_role method is only responsible for returning the user role.
 # It should not be called before the user has been authenticated (not before a password check).
 def get_user_role(user_email, user_password):
-    connection = get_db_connection()
-    if connection:
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s AND user_password = %s",
-                           (user_email, user_password))
-            result = cursor.fetchone()
-            return result['user_type'] if result else None
-        finally:
+        cursor.execute("SELECT user_type FROM airline.user WHERE user_email = %s",
+                       (user_email, user_password))
+        result = cursor.fetchone()
+
+        if result:
+            return result['user_type']
+
+        else:
+            return None
+
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
             connection.close()
-    return None
 
 
 def get_data_for_employee():
-    connection = get_db_connection()
-    if connection:
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT * FROM airline.request")
-            results = cursor.fetchall()
-            return results
-        finally:
+        cursor.execute("SELECT * FROM airline.request")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
             connection.close()
-    return None
 
 
 # returns miles and tier after figuring out that user is client
 def get_data_for_client(userId):
-    def get_data_for_client(userId):
-        connection = get_db_connection()
-        if connection:
-            cursor = connection.cursor(dictionary=True)
-            try:
-                cursor.execute("""SELECT clientId, miles, tier
-                                  FROM client
-                                  WHERE clientId = %s;""", (userId, ))
-                results = cursor.fetchall()
-                return results
-            finally:
-                connection.close()
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""SELECT clientId, miles, tier
+                          FROM client
+                          WHERE clientId = %s;""", (userId,))
+
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
         return None
+    finally:
+        if connection:
+            connection.close()
 
 
 def get_flights_by_destination(destination):
-    connection = get_db_connection()
-    if connection:
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT * FROM flights WHERE flight_destination = %s", (destination,))
-            results = cursor.fetchall()
-            return results
-        finally:
+        cursor.execute("SELECT * FROM flights WHERE flight_destination = %s", (destination,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
             connection.close()
-    return None
 
 
 def save_signup_information(first_name, last_name, email, password):
@@ -180,7 +194,6 @@ def user_with_email_exists(email):
     if existing_email:
         return True
     return False
-
 
 def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
     conn = get_db_connection()
@@ -254,6 +267,8 @@ def update_aircraft(id, model, capacity, firstclass):
         finally:
             conn.close()
 
+
+
 def get_client_data(userId):
     connection = None
     try:
@@ -274,26 +289,46 @@ def get_client_data(userId):
 
 
 def get_flighthistory(userId):
-    connection = get_db_connection()
-    if connection is None:  # Check if the connection is successful, if not return None immediately.
-        return None
-
+    connection = None
     try:
+        connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
             SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
             FROM tickets T
             LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
-            WHERE T.ticket_date >= CURDATE() and T.ticket_userId = %s
+            WHERE T.ticket_date>= CURDATE()  and ticket_userId = %s
+            ORDER BY T.ticket_date
         """, (userId,))
         results = cursor.fetchall()
         return results
     except mariadb.Error as e:
-        print(f"Error: {e}")
+        print(f"Error connecting to MariaDB Platform: {e}")
         return None
     finally:
-        connection.close()
+        if connection:
+            connection.close()
 
+def get_flighthistory_ofOldFlights(userId):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            FROM tickets T
+            LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
+            WHERE T.ticket_date< CURDATE()  and ticket_userId = %s
+            ORDER BY T.ticket_date
+        """, (userId,))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 def create_ticket_cancellation_request(ticket_id, client_id):
     try:
@@ -318,7 +353,6 @@ def create_ticket_cancellation_request(ticket_id, client_id):
         return False  # Fehler bei der Erstellung
 
 
-# Nehmen wir an, Ihre Stornierungsanfragen sind in einer separaten Tabelle namens 'cancellation_requests'.
 def get_cancellation_requests():
     connection = None
     try:
@@ -334,6 +368,86 @@ def get_cancellation_requests():
         if connection:
             connection.close()
 
+
+def all_airports():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT airportId FROM airport")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def airport_exists(airport):
+    airports = [entry['airportId'] for entry in all_airports()]
+    if airport in airports:
+        return True
+    return False
+
+
+def get_pricecategory(miles):
+    list = []
+    for i in miles:
+        if i > 450:
+            list.append('short distance')
+        elif i < 450 and i > 800:
+            list.append('middle distance')
+        else:
+            list.append('long distance')
+
+    return list
+
+
+def get_prices(pricecategory):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM ticketprice WHERE pricecategory =%s",
+                       (pricecategory,))
+        results = cursor.fetchone()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_flights(source, destination):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT flightcode, flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId, aircraft_firstclass  FROM flights JOIN aircraft ON flight_aircraftId = aircraftId WHERE flight_source = %s AND flight_destination = %s",
+            (source, destination))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_all_items_by_name__from_directionary(directionary, item_name):
+    list = []
+
+    for item in directionary:
+        if item_name in item:
+            list.append(item[item_name])
+
+    return list
 
 def get_pending_requests():
     conn = get_db_connection()
@@ -351,8 +465,8 @@ def get_pending_requests():
     return requests
 
 
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
-    client_data = get_data_for_client(userId)
+    client_data = get_client_data(userId)
     print(client_data)  # This will print the data returned by the function
-    print(add_flight(409, "AMS", "ARN", "monday", "09:20:00", "12:20:00", 28))
