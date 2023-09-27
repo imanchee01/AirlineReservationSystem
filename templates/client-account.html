@@ -35,7 +35,7 @@
 </style>
 
 	<div class="container">
-        <a href="/flight-search" class="back-button">
+        <a href="/search-flights" class="back-button">
         <button class="btn btn-primary">
             <i class="fas fa-plane-departure"></i> Back to Flight Search
         </button>
@@ -48,7 +48,7 @@
 			<p style="font-weight: bold; font-size: 18px;">Personal Data</p>
             {% for client in client_data %}
             <p><strong>Name:</strong> {{ client.user_name }}</p>
-            <p><strong>Email:</strong>{{ client.user_email }}</p>
+            <p><strong>Email:</strong> {{ client.user_email }}</p>
             <p><strong>Tier: </strong>{{ client.tier }}
                 <button class="info-button" onclick="toggleInfo('info{{ loop.index }}')">i</button>
             </p>
@@ -83,35 +83,56 @@
                     <th style="width: auto;">Miles</th>
                     <th style="width: auto;">Stornieren</th>
                     <th style="width: auto;">Check-In</th>
-				</tr>
+                </tr>
 
-                    {% for flight in flight_history %}
+                {% for flight in flight_history %}
+                <tr>
                     <td>{{ flight.ticket_name }}</td>
-                    <td> {{ flight.ticket_date }}</td>
-                    <td>{{ flight.flight_source}}</td>
-                    <td> {{ flight.flight_destination }}</td>
-                    <td>{{ flight.flight_depTime}}</td>
-                    <td>{{ flight.flight_arrTime}}</td>
-					<td>{{ flight.ticket_class}}</td>
-                    <td> {{ flight.ticket_miles }}</td>
-					<td>
-                        <td>
-                            <button class="cancellation-button"
-                                    data-ticket-id="{{ flight.ticketId }}"
-                                    onclick="stornierenButtonClick(this)"
-                                    style="width: 100px;">
-                                Stornieren
-                    <td>
+                    <td>{{ flight.ticket_date }}</td>
+                    <td>{{ flight.flight_source }}</td>
+                    <td>{{ flight.flight_destination }}</td>
+                    <td>{{ flight.flight_depTime }}</td>
+                    <td>{{ flight.flight_arrTime }}</td>
+                    <td>{{ flight.ticket_class }}</td>
+                    <td>{{ flight.ticket_miles }}</td>
 
-                        <button id="checkInButton{{ loop.index }}"
-                            onclick="toggleButton('checkInButton{{ loop.index }}', 'Checked In', 'green', 'stornierenButton{{ loop.index }}')"
-                            style="width: 100px;">Check-In
+                    <td>
+                        {% if flight.ticketId not in cancellation_requests %}
+                        <button
+                            class="cancellation-button"
+                            data-ticket-id="{{ flight.ticketId }}"
+                            onclick="stornierenButtonClick(this)"
+                            style="width: 100px;"
+                            {% if flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
+                            {% if flight.ticketId not in cancellation_requests %}
+                            Stornieren
+                            {% else %}
+                            Pending
+                            {% endif %}
+                        </button>
+                        {% else %}
+                        <button class="cancellation-button" style="width: 100px; background-color: yellow;">
+                            Pending
+                        </button>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button
+                            id="checkInButton{{ loop.index }}"
+                            onclick="checkInButtonClick(this, {{ flight.ticketId }})"
+                            style="width: 100px;"
+                            {% if flight.ticketId in cancellation_requests or flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
+                            {% if flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}
+                            Checked In
+                            {% else %}
+                            Check-In
+                            {% endif %}
                         </button>
                     </td>
+                </tr>
+                {% endfor %}
+            </table>
 
-                        <tr>
-                        {% endfor %}
-                    </tr>
 
 
 
@@ -125,68 +146,73 @@
 
 	<script>
 
-    // Initialisiere den Status der Buttons
-    const buttonStatus = {
-      'stornierenButton1': false,
-      'checkInButton1': false,
-      'stornierenButton2': false,
-      'checkInButton2': false,
-    };
+    const check_in_status = {}; // Use this object to keep track of check-in status.
 
-    function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
-      // Überprüfe, ob der gegnerische Button aktiv ist
-      if (!buttonStatus[oppositeButtonId]) {
-        const button = document.getElementById(buttonId);
-        button.innerHTML = newText;
-        button.style.backgroundColor = newColor;
-        button.disabled = true;
-        buttonStatus[buttonId] = true;
+function checkInButtonClick(button, ticketId) {
+        if (button.disabled) {
+            // If the "Stornieren" button was already clicked, do nothing.
+            return;
+        }
 
-        // Deaktiviere den gegnerischen Button
-        const oppositeButton = document.getElementById(oppositeButtonId);
-        oppositeButton.disabled = false;
-        oppositeButton.style.backgroundColor = '';
-        buttonStatus[oppositeButtonId] = false;
-      }
-    }
+        // Change the text and color of the "Check-In" button.
+        button.innerHTML = "Checked In";
+        button.style.backgroundColor = "green";
+        button.disabled = true; // Disable the button to prevent further clicks.
 
-    function toggleInfo(infoId) {
-        var infoElement = document.getElementById(infoId);
-        if (infoElement.style.display === "none") {
-            infoElement.style.display = "block";
-        } else {
-            infoElement.style.display = "none";
+        // Update the check-in status in the object.
+        check_in_status[ticketId] = true;
+
+        // Disable the corresponding "Stornieren" button.
+        const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
+        if (stornierenButton) {
+            stornierenButton.disabled = true;
         }
     }
-
 
 function stornierenButtonClick(button) {
-    const ticketId = button.getAttribute("data-ticket-id");
+        const ticketId = button.getAttribute("data-ticket-id");
 
-    // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
-    const data = {
-        ticket_id: ticketId
-    };
-
-    // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
-    fetch("/cancel-ticket", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
-        },
-        body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
-    })
-    .then((response) => {
-        if (response.ok) {
-            showNotification("Ticket cancellation request submitted successfully.", "success");
-        } else {
-            showNotification("Failed to submit ticket cancellation request.", "error");
+        // Check if the "Check-In" button was already clicked.
+        if (check_in_status[ticketId]) {
+            // If the "Check-In" button was already clicked, do nothing.
+            return;
         }
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-    });
-}
+
+        // Check if the button is already in "Pending" state.
+        if (button.innerHTML.trim() === "Pending") {
+            // If yes, change it back to "Stornieren" and remove the background color.
+            button.innerHTML = "Stornieren";
+            button.style.backgroundColor = "";
+        } else {
+            // Otherwise, set the button to "Pending" and change the background color to yellow.
+            button.innerHTML = "Pending";
+            button.style.backgroundColor = "yellow";
+        }
+
+        // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
+        const data = {
+            ticket_id: ticketId
+        };
+
+        // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
+        fetch("/cancel-ticket", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
+            },
+            body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
+        })
+        .then((response) => {
+            if (response.ok) {
+                showNotification("Ticket cancellation request submitted successfully.", "success");
+            } else {
+                showNotification("Failed to submit ticket cancellation request.", "error");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+    }
 
 	</script>
     </div>

@@ -352,8 +352,6 @@ def get_flighthistory(userId):
 
 
 def create_ticket_cancellation_request(ticket_id, client_id):
-    print('database')
-    print(ticket_id, client_id)
     try:
         # Erstellen Sie eine neue Anfrage zur Stornierung des Tickets in der Datenbank.
         new_request = Request(
@@ -375,6 +373,21 @@ def create_ticket_cancellation_request(ticket_id, client_id):
         db.session.rollback()
         return False  # Fehler bei der Erstellung
 
+# Nehmen wir an, Ihre Stornierungsanfragen sind in einer separaten Tabelle namens 'cancellation_requests'.
+def get_cancellation_requests():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT request_ticketId FROM request")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 if __name__ == "__main__":
     print(get_data_for_client(28))
