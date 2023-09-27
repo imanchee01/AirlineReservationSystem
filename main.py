@@ -1,8 +1,35 @@
 from flask import request, session, redirect, flash, url_for, jsonify, render_template
 from database import *
 import re
+import json
+import datetime
+from datetime import timedelta
 
 
+# Custom JSON encoder to handle timedelta objects
+class TimedeltaEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, timedelta):
+            return str(obj)
+        return super().default(obj)
+
+
+# Custom JSON decoder to handle timedelta strings
+def custom_decoder(obj):
+    if "__timedelta__" in obj:
+        return timedelta(seconds=obj["__timedelta__"])
+    return obj
+
+
+def check_flight_availability(date, flight_schedule):
+    input_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()  # Parse the string into a date
+    weekday = input_date.strftime("%A").lower()  # Get the full weekday name
+    #check for every flight if its on the same weekday as the selected date, if not remove the flight
+    valid_flights = []
+    for flight_info in flight_schedule:
+        if flight_info['flight_weekday'] == weekday:
+            valid_flights.append(flight_info)
+    return valid_flights
 
 @app.route("/")
 def home():
@@ -11,9 +38,79 @@ def home():
     return render_template("no-session.html")
 
 
-@app.route("/flight-search", methods=["GET"])
+@app.route("/flight-search", methods=["GET", "POST"])
 def flight_search():
-    return render_template("flight-search.html")
+    departure = request.form["departure"]
+    destination = request.form["destination"]
+    departure_date = request.form['departure_date']
+    return_date = request.form['return_date']
+    person_count = request.form['person_count']
+
+    # cheking if tho chosen airport exists
+    if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
+
+        # if it exists get the flight data
+        outward_flights_data = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
+        return_flights_data = check_flight_availability(f'{return_date}', get_flights(destination, departure))
+
+        # checking if there are any flights available
+        if outward_flights_data is None or return_flights_data is None:
+            flash('no flights found')
+            return redirect(url_for("search_flights"))
+
+        if outward_flights_data == []:
+            flash('No flights found on the selected departure date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        if return_flights_data == []:
+            flash('No flights found on the selected return date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        # getting the flight miles to check if flight is short, middle or long distance
+        flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+        # getting the prices for the pricecategory the flights are in
+        price_category = get_pricecategory(flight_miles)
+
+
+        prices = []
+        for i in price_category:
+            prices.append(get_prices(i))
+
+        direction = None
+
+        # adding the prices to the flight information dictionaries
+        outward_flights = []
+        for i in range(0, len(outward_flights_data)):
+            combined_data_out = {}
+            combined_data_out.update(outward_flights_data[i])
+            combined_data_out.update(prices[i])
+            outward_flights.append(combined_data_out)
+
+        return_flights = []
+        for i in range(0, len(return_flights_data)):
+            combined_data_ret = {}
+            combined_data_ret.update(return_flights_data[i])
+            combined_data_ret.update(prices[i])
+            return_flights.append(combined_data_ret)
+
+        # saving the flight information
+        session['outward_flights'] = json.dumps(outward_flights, cls=TimedeltaEncoder)
+        session['return_flights'] = json.dumps(return_flights, cls=TimedeltaEncoder)
+
+        return render_template(
+            "select-flight.html",
+            flights=outward_flights,
+            direction=direction,
+            departure=departure,
+            destination=destination,
+            departure_date=departure_date,
+            return_date=return_date,
+            person_count=person_count
+        )
+
+    else:
+        flash('The selected airport was not found. Please try again with a different airport.')
+        return render_template("flight-search.html")
 
 
 @app.route("/client-account", methods=["GET"])
@@ -126,6 +223,11 @@ def select_flight():
     session["return_date"] = return_date
     session["person_count"] = person_count
 
+    # loading the flight information
+    outward_flights = json.loads(session.get('outward_flights', '[]'), object_hook=custom_decoder)
+    return_flights = json.loads(session.get('return_flights', '[]'), object_hook=custom_decoder)
+
+
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
@@ -140,17 +242,17 @@ def select_flight():
 
         return redirect("booking-summary")
 
+    #pass flight data to the template
     return render_template(
         "select-flight.html",
-        flights=outward_flights,
+        flights=return_flights if direction == "outward" else outward_flights,
         direction=direction,
         departure=departure,
         destination=destination,
         departure_date=departure_date,
         return_date=return_date,
-        person_count=person_count,
+        person_count=person_count
     )
-
 
 @app.route("/booking-summary", methods=["GET"])
 def booking_summary():

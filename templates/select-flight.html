@@ -5,24 +5,24 @@
 
 
 {% block content %}
-	<h1>Flight Search Results</h1>
+    <h1>Flight Search Results</h1>
 
-	<h2>Select {% if direction == None %}Outward{% else %}Return{% endif %} Flight:</h2>
+    <h2>Select {% if direction == None %}Outward{% else %}Return{% endif %} Flight:</h2>
 
-	<form action="/select-flight" method="get">
-		{% if direction == None %}
-			<input type="hidden" name="direction" value="outward"/>
-		{% elif direction == "outward" %}
-			<input type="hidden" name="direction" value="return"/>
-		{% endif %}
+    <form action="/select-flight" method="get">
+       {% if direction == None %}
+          <input type="hidden" name="direction" value="outward" />
+       {% elif direction == "outward" %}
+          <input type="hidden" name="direction" value="return" />
+       {% endif %}
 
-		<input type="hidden" name="departure" value="{{ departure }}"/>
-		<input type="hidden" name="destination" value="{{ destination }}"/>
-		<input type="hidden" name="departure_date" value="{{ departure_date }}"/>
-		<input type="hidden" name="return_date" value="{{ return_date }}"/>
-		<input type="hidden" name="person_count" value="{{ person_count }}"/>
+       <input type="hidden" name="departure" value="{{ departure }}"/>
+       <input type="hidden" name="destination" value="{{ destination }}"/>
+       <input type="hidden" name="departure_date" value="{{ departure_date }}"/>
+       <input type="hidden" name="return_date" value="{{ return_date }}"/>
+       <input type="hidden" name="person_count" value="{{ person_count }}"/>
 
-		<style>
+       <style>
       table {
         width: 100%;
         border-collapse: collapse;
@@ -41,66 +41,122 @@
       strong {
         font-weight: bold;
       }
-		</style>
+       </style>
 
-		<table class="table">
-			<tr>
-				<th></th>
-				<th>Departure City</th>
-				<th>Destination City</th>
-				<th>Departure Time</th>
-				<th>Arrival Time</th>
-				<th>Economy Price</th>
-				<th>Business Price</th>
-				<th>First Class Price</th>
-				<th>Class</th>
-				<th>Extra Luggage</th>
-			</tr>
+       <table class="table">
+          <tr>
+             <th></th>
+             <th>Departure City</th>
+             <th>Destination City</th>
+             <th>Departure Time</th>
+             <th>Arrival Time</th>
+             <th>Economy Price</th>
+             <th>Business Price</th>
+             <th>First Class Price</th>
+             <th>Class</th>
+             <th>Extra Luggage</th>
+          </tr>
 
-			{% for flight in flights %}
-				<tr>
-					<td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}"/></td>
-					<td>{{ flight["flight_source"] }}</td>
-					<td>{{ flight["flight_destination"] }}</td>
-					<td>{{ flight["flight_depTime"] }}</td>
-					<td>{{ flight["flight_arrtime"] }}</td>
-					{# TODO: input flight price from database  #}
-					<td>${{ flight["flight_economy_price"] }}</td>
-					<td>${{ flight["flight_business_price"] }}</td>
-					<td>${{ flight["flight_first_class_price"] }}</td>
-					<td>
-						<select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class">
-							<option>Select a class</option>
-							<option value="$300">Economy: ${{ flight["flight_economy_price"] }}</option>
-							<option value="$600">Business: ${{ flight["flight_business_price"] }}</option>
-							<option value="$1000">First: ${{ flight["flight_first_class_price"] }}</option>
-						</select>
-					</td>
-					<td>
-						<select class="form-control" name="extra_luggage" id="extra-luggage">
-							{# TODO: input luggage pric from database  #}
-							<option value="0">No Extra Luggage</option>
-							{#{% if flight["distance"] == "short" %}#}
-							<option value="$25">1 x $25</option>
-							<option value="$50">2 x $25</option>
-							<option value="$75">3 x $25</option>
-							<option value="$100">4 x $25</option>
-							<option value="$125">5 x $25</option>
-							{#{% elif flight["distance"] == "medium" %}#}
-							{#{% else flight["distance"] == "long" %}#}
-							{#{% endif %}#}
+          {% for flight in flights %}
+             <tr>
+                <td><input type="radio" name="flightcode" value="{{ flight['flightcode'] }}" required pattern = ".{1,}" title = "Please select flight" /></td>
+                <td>{{ flight["flight_source"] }}</td>
+                <td>{{ flight["flight_destination"] }}</td>
+                <td>{{ flight["flight_depTime"] }}</td>
+                <td>{{ flight["flight_arrTime"] }}</td>
+                {# TODO: input flight price from database  #}
+                <td>${{ flight["economy_price"] }}</td>
+                <td>${{ flight["business_price"] }}</td>
+                <td>
+                        {% if flight['aircraft_firstclass'] == "y" %}
+                            ${{ flight["firstclass_price"] }}
+                        {% else %}
+                            not available
+                        {% endif %}
+                    </td>
+                <td>
+                   <select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class_{{ flight['flightcode'] }}" required disabled>
+                      <option value="" disable selected>Select a class</option>
+                      <option value="${{ flight["economy_price"] }}">Economy: ${{ flight["economy_price"] }}</option>
+                      <option value="${{ flight["business_price"] }}">Business: ${{ flight["business_price"] }}</option>
+                      {% if flight["aircraft_firstclass"] == 'y' %}
+                                <option value="${{ flight["firstclass_price"] }}">First: ${{ flight["firstclass_price"] }}</option>
+                       {% endif  %}
+                        </select>
+                </td>
+                <td>
+                   <select class="form-control" name="extra_luggage" id="extra-luggage_{{ flight['flightcode'] }}" required disabled>
+                      {# TODO: input luggage price from database  #}
+                      <option value="" disable selected>Select Luggage</option>
+                      {#{% if flight["distance"] == "short" %}#}
+                            <option value = "$0">No Extra Luggage</option>
+                      <option value="${{ flight['luggage_price'] }}">1 x ${{ flight['luggage_price'] }}</option>
+                      <option value="${{ flight['luggage_price'] * 2 }}">2 x ${{ flight['luggage_price'] }}</option>
+                      <option value="${{ flight['luggage_price'] * 3 }}">3 x ${{ flight['luggage_price'] }}</option>
+                      <option value="${{ flight['luggage_price'] * 4 }}">4 x ${{ flight['luggage_price'] }}</option>
+                      <option value="${{ flight['luggage_price'] * 5 }}">5 x ${{ flight['luggage_price'] }}</option>
+                      {#{% elif flight["distance"] == "medium" %}#}
+                      {#{% else flight["distance"] == "long" %}#}
+                      {#{% endif %}#}
+                        required
+                   </select>
+                </td>
+             </tr>
+          {% endfor %}
+       </table>
 
-						</select>
-					</td>
-				</tr>
-			{% endfor %}
-		</table>
+       <br>
+       <input class="btn btn-default" type="submit" value="Select">
+    </form>
 
-		<br>
-		<input class="btn btn-default" type="submit" value="Select">
-	</form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- Jinja2 code, call flashed messages with caogories and store them in the 'messages' variable -->
+        {% if messages %}
+            <ul class="list-group">
+                {% for category, message in messages %}
+                    <li class="list-group-item {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <br><br>
+    <a href="/">Back to Home</a>
 
-	<br><br>
-	<a href="/">Back to Home</a>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Function to enable or disable ticket and luggage selection fields based on flight selection
+    function toggleTicketAndLuggageFields() {
+        var selectedFlight = document.querySelector('input[name="flightcode"]:checked');
+        var flightcode = selectedFlight ? selectedFlight.value : null;
+
+        // Disable all select fields initially
+        var allSelects = document.querySelectorAll('select[id^="selected-class_"], select[id^="extra-luggage_"]');
+        for (var i = 0; i < allSelects.length; i++) {
+            allSelects[i].setAttribute('disabled', 'disabled');
+        }
+
+        if (flightcode) {
+            // Enable the select fields for the selected flight
+            var ticketSelect = document.getElementById('selected-class_' + flightcode);
+            var luggageSelect = document.getElementById('extra-luggage_' + flightcode);
+
+            if (ticketSelect && luggageSelect) {
+                ticketSelect.removeAttribute('disabled');
+                luggageSelect.removeAttribute('disabled');
+            }
+        }
+    }
+
+    // Attach the onchange event handler to the radio buttons
+    var radioButtons = document.querySelectorAll('input[name="flightcode"]');
+    for (var i = 0; i < radioButtons.length; i++) {
+        radioButtons[i].addEventListener('change', toggleTicketAndLuggageFields);
+    }
+
+    // Call the function initially to handle the case when the page loads with a pre-selected flight
+    toggleTicketAndLuggageFields();
+});
+</script>
+
 
 {% endblock %}

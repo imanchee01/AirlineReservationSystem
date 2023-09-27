@@ -271,7 +271,6 @@ def create_ticket_cancellation_request(ticket_id, client_id):
         return False  # Fehler bei der Erstellung
 
 
-# Nehmen wir an, Ihre Stornierungsanfragen sind in einer separaten Tabelle namens 'cancellation_requests'.
 def get_cancellation_requests():
     connection = None
     try:
@@ -286,6 +285,87 @@ def get_cancellation_requests():
     finally:
         if connection:
             connection.close()
+
+
+def all_airports():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT airportId FROM airport")
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def airport_exists(airport):
+    airports = [entry['airportId'] for entry in all_airports()]
+    if airport in airports:
+        return True
+    return False
+
+
+def get_pricecategory(miles):
+    list = []
+    for i in miles:
+        if i > 450:
+            list.append('short distance')
+        elif i < 450 and i > 800:
+            list.append('middle distance')
+        else:
+            list.append('long distance')
+
+    return list
+
+
+def get_prices(pricecategory):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM ticketprice WHERE pricecategory =%s",
+                       (pricecategory,))
+        results = cursor.fetchone()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_flights(source, destination):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT flightcode, flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId, aircraft_firstclass  FROM flights JOIN aircraft ON flight_aircraftId = aircraftId WHERE flight_source = %s AND flight_destination = %s",
+            (source, destination))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_all_items_by_name__from_directionary(directionary, item_name):
+    list = []
+
+    for item in directionary:
+        if item_name in item:
+            list.append(item[item_name])
+
+    return list
 
 
 if __name__ == "__main__":

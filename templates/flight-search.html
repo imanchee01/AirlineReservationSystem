@@ -11,7 +11,6 @@
         right: 10px; /* Abstand vom rechten Rand */
         z-index: 1; /* Um sicherzustellen, dass der Button über anderen Inhalten liegt */
     }
-
     .logout-link {
         position: absolute;
         top: 50px; /* Passen Sie den Abstand nach Bedarf an */
@@ -24,10 +23,10 @@
         top: 10px;
         right: 10px;
     }
-    </style>
 
+	</style>
 
-    <div class="container">
+	<div class="container">
         <a href="/client-account" class="back-button">
         <button class="btn btn-primary">
             <i class="fas fa-user"></i> My Account
@@ -37,49 +36,62 @@
 
      <a href="/logout" class="logout-link">Logout</a>
 
-	<h1>Flight Search</h1>
-	<form action="/select-flight" method="get" onsubmit="return validateForm()">
-		<div class="row">
-			<div class="col-xs-6">
-				<label for="departure">Departure City</label>
-				<input class="form-control" type="text" id="departure" name="departure" required>
-				<br>
-				<label for="destination">Destination City:</label>
-				<input class="form-control" type="text" id="destination" name="destination" required>
-				<div id="error-message" style="color: red;"></div>
-				<br><br>
-			</div>
-			<div class="col-xs-6">
-				<label for="departure-date">Departure Date:</label>
-				<input class="form-control" type="date" id="departure-date" name="departure_date" required>
-				<br>
-				<label for="return-date">Return Date:</label>
-				<input class="form-control" type="date" id="return-date" name="return_date" required>
-				<br><br>
-			</div>
-		</div>
 
-		<div class="row">
-			<div class="col-xs-6">
-				<label for="person-count">Number of Persons:</label>
-				<select class="form-control" id="person-count" name="person_count">
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-					<option value="4">4</option>
-					<option value="5">5</option>
-				</select>
-			</div>
-		</div>
-		<br><br>
+<h1>Flight Search</h1>
+    <form action="/flight-search" method="post">
+       <div class="row">
+          <div class="col-xs-6">
+             <label for="departure">Departure City</label>
+             <input class="form-control" type="text" id="departure" name="departure" required/>
+             <br>
+             <label for="destination">Destination City:</label>
+             <input class="form-control" type="text" id="destination" name="destination" required/>
+             <div id="error-message" style="color: red;"></div>
+             <br><br>
+          </div>
+          <div class="col-xs-6">
+             <label for="departure-date">Departure Date:</label>
+             <input class="form-control" type="date" id="departure-date" name="departure_date" required>
+             <br>
+             <label for="return-date">Return Date:</label>
+             <input class="form-control" type="date" id="return-date" name="return_date" required>
+             <br><br>
+          </div>
+       </div>
 
-		<input class="btn btn-default" type="submit" value="Search Flights">
-	</form>
+       <div class="row">
+          <div class="col-xs-6">
+             <label for="person-count">Number of Persons:</label>
+             <select class="form-control" id="person-count" name="person_count">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+             </select>
+          </div>
+       </div>
+       <br><br>
 
-	<br><br>
+       <input class="btn btn-default" type="submit" value="Search Flights">
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- Jinja2 code, call flashed messages with caogories and store them in the 'messages' variable -->
+            {% if messages %}
+                <ul class="list-group">
+                    {% for category, message in messages %}
+                        <li class="list-group-item {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+    {% endwith %}
+
+    <br><br>
+    <a href="/logout">Logout</a>
 
 
-	<script>
+    <script>
     const departure_date = document.getElementById("departure-date");
     const return_date = document.getElementById("return-date");
     const departure = document.getElementById("departure");
@@ -115,6 +127,6 @@
 
     departure.addEventListener("input", validateForm);
     destination.addEventListener("input", validateForm);
-	</script>
+    </script>
 
 {% endblock %}
