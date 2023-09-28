@@ -8,6 +8,13 @@
 	<h1>Booking Summary</h1>
 
 	<style>
+
+    /* Style for the logout button */
+    .logout-button {
+        position: absolute;
+        top: 10px; /* Adjust the top position as needed */
+        right: 20px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -31,50 +38,59 @@
 	<table>
 		<tr>
 			<th></th>
-			<th>Flight Code</th>
+            <th>Route</th>
 			<th>Date</th>
-			<th>Passengers</th>
 			<th>Price</th>
 		</tr>
 		<tr>
 			<td><strong>Outward Flight:</strong></td>
-			<td>{{ outward_flight }}</td>
+            <td>{{ outward_airport }}-{{ return_airport }}</td>
 			<td>{{ departure_date }}</td>
-			<td>{{ person_count }}</td>
 			<td>${{ outward_selected_class }}</td>
 		</tr>
 		<tr>
 			<td><strong>Return Flight:</strong></td>
-			<td>{{ return_flight }}</td>
+            <td>{{ return_airport }}-{{ outward_airport }}</td>
 			<td>{{ return_date }}</td>
-			<td>{{ person_count }}</td>
 			<td>${{ return_selected_class }}</td>
 		</tr>
 		<tr>
 			<td><strong>Extra Luggage Outward Flight:</strong></td>
 			<td></td>
-			<td></td>
-			<td></td>
+            			<td></td>
 			<td>{{ outward_extra_luggage }}</td>
 		</tr>
 		<tr>
 			<td><strong>Extra Luggage Return Flight:</strong></td>
-			<td></td>
-			<td></td>
-			<td></td>
+			<td></td>			<td></td>
+
 			<td>{{ return_extra_luggage }}</td>
 		</tr>
 		<tr>
 			<td colspan="5" style="border-top: 1px solid #ccc;"></td>
 		</tr>
 		<tr>
+
+    <td><strong>Total Price:</strong></td>
 			<td></td>
 			<td></td>
-			<td></td>
-			<td><strong>Total Price:</strong></td>
-			<td>
-				${{ (outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int) }}</td>
-		</tr>
+
+    <td><strong>
+        {% if user_tier == "gold" %}
+            ${{ ((outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int)) * 0.9 }}
+            <br> (Gold Tier: 10% Discount applied)
+        {% elif user_tier == "silver" %}
+            ${{ ((outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int)) * 0.95 }}
+            <br> (Silver Tier: 5% Discount Applied)
+        {% else %}
+            ${{ (outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int) }}
+            <br> (Bronze Tier: No discount this time, unfortunately)
+        {% endif %}
+    </strong>
+    </td>
+</tr>
+
+
 	</table>
 
 	<br><br>
@@ -82,5 +98,12 @@
 	<a href="/check-out" class="btn btn-default" role="button">Continue To Buy</a>
 	<br><br>
 
-	<a href="/">Back to Home</a>
+    <div class="logout-button">
+    <a href="/logout">
+        <i class="fas fa-arrow-right"></i>
+        Logout
+    </a>
+</div>
+
+
 {% endblock %}

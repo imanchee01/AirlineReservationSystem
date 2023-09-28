@@ -5,7 +5,18 @@
 
 
 {% block content %}
+    <style>
+
+    /* Style for the logout button */
+    .logout-button {
+        position: absolute;
+        top: 10px; /* Adjust the top position as needed */
+        right: 20px;
+    }
+    </style>
+
     <h1>Flight Search Results</h1>
+    <br>
 
     <h2>Select {% if direction == None %}Outward{% else %}Return{% endif %} Flight:</h2>
 
@@ -120,8 +131,15 @@
         {% endif %}
     {% endwith %}
     <br><br>
-    <a href="/">Back to Home</a>
 
+
+<!-- Logout button with icon -->
+<div class="logout-button">
+    <a href="/logout">
+        <i class="fas fa-arrow-right"></i>
+        Logout
+    </a>
+</div>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // Function to enable or disable ticket and luggage selection fields based on flight selection

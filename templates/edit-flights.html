@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block content %}
 
+{% block content %}
 <body>
 <style>
     input[type="text"],
@@ -16,34 +16,42 @@
       display: block;
       font-weight: bold;
     }
+
+    /* Style for the employee home button and icon */
+    .employee-home-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    /* Style for the logout button */
+    .logout-button {
+        position: absolute;
+        top: 50px; /* Adjust the top position as needed */
+        right: 20px;
+    }
 </style>
+
 <h1 style="font-weight: bold; font-size: 18px;">Add Flight</h1>
 <br>
 <form action="http://127.0.0.1:5000/add_flight_route" method="post">
     <div class="row">
      <div class="col-xs-6">
-      <label for="miles">Miles:</label>
       <br>
       Miles: <input type="text" name="miles" required><br>
       <br>
-         <label for="source">Source:</label>
       Source: <input type="text" name="source" required><br>
       <br>
-         <label for="destination">Destination:</label>
       Destination: <input type="text" name="destination" required><br>
       <br>
-         <label for="weekday">Weekday:</label>
       Weekday: <input type="text" name="weekday" required><br>
      </div>
         <div class="col-xs-6">
-     <label for="arrival">Arrival:</label>
       <br>
       Arrival: <input type="time" name="arrival" required><br>
       <br>
-            <label for="departure">Departure:</label>
       Departure: <input type="time" name="departure" required><br>
       <br>
-            <label for="aircraft">Aircraft:</label>
       Aircraft: <input type="number" name="aircraft_id" required><br>
             </div>
    </div>
@@ -51,16 +59,24 @@
       <input type="submit" value="Add Flight">
 </form>
 <br><br>
-<a href="/employee-home">Employee Home</a>
+
+<!-- Employee Home button with icon -->
+<div class="employee-home-button">
+    <a href="/employee-home">
+        <button class="btn btn-primary">
+            Employee Home
+        </button>
+    </a>
+</div>
+
+<!-- Logout button with icon -->
+<div class="logout-button">
+    <a href="/logout">
+        <i class="fas fa-arrow-right"></i>
+        Logout
+    </a>
+</div>
+
 </body>
 
 {% endblock %}
-
-
-
-
-
-
-
-
-

@@ -77,6 +77,14 @@ class User(db.Model):
     def __repr__(self):
         return f"<User {self.user_name}>"
 
+def get_db_connection():
+    try:
+        conn = mariadb.connect(**db_config)
+        return conn
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+
 
 class Flight(db.Model):
     __tablename__ = "flights"
@@ -279,6 +287,7 @@ def user_with_email_exists(email):
         return True
     return False
 
+
 def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
     conn = get_db_connection()
     if conn:
@@ -324,6 +333,7 @@ def get_all_aircrafts():
             return cursor.fetchall()
         finally:
             conn.close()
+
 
 def get_aircraft_by_id(id):
     conn = get_db_connection()
@@ -380,7 +390,8 @@ def get_flighthistory(userId):
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, 
+                    F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
             FROM tickets T
             LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
             WHERE T.ticket_date>= CURDATE()  and ticket_userId = %s
@@ -395,13 +406,15 @@ def get_flighthistory(userId):
         if connection:
             connection.close()
 
+
 def get_flighthistory_ofOldFlights(userId):
     connection = None
     try:
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            SELECT T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, 
+                F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
             FROM tickets T
             LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
             WHERE T.ticket_date< CURDATE()  and ticket_userId = %s
@@ -415,6 +428,7 @@ def get_flighthistory_ofOldFlights(userId):
     finally:
         if connection:
             connection.close()
+
 
 def create_ticket_cancellation_request(ticket_id, client_id):
     try:
@@ -551,26 +565,42 @@ def get_pending_requests():
     return requests
 
 
-def delete_flight(flightcode):
-    conn = get_db_connection()
-    if not conn:
+def get_user_name(user_Id):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(" SELECT user_name FROM user WHERE userId= %s", (user_Id))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
         return None
-    cursor = conn.cursor(dictionary=True)
-
-    delete_query = "DELETE FROM flights WHERE flightcode = %s"
-    cursor.execute(delete_query, (flightcode,))
-
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    finally:
+        if connection:
+            connection.close()
 
 
-
+def get_user_tier(user_id):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT tier FROM client WHERE clientId = %s", (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['tier']
+        else:
+            return None
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_client_data(userId)
-    delete_flight(67)
     print(client_data)  # This will print the data returned by the function

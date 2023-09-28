@@ -5,6 +5,7 @@ import json
 import datetime
 from datetime import timedelta
 
+
 # Custom JSON encoder to handle timedelta objects
 class TimedeltaEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -63,7 +64,6 @@ def flight_search():
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
     return_date = request.form['return_date']
-    person_count = request.form['person_count']
 
     # cheking if tho chosen airport exists
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
@@ -89,7 +89,6 @@ def flight_search():
         flight_miles_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
         # getting the prices for the pricecategory the flights are in
         price_category_out = get_pricecategory(flight_miles_out)
-
 
         outward_prices = []
         for i in price_category_out:
@@ -133,7 +132,6 @@ def flight_search():
             destination=destination,
             departure_date=departure_date,
             return_date=return_date,
-            person_count=person_count
         )
 
     else:
@@ -153,6 +151,7 @@ def client_account():
 
     return render_template("client-account.html", client_data=client_data2,
                                flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
+
 
 
 def is_valid_registration_data(firstName, lastName, email, password):
@@ -186,7 +185,7 @@ def sign_up():
         try:
             if is_valid_registration_data(firstName, lastName, email, password):
                 save_signup_information(firstName, lastName, email, password)
-                return redirect(url_for("search_flights"))
+                return redirect(url_for("flight_search"))
 
         except Exception as e:
             app.logger.error("Error! " + str(e))
@@ -242,13 +241,11 @@ def select_flight():
     destination = request.args.get("destination")
     departure_date = request.args.get("departure_date")
     return_date = request.args.get("return_date")
-    person_count = request.args.get("person_count")
     selected_class = request.args.get("selected_class")
     extra_luggage = request.args.get("extra_luggage")
     # Save departure and return date and number of passengers into session.
     session["departure_date"] = departure_date
     session["return_date"] = return_date
-    session["person_count"] = person_count
 
     # loading the flight information
     outward_flights = json.loads(session.get('outward_flights', '[]'), object_hook=custom_decoder)
@@ -258,6 +255,7 @@ def select_flight():
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
+        session["outward_airport"] = departure
         session["outward_selected_class"] = selected_class
         session["outward_extra_luggage"] = extra_luggage
 
@@ -265,13 +263,13 @@ def select_flight():
         selected_category = get_flight_class(chosen_flight_out, selected_class)
         session["outward_selected_category"] = selected_category
 
-
         flight_miles_out = chosen_flight_out['flight_miles']
         session['flight_miles_out'] = flight_miles_out
 
     if direction == "return":
         # Save return flight data(code, pirce, luggage) into session.
         session["return_flight"] = flight_code
+        session["return_airport"] = destination
         session["return_selected_class"] = selected_class
         session["return_extra_luggage"] = extra_luggage
 
@@ -281,7 +279,6 @@ def select_flight():
 
         flight_miles_ret = chosen_flight_ret['flight_miles']
         session['flight_miles_ret'] = flight_miles_ret
-
 
         return redirect("booking-summary")
 
@@ -294,13 +291,13 @@ def select_flight():
         destination=destination,
         departure_date=departure_date,
         return_date=return_date,
-        person_count=person_count
     )
-
 
 @app.route("/booking-summary", methods=["GET"])
 def booking_summary():
-    # TODO: get price for flight and luggage from DB
+    user_id = session["userId"]
+    user_tier = get_user_tier(user_id)
+    print(user_tier)
     return render_template(
         "booking-summary.html",
         outward_flight=session["outward_flight"],
@@ -311,14 +308,17 @@ def booking_summary():
         return_extra_luggage=session["return_extra_luggage"],
         departure_date=session["departure_date"],
         return_date=session["return_date"],
-        person_count=session["person_count"],
+        user_tier=user_tier,
+        user_id=user_id,
+        outward_airport=session["outward_airport"],
+        return_airport=session["return_airport"]
+
     )
 
 
 @app.route("/check-out", methods=["GET", "POST"])
 def check_out():
     if request.method == "POST":
-        print(request.form)
         salutation = request.form["salutation"]
         last_name = request.form["last_name"]
         first_name = request.form["first_name"]
@@ -330,7 +330,6 @@ def check_out():
         payment_option = request.form["payment_option"]
 
         return redirect(url_for("order_confirmation"))
-
 
     return render_template('check-out.html')
 
@@ -390,7 +389,6 @@ def employee_home():
 def edit_aircrafts():
     aircrafts = get_all_aircrafts()
     return render_template('edit-aircrafts.html', aircrafts=aircrafts)
-
 
 @app.route('/edit-aircraft/<int:id>', methods=['GET'])
 def edit_aircraft(id):
@@ -462,7 +460,6 @@ def add_flight_route():
 def cancellation_requests():
     return render_template("cancellation-requests.html")
 
-
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
     if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
@@ -487,7 +484,7 @@ def add_flight_route():
 @app.route("/cancel-ticket", methods=["POST"])
 def cancel_ticket():
     client_id = session["userId"]
-    data = request.get_json()  # Holen Sie sich die JSON-Daten aus dem Request.
+    data = request.get_json()
     ticket_id = data["ticket_id"]
     if "ticket_id" in data:
         create_ticket_cancellation_request(ticket_id, client_id)
@@ -495,12 +492,10 @@ def cancel_ticket():
     else:
         return jsonify({"message": "Invalid data"}), 400
 
-
 @app.route('/view-requests', methods=['GET'])
 def view_requests():
     requests = get_pending_requests()
     return render_template('cancellation-requests.html', requests=requests)
-
 
 
 if __name__ == "__main__":
