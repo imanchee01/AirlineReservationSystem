@@ -464,6 +464,20 @@ def get_pending_requests():
 
     return requests
 
+def get_user_name(user_Id):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(" SELECT user_name FROM user WHERE userId= %s", (user_Id))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 
 if __name__ == "__main__":

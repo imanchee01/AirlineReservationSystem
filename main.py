@@ -301,6 +301,7 @@ def employee_home():
 def edit_aircrafts():
     aircrafts = get_all_aircrafts()
     return render_template('edit-aircrafts.html', aircrafts=aircrafts)
+
 @app.route('/edit-aircraft/<int:id>', methods=['GET'])
 def edit_aircraft(id):
     # Your logic here, for example:
@@ -309,7 +310,6 @@ def edit_aircraft(id):
         return render_template('edit-aircraft-form.html', aircraft=aircraft)
     else:
         return 'Aircraft not found', 404
-
 
 
 @app.route('/save_aircraft/<int:id>', methods=['POST'])
@@ -371,6 +371,7 @@ def add_flight_route():
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
     return render_template("cancellation-requests.html")
+
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
     if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
