@@ -58,9 +58,9 @@
                     <br>
                     Bronze Tier: You start as a Bronze member
                     <br>
-                    Silver Tier: With 1.000 flown miles, you reach the Silver tier
+                    Silver Tier: With 1.000 flown miles, you reach the Silver tier. You get 5% price discount on each booking.
                     <br>
-                    Gold Tier: You achieve Gold status with 10.000 flown miles.
+                    Gold Tier: You achieve Gold status with 10.000 flown miles. You get 10% price discount on each booking.
                     <br>
                     ---------------------------------------------------------------------------------------------------------<br>
                 </div>
@@ -81,10 +81,9 @@
                     <th style="width: auto;">Arrival Time (UTC)</th>
                     <th style="width: auto;">Class</th>
                     <th style="width: auto;">Miles</th>
-                    <th style="width: auto;">Stornieren</th>
+                    <th style="width: auto;">Cancellation</th>
                     <th style="width: auto;">Check-In</th>
                 </tr>
-
                 {% for flight in flight_history %}
                 <tr>
                     <td>{{ flight.ticket_name }}</td>
@@ -257,3 +256,4 @@ function toggleInfo(infoId) {
         </div>
     </div>
 {% endblock %}
+</div>
