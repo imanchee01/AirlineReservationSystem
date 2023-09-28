@@ -314,6 +314,7 @@ def aircraft_exists(aircraft_id):
     finally:
         conn.close()
 
+
 def get_all_aircrafts():
     conn = get_db_connection()
     if conn:
@@ -333,6 +334,8 @@ def get_aircraft_by_id(id):
             return cursor.fetchone()
         finally:
             conn.close()
+
+
 def update_aircraft(id, model, capacity, firstclass):
     conn = get_db_connection()
     if conn:
@@ -548,8 +551,26 @@ def get_pending_requests():
     return requests
 
 
+def delete_flight(flightcode):
+    conn = get_db_connection()
+    if not conn:
+        return None
+    cursor = conn.cursor(dictionary=True)
+
+    delete_query = "DELETE FROM flights WHERE flightcode = %s"
+    cursor.execute(delete_query, (flightcode,))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+
+
+
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_client_data(userId)
+    delete_flight(67)
     print(client_data)  # This will print the data returned by the function

@@ -77,11 +77,11 @@ def flight_search():
             flash('no flights found')
             return redirect(url_for("search_flights"))
 
-        if outward_flights_data == []:
+        elif outward_flights_data == []:
             flash('No flights found on the selected departure date. Please select a different date.')
             return redirect(url_for("search_flights"))
 
-        if return_flights_data == []:
+        elif return_flights_data == []:
             flash('No flights found on the selected return date. Please select a different date.')
             return redirect(url_for("search_flights"))
 
@@ -335,7 +335,6 @@ def check_out():
     return render_template('check-out.html')
 
 
-
 @app.route("/order-confirmation", methods=["GET", "POST"])
 def order_confirmation():
     # Ticket-Informationen aus dem Formular abrufen: Hinflug
@@ -462,6 +461,8 @@ def add_flight_route():
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
     return render_template("cancellation-requests.html")
+
+
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
     if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
@@ -483,7 +484,6 @@ def add_flight_route():
         return 'Internal Server Error', 500
 
 
-
 @app.route("/cancel-ticket", methods=["POST"])
 def cancel_ticket():
     client_id = session["userId"]
@@ -494,6 +494,7 @@ def cancel_ticket():
         return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
     else:
         return jsonify({"message": "Invalid data"}), 400
+
 
 @app.route('/view-requests', methods=['GET'])
 def view_requests():
