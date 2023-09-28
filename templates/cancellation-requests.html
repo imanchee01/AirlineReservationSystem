@@ -4,6 +4,18 @@
 
 {% block content %}
   <style>
+  .employee-home-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    /* Style for the logout button */
+    .logout-button {
+        position: absolute;
+        top: 50px; /* Adjust the top position as needed */
+        right: 20px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -22,6 +34,7 @@
     strong {
       font-weight: bold;
     }
+
   </style>
   <div class="cancellation-requests">
    <h1 style="font-weight: bold; font-size: 18px;">Cancellation Request</h1>
@@ -56,6 +69,21 @@
     </tr>
    </table>
   </div>
+<div class="employee-home-button">
+    <a href="/employee-home">
+        <button class="btn btn-primary">
+            Employee Home
+        </button>
+    </a>
+</div>
+
+<div class="logout-button">
+    <a href="/logout">
+        <i class="fas fa-arrow-right"></i>
+        Logout
+    </a>
+</div>
+
 
   <script>
     function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
@@ -71,5 +99,4 @@
     }
   </script>
 
-  <a href="/employee-home">Employee Home</a>
 {% endblock %}

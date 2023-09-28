@@ -20,31 +20,59 @@
   strong {
     font-weight: bold;
   }
+
+  /* Style for the employee home button and icon */
+  .employee-home-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  /* Style for the logout button */
+  .logout-button {
+    position: absolute;
+    top: 55px; /* Adjust the top position as needed */
+    right: 20px;
+  }
 </style>
 
-<div class="edit-aircrafts">
-  <h1 style="font-weight: bold; font-size: 18px;">Edit Aircraft</h1>
-  <br>
-  <table>
-    <tr>
-      <th style="width: 10%;">Aircraft ID</th>
-      <th style="width: 20%;">Aircraft Model</th>
-      <th style="width: 15%;">Aircraft Capacity</th>
-      <th style="width: 15%;">First Class Capacity</th>
-      <th style="width: 10%;">Actions</th>
-    </tr>
-    {% for aircraft in aircrafts %}
-    <tr>
-      <td>{{ aircraft.aircraftId }}</td>
-      <td>{{ aircraft.aircraft_model }}</td>
-      <td>{{ aircraft.aircraft_capacity }}</td>
-      <td>{{ aircraft.aircraft_firstclass }}</td>
-      <td><a href="{{ url_for('edit_aircraft', id=aircraft.aircraftId) }}">Edit</a></td>
-    </tr>
-    {% endfor %}
-  </table>
+<!-- Employee Home button with icon -->
+<div class="employee-home-button">
+  <a href="/employee-home">
+    <button class="btn btn-primary">
+      Employee Home
+    </button>
+  </a>
 </div>
 
-<a href="/employee-home">Employee Home</a>
+<!-- Logout button with icon -->
+<div class="logout-button">
+  <a href="/logout">
+    <i class="fas fa-arrow-right"></i>
+    Logout
+  </a>
+</div>
+
+<h1 style="font-weight: bold; font-size: 18px;">Edit Aircraft</h1>
+<br>
+<table>
+  <tr>
+    <th style="width: 10%;">Aircraft ID</th>
+    <th style="width: 20%;">Aircraft Model</th>
+    <th style="width: 15%;">Aircraft Capacity</th>
+    <th style="width: 15%;">First Class Capacity</th>
+    <th style="width: 10%;">Actions</th>
+  </tr>
+  {% for aircraft in aircrafts %}
+  <tr>
+    <td>{{ aircraft.aircraftId }}</td>
+    <td>{{ aircraft.aircraft_model }}</td>
+    <td>{{ aircraft.aircraft_capacity }}</td>
+    <td>{{ aircraft.aircraft_firstclass }}</td>
+    <td><a href="{{ url_for('edit_aircraft', id=aircraft.aircraftId) }}">Edit</a></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
 
 {% endblock %}

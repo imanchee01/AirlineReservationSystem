@@ -3,17 +3,45 @@
 {% block title %}Flight Search Results{% endblock %}
 
 {% block content %}
-	<h1>Order Confirmation</h1>
+<style>
+    .client-account-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
 
-	<h2>Thank you for your order!</h2>
-	<br>
+    /* Style for the logout button */
+    .logout-button {
+        position: absolute;
+        top: 50px; /* Adjust the top position as needed to separate it from the "My Account" button */
+        right: 10px;
+    }
+</style>
 
-	<p>You have earned xxx miles with this purchase.</p>
+<h1>Order Confirmation</h1>
 
-	<p>You will receive a confirmation email shortly.</p>
+<h2>Thank you for your order!</h2>
+<br>
 
-	<br><br>
+<p>You have earned xxx miles with this purchase.</p>
 
-	<a href="/">Back to Home</a>
+<p>You will receive a confirmation email shortly.</p>
+
+<br><br>
+
+<!-- "My Account" button with icon -->
+<a href="/client-account" class="client-account-button">
+    <button class="btn btn-primary">
+        <i class="fas fa-user"></i> My Account
+    </button>
+</a>
+
+<!-- Logout link -->
+<div class="logout-button">
+    <a href="/logout">Logout</a>
+</div>
+
+</div>
 
 {% endblock %}
