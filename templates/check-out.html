@@ -3,6 +3,16 @@
 {% block title %}Check Out{% endblock %}
 
 {% block content %}
+    <style>
+
+    /* Style for the logout button */
+    .logout-button {
+        position: absolute;
+        top: 10px; /* Adjust the top position as needed */
+        right: 20px;
+    }
+    </style>
+
 	<div class="row">
 		<form method="POST" action="/order-confirmation" class="col-md-6">
 			<h1>Checkout</h1>
@@ -48,7 +58,12 @@
 
 	<br>
 
-	<a href="/">Back to Home</a>
+<div class="logout-button">
+    <a href="/logout">
+        <i class="fas fa-arrow-right"></i>
+        Logout
+    </a>
+</div>
 {% endblock %}
 
 
