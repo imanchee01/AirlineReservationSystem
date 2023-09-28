@@ -1,10 +1,9 @@
-from flask import request, session, redirect, flash, url_for
-from flask import render_template
+from flask import request, session, redirect, flash, url_for, jsonify, render_template
 from database import *
 import re
 import json
-from datetime import timedelta
 import datetime
+from datetime import timedelta
 
 # Custom JSON encoder to handle timedelta objects
 class TimedeltaEncoder(json.JSONEncoder):
@@ -30,6 +29,25 @@ def check_flight_availability(date, flight_schedule):
         if flight_info['flight_weekday'] == weekday:
             valid_flights.append(flight_info)
     return valid_flights
+
+
+def chosen_flight_data(flight_list, target_flightcode):
+    for flight in flight_list:
+        if int(flight['flightcode']) == int(target_flightcode):
+            return flight
+
+    return None
+
+
+def get_flight_class(flight, flight_price):
+    if float(flight_price) == float(flight['economy_price']):
+        return 'economy'
+    elif float(flight_price) == float(flight['business_price']):
+        return 'business'
+    elif float(flight_price) == float(flight['firstclass_price']):
+        return 'first-class'
+    else:
+        return None
 
 
 @app.route("/")
@@ -68,30 +86,39 @@ def flight_search():
             return redirect(url_for("search_flights"))
 
         # getting the flight miles to check if flight is short, middle or long distance
-        flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+        flight_miles_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
         # getting the prices for the pricecategory the flights are in
-        price_category = get_pricecategory(flight_miles)
+        price_category_out = get_pricecategory(flight_miles_out)
 
 
-        prices = []
-        for i in price_category:
-            prices.append(get_prices(i))
+        outward_prices = []
+        for i in price_category_out:
+            outward_prices.append(get_prices(i))
+
+        # getting the flight miles to check if flight is short, middle or long distance
+        flight_miles_ret = get_all_items_by_name__from_directionary(return_flights_data, 'flight_miles')
+        # getting the prices for the pricecategory the flights are in
+        price_category_ret = get_pricecategory(flight_miles_ret)
+
+        return_prices = []
+        for i in price_category_ret:
+            return_prices.append(get_prices(i))
 
         direction = None
 
         # adding the prices to the flight information dictionaries
         outward_flights = []
         for i in range(0, len(outward_flights_data)):
-            combined_data_out = {} 
+            combined_data_out = {}
             combined_data_out.update(outward_flights_data[i])
-            combined_data_out.update(prices[i])
+            combined_data_out.update(outward_prices[i])
             outward_flights.append(combined_data_out)
 
         return_flights = []
         for i in range(0, len(return_flights_data)):
             combined_data_ret = {}
             combined_data_ret.update(return_flights_data[i])
-            combined_data_ret.update(prices[i])
+            combined_data_ret.update(return_prices[i])
             return_flights.append(combined_data_ret)
 
         # saving the flight information
@@ -122,14 +149,11 @@ def client_account():
     client_data2 = get_client_data(user_id)
     cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
     flight_history = get_flighthistory(user_id)
+    old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
-    if client_data2 and flight_history:
-        # Wenn die Daten erfolgreich abgerufen wurden, rendern Sie die Vorlage mit den Daten.
-        return render_template("client-account.html", client_data=client_data2,
-                               flight_history=flight_history, cancellation_requests=cancellation_requests)
-    else:
-        # Behandeln Sie den Fall, in dem das Abrufen der Daten fehlschlägt.
-        return "Fehler beim Abrufen der Client-Daten aus der Datenbank"
+    return render_template("client-account.html", client_data=client_data2,
+                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
+
 
 
 def is_valid_registration_data(firstName, lastName, email, password):
@@ -163,7 +187,7 @@ def sign_up():
         try:
             if is_valid_registration_data(firstName, lastName, email, password):
                 save_signup_information(firstName, lastName, email, password)
-                return redirect(url_for("flight_search"))
+                return redirect(url_for("search_flights"))
 
         except Exception as e:
             app.logger.error("Error! " + str(e))
@@ -186,15 +210,14 @@ def login():
     user = get_user(user_email)
 
     if user and user.check_password(user_password):
-        session['username'] = user.user_name
-        session['userId'] = user.userId
+        session["userId"] = user.userId
         # Password is correct.
         if user.user_type == "Client":
             # Redirect to the flight search page if the user is a client.
             return redirect(url_for("search_flights"))
         if user.user_type == "Employee":
             # Redirect to the manage requests page if the user is an employee.
-            return redirect(url_for("manage_requests"))
+            return redirect(url_for("employee_home"))
 
     # Username or password is incorrect (or we have a user who is not a client nor an employee).
     flash('Invalid login credentials. Please try again or sign up.', 'error')
@@ -239,11 +262,27 @@ def select_flight():
         session["outward_selected_class"] = selected_class
         session["outward_extra_luggage"] = extra_luggage
 
+        chosen_flight_out = chosen_flight_data(outward_flights, flight_code)
+        selected_category = get_flight_class(chosen_flight_out, selected_class)
+        session["outward_selected_category"] = selected_category
+
+
+        flight_miles_out = chosen_flight_out['flight_miles']
+        session['flight_miles_out'] = flight_miles_out
+
     if direction == "return":
         # Save return flight data(code, pirce, luggage) into session.
         session["return_flight"] = flight_code
         session["return_selected_class"] = selected_class
         session["return_extra_luggage"] = extra_luggage
+
+        chosen_flight_ret = chosen_flight_data(return_flights, flight_code)
+        selected_category = get_flight_class(chosen_flight_ret, selected_class)
+        session["return_selected_category"] = selected_category
+
+        flight_miles_ret = chosen_flight_ret['flight_miles']
+        session['flight_miles_ret'] = flight_miles_ret
+
 
         return redirect("booking-summary")
 
@@ -279,32 +318,74 @@ def booking_summary():
 
 @app.route("/check-out", methods=["GET", "POST"])
 def check_out():
-    if request.method == 'GET':
-        return render_template('check-out.html')
+    if request.method == "POST":
+        print(request.form)
+        salutation = request.form["salutation"]
+        last_name = request.form["last_name"]
+        first_name = request.form["first_name"]
+        ticket_name = str(first_name) + ' ' + str(last_name)
+        session['ticket_name'] = ticket_name
+        email = request.form["email"]
+        address = request.form["address"]
+        phone = request.form["phone"]
+        payment_option = request.form["payment_option"]
 
-    salutation = request.form.get("salutation")
-    last_name = request.form.get("last_name")
-    first_name = request.form.get("first_name")
-    email = request.form.get("email")
-    address = request.form.get("address")
-    phone = request.form.get("phone")
-    payment_option = request.form.get("payment_option")
+        return redirect(url_for("order_confirmation"))
 
 
+    return render_template('check-out.html')
 
-
-    return redirect(url_for("order_confirnation"))
 
 
 @app.route("/order-confirmation", methods=["GET", "POST"])
 def order_confirmation():
-    return render_template("order-confirmation.html")
+    # Ticket-Informationen aus dem Formular abrufen: Hinflug
+    ticket_purchaseDate_outward = datetime.datetime.now()
+
+    ticket_name = session.get('ticket_name')
+    print(ticket_name)
+    ticket_date = session.get("departure_date")
+    ticket_userId = session.get("userId")
+    ticket_flightcode = session.get("outward_flight")
+    ticket_miles_out = session.get("flight_miles_out")
+    ticket_class_out = session.get("outward_selected_category")
+
+    Ticket.add_ticket(
+        ticket_name,
+        ticket_date,
+        ticket_miles_out,
+        ticket_purchaseDate_outward,
+        ticket_userId,
+        ticket_flightcode,
+        ticket_class_out
+    )
+
+    # Ticket-Informationen aus dem Formular abrufen: Rückflug
+    ticket_purchaseDate_return = datetime.datetime.now()
+    ticket_date = session.get("return_date")
+    ticket_flightcode = session.get("return_flight")
+    ticket_miles_ret = session.get("flight_miles_ret")
+    ticket_class_ret = session.get("return_selected_category")
+
+    Ticket.add_ticket(
+        ticket_name,
+        ticket_date,
+        ticket_miles_ret,
+        ticket_purchaseDate_return,
+        ticket_userId,
+        ticket_flightcode,
+        ticket_class_ret
+    )
+
+    flight_miles = ticket_miles_ret + ticket_miles_out
+
+    return render_template('order-confirmation.html',
+                           flight_miles=flight_miles)
 
 
-# manage request opens employee home
-@app.route('/manage-requests')
-def manage_requests():
-    return render_template('employee-home.html', user_name=session.get("user_name"))
+@app.route("/employee-home", methods=["GET"])
+def employee_home():
+    return render_template('employee-home.html')
 
 
 @app.route('/edit-aircrafts', methods=['GET'])
@@ -339,12 +420,49 @@ def save_aircraft(id):
 def edit_flights():
     return render_template("edit-flights.html")
 
+'''
+@app.route("/add-flight", methods=["GET", "POST"])
+def add_flight_route():
+    if request.method == 'GET':
+        return render_template("edit-flights.html")
+
+    if not request.form or not all(key in request.form for key in (
+        "miles",
+        "source",
+        "destination",
+        "weekday",
+        "arrival",
+        "departure",
+        "aircraft"
+    )):
+        return 'All fields are required', 400
+
+    aircraft_id = request.form['aircraft']
+    if not aircraft_exists(aircraft_id):
+        return 'Invalid aircraft_id', 400
+
+    miles = request.form['miles']
+    source = request.form['source']
+    destination = request.form['destination']
+    weekday = request.form['weekday']
+    arrival = request.form['arrival']
+    departure = request.form['departure']
+    aircraft_id = request.form['aircraft']
+
+    try:
+        add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id)
+        flash('Flight created successfully.')
+        return redirect(url_for("add_flight_route"))
+    except Exception as e:
+        app.logger.error("Error! " + str(e))
+        flash('Failed to add flight.', 'error')
+
+    return redirect(url_for("add_flight_route"))
+'''
 
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
     return render_template("cancellation-requests.html")
-
-
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
     if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
@@ -366,9 +484,23 @@ def add_flight_route():
         return 'Internal Server Error', 500
 
 
-@app.route("/employee-home", methods=["GET"])
-def employee_home():
-    return render_template('employee-home.html')
+
+@app.route("/cancel-ticket", methods=["POST"])
+def cancel_ticket():
+    client_id = session["userId"]
+    data = request.get_json()  # Holen Sie sich die JSON-Daten aus dem Request.
+    ticket_id = data["ticket_id"]
+    if "ticket_id" in data:
+        create_ticket_cancellation_request(ticket_id, client_id)
+        return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
+    else:
+        return jsonify({"message": "Invalid data"}), 400
+
+@app.route('/view-requests', methods=['GET'])
+def view_requests():
+    requests = get_pending_requests()
+    return render_template('cancellation-requests.html', requests=requests)
+
 
 
 if __name__ == "__main__":

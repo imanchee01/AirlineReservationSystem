@@ -70,7 +70,7 @@
 
         <br>
 		<div class="flight-history">
-			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
+			<p style="font-weight: bold; font-size: 18px;">Upcoming Flights</p>
 			<table style="table-layout: auto; width: 100%;">
                 <tr>
                     <th style="width: auto;">Passenger</th>
@@ -118,8 +118,8 @@
                     </td>
                     <td>
                         <button
-                            id="checkInButton{{ loop.index }}"
-                            check-in-id="{{ flight.ticketId }}"
+                            data-check-in-id="{{ flight.ticketId }}"
+                            class="checkInButton"
                             onclick="checkInButtonClick(this, {{ flight.ticketId }})"
                             style="width: 100px;"
                             {% if flight.ticketId in cancellation_requests or flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
@@ -133,17 +133,39 @@
                 </tr>
                 {% endfor %}
             </table>
+        <br>
+        <br>
+        <div class="old-flight-history">
+			<p style="font-weight: bold; font-size: 18px;">Flight History</p>
+			<table style="table-layout: auto; width: 100%;">
+                <tr>
+                    <th style="width: auto;">Passenger</th>
+                    <th style="width: auto;">Date</th>
+                    <th style="width: auto;">Departure</th>
+                    <th style="width: auto;">Destination</th>
+                    <th style="width: auto;">Departure Time (UTC)</th>
+                    <th style="width: auto;">Arrival Time (UTC)</th>
+                    <th style="width: auto;">Class</th>
+                    <th style="width: auto;">Miles</th>
 
+                </tr>
 
-
-
+                {% for flight in old_flight_history %}
+                <tr>
+                    <td>{{ flight.ticket_name }}</td>
+                    <td>{{ flight.ticket_date }}</td>
+                    <td>{{ flight.flight_source }}</td>
+                    <td>{{ flight.flight_destination }}</td>
+                    <td>{{ flight.flight_depTime }}</td>
+                    <td>{{ flight.flight_arrTime }}</td>
+                    <td>{{ flight.ticket_class }}</td>
+                    <td>{{ flight.ticket_miles }}</td>
+                </tr>
+                {% endfor %}
+            </table>
 		<br>
-
-
 	</div>
 	<br><br>
-
-
 	<script>
 
     const check_in_status = {}; // Use this object to keep track of check-in status.
@@ -176,6 +198,12 @@ function stornierenButtonClick(button) {
         if (check_in_status[ticketId]) {
             // If the "Check-In" button was already clicked, do nothing.
             return;
+        }
+
+        // Disable the corresponding "CheckIn" button.
+        const checkIn = document.querySelector(`.checkInButton[data-check-in-id="${ticketId}"]`);
+        if (checkIn) {
+            checkIn.disabled = true;
         }
 
         // Check if the button is already in "Pending" state.
@@ -213,12 +241,17 @@ function stornierenButtonClick(button) {
             console.error("Error:", error);
         });
 
-        // Disable the corresponding "CheckIn" button.
-        const checkIn = document.querySelector(`.checkInButton[check-in-id="${ticketId}"]`);
-        if (checkIn) {
-            checkIn.disabled = true;
-        }
+
     }
+
+function toggleInfo(infoId) {
+    var infoElement = document.getElementById(infoId);
+    if (infoElement.style.display === "none") {
+        infoElement.style.display = "block";
+    } else {
+        infoElement.style.display = "none";
+    }
+}
 
 	</script>
     </div>
