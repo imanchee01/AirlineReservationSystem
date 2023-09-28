@@ -155,7 +155,6 @@ def client_account():
                                flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
 
 
-
 def is_valid_registration_data(firstName, lastName, email, password):
     if not firstName or not lastName:
         return False
