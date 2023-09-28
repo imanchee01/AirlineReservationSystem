@@ -65,11 +65,23 @@
 			<td colspan="5" style="border-top: 1px solid #ccc;"></td>
 		</tr>
 		<tr>
-			<td></td>
-			<td><strong>Total Price:</strong></td>
-			<td>
-				${{ (outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int) }}</td>
-		</tr>
+    <td></td>
+    <td><strong>Total Price:</strong></td>
+    <td>
+        {% if user_tier == "gold" %}
+            ${{ ((outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int)) * 0.9 }}
+
+            &nbsp (Gold Tier: 10% Discount applied)
+        {% elif user_tier == "silver" %}
+            ${{ ((outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int)) * 0.95 }}
+            &nbsp (Silver Tier: 5% Discount Applied)
+        {% else %}
+            ${{ (outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int) }}
+        {% endif %}
+    </td>
+</tr>
+
+
 	</table>
 
 	<br><br>

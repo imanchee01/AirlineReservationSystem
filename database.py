@@ -294,7 +294,8 @@ def get_flighthistory(userId):
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            SELECT T.ticketId, T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, 
+                    F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
             FROM tickets T
             LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
             WHERE T.ticket_date>= CURDATE()  and ticket_userId = %s
@@ -315,7 +316,8 @@ def get_flighthistory_ofOldFlights(userId):
         connection = mariadb.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
+            SELECT T.ticket_date, T.ticket_name, T.ticket_flightcode, T.ticket_class, T.ticket_miles, 
+                F.flight_destination, F.flight_source, F.flight_arrTime, F.flight_depTime
             FROM tickets T
             LEFT JOIN flights F ON T.ticket_flightcode = F.flightcode
             WHERE T.ticket_date< CURDATE()  and ticket_userId = %s
@@ -472,6 +474,24 @@ def get_user_name(user_Id):
         cursor.execute(" SELECT user_name FROM user WHERE userId= %s", (user_Id))
         results = cursor.fetchall()
         return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def get_user_tier(user_id):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT tier FROM client WHERE clientId = %s", (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['tier']
+        else:
+            return None
     except mariadb.Error as e:
         print(f"Error connecting to MariaDB Platform: {e}")
         return None

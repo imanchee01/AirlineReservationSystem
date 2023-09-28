@@ -251,7 +251,9 @@ def select_flight():
 
 @app.route("/booking-summary", methods=["GET"])
 def booking_summary():
-    # TODO: get price for flight and luggage from DB
+    user_id = session["userId"]
+    user_tier = get_user_tier(user_id)
+    print(user_tier)
     return render_template(
         "booking-summary.html",
         outward_flight=session["outward_flight"],
@@ -262,6 +264,8 @@ def booking_summary():
         return_extra_luggage=session["return_extra_luggage"],
         departure_date=session["departure_date"],
         return_date=session["return_date"],
+        user_tier=user_tier,
+        user_id=user_id
     )
 
 
@@ -387,11 +391,10 @@ def add_flight_route():
         return 'Internal Server Error', 500
 
 
-
 @app.route("/cancel-ticket", methods=["POST"])
 def cancel_ticket():
     client_id = session["userId"]
-    data = request.get_json()  # Holen Sie sich die JSON-Daten aus dem Request.
+    data = request.get_json()
     ticket_id = data["ticket_id"]
     if "ticket_id" in data:
         create_ticket_cancellation_request(ticket_id, client_id)
