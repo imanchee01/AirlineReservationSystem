@@ -31,6 +31,26 @@ def check_flight_availability(date, flight_schedule):
             valid_flights.append(flight_info)
     return valid_flights
 
+
+def chosen_flight_data(flight_list, target_flightcode):
+    for flight in flight_list:
+        if int(flight['flightcode']) == int(target_flightcode):
+            return flight
+
+    return None
+
+
+def get_flight_class(flight, flight_price):
+    if float(flight_price) == float(flight['economy_price']):
+        return 'economy'
+    elif float(flight_price) == float(flight['business_price']):
+        return 'business'
+    elif float(flight_price) == float(flight['firstclass_price']):
+        return 'first-class'
+    else:
+        return None
+
+
 @app.route("/")
 def home():
     if "user_name" in session:
@@ -57,23 +77,31 @@ def flight_search():
             flash('no flights found')
             return redirect(url_for("search_flights"))
 
-        if outward_flights_data == []:
+        elif outward_flights_data == []:
             flash('No flights found on the selected departure date. Please select a different date.')
             return redirect(url_for("search_flights"))
 
-        if return_flights_data == []:
+        elif return_flights_data == []:
             flash('No flights found on the selected return date. Please select a different date.')
             return redirect(url_for("search_flights"))
 
         # getting the flight miles to check if flight is short, middle or long distance
-        flight_miles = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
+        flight_miles_out = get_all_items_by_name__from_directionary(outward_flights_data, 'flight_miles')
         # getting the prices for the pricecategory the flights are in
-        price_category = get_pricecategory(flight_miles)
+        price_category_out = get_pricecategory(flight_miles_out)
 
+        outward_prices = []
+        for i in price_category_out:
+            outward_prices.append(get_prices(i))
 
-        prices = []
-        for i in price_category:
-            prices.append(get_prices(i))
+        # getting the flight miles to check if flight is short, middle or long distance
+        flight_miles_ret = get_all_items_by_name__from_directionary(return_flights_data, 'flight_miles')
+        # getting the prices for the pricecategory the flights are in
+        price_category_ret = get_pricecategory(flight_miles_ret)
+
+        return_prices = []
+        for i in price_category_ret:
+            return_prices.append(get_prices(i))
 
         direction = None
 
@@ -82,14 +110,14 @@ def flight_search():
         for i in range(0, len(outward_flights_data)):
             combined_data_out = {}
             combined_data_out.update(outward_flights_data[i])
-            combined_data_out.update(prices[i])
+            combined_data_out.update(outward_prices[i])
             outward_flights.append(combined_data_out)
 
         return_flights = []
         for i in range(0, len(return_flights_data)):
             combined_data_ret = {}
             combined_data_ret.update(return_flights_data[i])
-            combined_data_ret.update(prices[i])
+            combined_data_ret.update(return_prices[i])
             return_flights.append(combined_data_ret)
 
         # saving the flight information
@@ -231,12 +259,26 @@ def select_flight():
         session["outward_selected_class"] = selected_class
         session["outward_extra_luggage"] = extra_luggage
 
+        chosen_flight_out = chosen_flight_data(outward_flights, flight_code)
+        selected_category = get_flight_class(chosen_flight_out, selected_class)
+        session["outward_selected_category"] = selected_category
+
+        flight_miles_out = chosen_flight_out['flight_miles']
+        session['flight_miles_out'] = flight_miles_out
+
     if direction == "return":
         # Save return flight data(code, pirce, luggage) into session.
         session["return_flight"] = flight_code
         session["return_airport"] = destination
         session["return_selected_class"] = selected_class
         session["return_extra_luggage"] = extra_luggage
+
+        chosen_flight_ret = chosen_flight_data(return_flights, flight_code)
+        selected_category = get_flight_class(chosen_flight_ret, selected_class)
+        session["return_selected_category"] = selected_category
+
+        flight_miles_ret = chosen_flight_ret['flight_miles']
+        session['flight_miles_ret'] = flight_miles_ret
 
         return redirect("booking-summary")
 
@@ -276,23 +318,66 @@ def booking_summary():
 
 @app.route("/check-out", methods=["GET", "POST"])
 def check_out():
-    if request.method == 'GET':
-        return render_template('check-out.html')
+    if request.method == "POST":
+        salutation = request.form["salutation"]
+        last_name = request.form["last_name"]
+        first_name = request.form["first_name"]
+        ticket_name = str(first_name) + ' ' + str(last_name)
+        session['ticket_name'] = ticket_name
+        email = request.form["email"]
+        address = request.form["address"]
+        phone = request.form["phone"]
+        payment_option = request.form["payment_option"]
 
-    salutation = request.form.get("salutation")
-    last_name = request.form.get("last_name")
-    first_name = request.form.get("first_name")
-    email = request.form.get("email")
-    address = request.form.get("address")
-    phone = request.form.get("phone")
-    payment_option = request.form.get("payment_option")
+        return redirect(url_for("order_confirmation"))
 
-    return redirect(url_for("order_confirnation"))
+    return render_template('check-out.html')
 
 
 @app.route("/order-confirmation", methods=["GET", "POST"])
 def order_confirmation():
-    return render_template("order-confirmation.html")
+    # Ticket-Informationen aus dem Formular abrufen: Hinflug
+    ticket_purchaseDate_outward = datetime.datetime.now()
+
+    ticket_name = session.get('ticket_name')
+    print(ticket_name)
+    ticket_date = session.get("departure_date")
+    ticket_userId = session.get("userId")
+    ticket_flightcode = session.get("outward_flight")
+    ticket_miles_out = session.get("flight_miles_out")
+    ticket_class_out = session.get("outward_selected_category")
+
+    Ticket.add_ticket(
+        ticket_name,
+        ticket_date,
+        ticket_miles_out,
+        ticket_purchaseDate_outward,
+        ticket_userId,
+        ticket_flightcode,
+        ticket_class_out
+    )
+
+    # Ticket-Informationen aus dem Formular abrufen: Rückflug
+    ticket_purchaseDate_return = datetime.datetime.now()
+    ticket_date = session.get("return_date")
+    ticket_flightcode = session.get("return_flight")
+    ticket_miles_ret = session.get("flight_miles_ret")
+    ticket_class_ret = session.get("return_selected_category")
+
+    Ticket.add_ticket(
+        ticket_name,
+        ticket_date,
+        ticket_miles_ret,
+        ticket_purchaseDate_return,
+        ticket_userId,
+        ticket_flightcode,
+        ticket_class_ret
+    )
+
+    flight_miles = ticket_miles_ret + ticket_miles_out
+
+    return render_template('order-confirmation.html',
+                           flight_miles=flight_miles)
 
 
 @app.route("/employee-home", methods=["GET"])
@@ -411,7 +496,6 @@ def cancel_ticket():
 def view_requests():
     requests = get_pending_requests()
     return render_template('cancellation-requests.html', requests=requests)
-
 
 
 if __name__ == "__main__":

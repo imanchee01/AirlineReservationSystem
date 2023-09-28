@@ -88,10 +88,10 @@
                 <td>
                    <select style="min-width: 140px;" class="form-control" name="selected_class" id="selected-class_{{ flight['flightcode'] }}" required disabled>
                       <option value="" disable selected>Select a class</option>
-                      <option value="${{ flight["economy_price"] }}">Economy: ${{ flight["economy_price"] }}</option>
-                      <option value="${{ flight["business_price"] }}">Business: ${{ flight["business_price"] }}</option>
+                      <option value="{{ flight["economy_price"] }}">Economy: ${{ flight["economy_price"] }}</option>
+                      <option value="{{ flight["business_price"] }}">Business: ${{ flight["business_price"] }}</option>
                       {% if flight["aircraft_firstclass"] == 'y' %}
-                                <option value="${{ flight["firstclass_price"] }}">First: ${{ flight["firstclass_price"] }}</option>
+                                <option value="{{ flight["firstclass_price"] }}">First: ${{ flight["firstclass_price"] }}</option>
                        {% endif  %}
                         </select>
                 </td>

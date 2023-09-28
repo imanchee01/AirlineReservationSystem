@@ -1,4 +1,5 @@
 import mariadb
+import os
 from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -6,12 +7,13 @@ from sqlalchemy.orm import DeclarativeBase
 from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
+
 db_config = {
-    'user': 'root',
-    'password': '',
-    'host': 'localhost',
-    'database': 'airline',
-    'port': 3306
+    'user': os.environ.get("DB_ROOTUSER") or 'root',
+    'password': os.environ.get("DB_ROOTPASSWORD") or '',
+    'host': os.environ.get("DB_HOST") or 'localhost',
+    'database': os.environ.get("DB_DATABASE") or 'airline',
+    'port': os.environ.get("DB_PORT") or 3308
 }
 
 app = Flask(__name__)
@@ -74,6 +76,96 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.user_name}>"
+
+def get_db_connection():
+    try:
+        conn = mariadb.connect(**db_config)
+        return conn
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+
+
+class Flight(db.Model):
+    __tablename__ = "flights"
+
+    flightcode = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    flight_miles = db.Column(db.Float, unique=False, nullable=False)
+    flight_source = db.Column(db.String(4), unique=True, nullable=False)
+    flight_destination = db.Column(db.String(4), unique=True, nullable=False)
+    flight_weekday = db.Column(db.String(10), nullable=False)
+    flight_arrTime = db.Column(db.String(10), nullable=False)
+    flight_depTime = db.Column(db.String(10), nullable=False)
+    flight_aircraftId = db.Column(db.Integer, db.ForeignKey('aircraft.aircraftId'),
+                                  nullable=False)
+
+    def __init__(self,
+                 flight_miles,
+                 flight_source,
+                 flight_destination,
+                 flight_weekday,
+                 flight_arrTime,
+                 flight_depTime,
+                 flight_aircraftId,
+                 ):
+        self.flight_miles = flight_miles
+        self.flight_source = flight_source
+        self.flight_destination = flight_destination
+        self.flight_weekday = flight_weekday
+        self.flight_arrTime = flight_arrTime
+        self.flight_depTime = flight_depTime
+        self.flight_aircraftId = flight_aircraftId
+
+    def __repr__(self):
+        return f"<Flight {self.flightcode}>"
+
+
+class Ticket(db.Model):
+    __tablename__ = "tickets"
+
+    ticket_name = db.Column(db.String(100), unique=True, nullable=False)
+    ticket_date = db.Column(db.Date, unique=False, nullable=False)
+    ticket_miles = db.Column(db.Float, nullable=False)
+    ticketId = db.Column(db.Integer, primary_key=True)
+    ticket_purchaseDate = db.Column(db.Date, nullable=False)
+    ticket_userId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
+    ticket_flightcode = db.Column(db.Integer, db.ForeignKey('flights.flightcode'), nullable=False)
+    ticket_class = db.Column(db.String(10), nullable=False)
+
+    def __init__(self,
+                 ticket_name,
+                 ticket_date,
+                 ticket_miles,
+                 ticket_purchaseDate,
+                 ticket_userId,
+                 ticket_flightcode,
+                 ticket_class
+                 ):
+        self.ticket_name = ticket_name
+        self.ticket_date = ticket_date
+        self.ticket_miles = ticket_miles
+        self.ticket_purchaseDate = ticket_purchaseDate
+        self.ticket_userId = ticket_userId
+        self.ticket_flightcode = ticket_flightcode
+        self.ticket_class = ticket_class
+
+    def __repr__(self):
+        return f"<Ticket {self.ticketId}>"
+    def add_ticket(ticket_name, ticket_date, ticket_miles, ticket_purchaseDate, ticket_userId, ticket_flightcode,
+                   ticket_class):
+        # add new ticket to the database
+        new_ticket = Ticket(
+            ticket_name=ticket_name,
+            ticket_date=ticket_date,
+            ticket_miles=ticket_miles,
+            ticket_purchaseDate=ticket_purchaseDate,
+            ticket_userId=ticket_userId,
+            ticket_flightcode=ticket_flightcode,
+            ticket_class=ticket_class
+        )
+        db.session.add(new_ticket)
+        db.session.commit()
+
 
 def get_db_connection():
     try:
@@ -195,6 +287,7 @@ def user_with_email_exists(email):
         return True
     return False
 
+
 def add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
     conn = get_db_connection()
     if conn:
@@ -230,6 +323,7 @@ def aircraft_exists(aircraft_id):
     finally:
         conn.close()
 
+
 def get_all_aircrafts():
     conn = get_db_connection()
     if conn:
@@ -240,6 +334,7 @@ def get_all_aircrafts():
         finally:
             conn.close()
 
+
 def get_aircraft_by_id(id):
     conn = get_db_connection()
     if conn:
@@ -249,6 +344,8 @@ def get_aircraft_by_id(id):
             return cursor.fetchone()
         finally:
             conn.close()
+
+
 def update_aircraft(id, model, capacity, firstclass):
     conn = get_db_connection()
     if conn:
@@ -266,7 +363,6 @@ def update_aircraft(id, model, capacity, firstclass):
             return False
         finally:
             conn.close()
-
 
 
 def get_client_data(userId):
@@ -310,6 +406,7 @@ def get_flighthistory(userId):
         if connection:
             connection.close()
 
+
 def get_flighthistory_ofOldFlights(userId):
     connection = None
     try:
@@ -331,6 +428,7 @@ def get_flighthistory_ofOldFlights(userId):
     finally:
         if connection:
             connection.close()
+
 
 def create_ticket_cancellation_request(ticket_id, client_id):
     try:
@@ -466,6 +564,7 @@ def get_pending_requests():
 
     return requests
 
+
 def get_user_name(user_Id):
     connection = None
     try:
@@ -480,6 +579,7 @@ def get_user_name(user_Id):
     finally:
         if connection:
             connection.close()
+
 
 def get_user_tier(user_id):
     connection = None
