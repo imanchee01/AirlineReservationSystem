@@ -28,48 +28,29 @@
    <br> <br>
    <table>
     <tr>
-     <th style="width: 5%;">Passenger</th>
-     <th style="width: 5%;">Date</th>
-     <th style="width: 10%;">Departure</th>
-     <th style="width: 10%;">Destination</th>
-     <th style="width: 15%;">Departure Time</th>
-     <th style="width: 10%;">Arrival Time</th>
-     <th style="width: 5%;">Class</th>
-     <th style="width: 5%;">Miles</th>
-     <th style="width: 15%;">Cancel Request</th>
+        <th>Passenger</th>
+        <th>Ticket ID</th>
+        <th>Date</th>
+        <th>Flight Code</th>
+        <th>Action</th>
     </tr>
+    {% for request in requests %}
     <tr>
-     <!-- Flugdaten hier einfügen -->
-     <td>
-     <td>
-     <td>
-     <td>
-     <td>
-     <td>
-     <td>
-     <td>
-     <td>
-      <button id="CancelButton1"
-              onclick="toggleButton('CancelButton1', 'Accepted', 'blau', 'accepted')">Cancel Request
-      </button>
-     <td>
+        <td>{{ request.user_name }}</td>
+        <td>{{ request.ticketId }}</td>
+        <td>{{ request.ticket_date }}</td>
+        <td>{{ request.flightcode }}</td>
+        <td>
+            <form method="post" action="{{ url_for('accept_request', request_id=request.requestId) }}">
+                <button type="submit">Accept</button>
+            </form>
+            <form method="post" action="{{ url_for('decline_request', request_id=request.requestId) }}">
+                <button type="submit">Decline</button>
+            </form>
+        </td>
     </tr>
+
+      {% endfor %}
    </table>
   </div>
-
-  <script>
-    function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
-      const button = document.getElementById(buttonId);
-      button.innerHTML = newText;
-      button.style.backgroundColor = newColor;
-      button.disabled = true;
-
-      // Deaktiviere den gegnerischen Button
-      const oppositeButton = document.getElementById(oppositeButtonId);
-      oppositeButton.disabled = false;
-      oppositeButton.style.backgroundColor = '';
-    }
-  </script>
-
-  <a href="/employee-home">Employee Home</a>
 {% endblock %}
