@@ -44,7 +44,6 @@ def flight_search():
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
     return_date = request.form['return_date']
-    person_count = request.form['person_count']
 
     # cheking if tho chosen airport exists
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
@@ -105,7 +104,6 @@ def flight_search():
             destination=destination,
             departure_date=departure_date,
             return_date=return_date,
-            person_count=person_count
         )
 
     else:
