@@ -213,13 +213,11 @@ def select_flight():
     destination = request.args.get("destination")
     departure_date = request.args.get("departure_date")
     return_date = request.args.get("return_date")
-    person_count = request.args.get("person_count")
     selected_class = request.args.get("selected_class")
     extra_luggage = request.args.get("extra_luggage")
     # Save departure and return date and number of passengers into session.
     session["departure_date"] = departure_date
     session["return_date"] = return_date
-    session["person_count"] = person_count
 
     # loading the flight information
     outward_flights = json.loads(session.get('outward_flights', '[]'), object_hook=custom_decoder)
@@ -249,7 +247,6 @@ def select_flight():
         destination=destination,
         departure_date=departure_date,
         return_date=return_date,
-        person_count=person_count
     )
 
 @app.route("/booking-summary", methods=["GET"])
@@ -265,7 +262,6 @@ def booking_summary():
         return_extra_luggage=session["return_extra_luggage"],
         departure_date=session["departure_date"],
         return_date=session["return_date"],
-        person_count=session["person_count"],
     )
 
 
