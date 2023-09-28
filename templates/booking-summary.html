@@ -67,7 +67,7 @@
 		<tr>
     <td></td>
     <td><strong>Total Price:</strong></td>
-    <td>
+    <td><strong>
         {% if user_tier == "gold" %}
             ${{ ((outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int)) * 0.9 }}
 
@@ -78,6 +78,7 @@
         {% else %}
             ${{ (outward_selected_class|replace('$', '')|int) + (return_selected_class|replace('$', '')|int) + (outward_extra_luggage|replace('$', '')|int) + (return_extra_luggage|replace('$', '')|int) }}
         {% endif %}
+    </strong>
     </td>
 </tr>
 
