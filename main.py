@@ -227,12 +227,14 @@ def select_flight():
     if direction == "outward":
         # Save outward flight data (code, pirce, luggage) into session.
         session["outward_flight"] = flight_code
+        session["outward_airport"] = departure
         session["outward_selected_class"] = selected_class
         session["outward_extra_luggage"] = extra_luggage
 
     if direction == "return":
         # Save return flight data(code, pirce, luggage) into session.
         session["return_flight"] = flight_code
+        session["return_airport"] = destination
         session["return_selected_class"] = selected_class
         session["return_extra_luggage"] = extra_luggage
 
@@ -265,7 +267,10 @@ def booking_summary():
         departure_date=session["departure_date"],
         return_date=session["return_date"],
         user_tier=user_tier,
-        user_id=user_id
+        user_id=user_id,
+        outward_airport=session["outward_airport"],
+        return_airport=session["return_airport"]
+
     )
 
 
