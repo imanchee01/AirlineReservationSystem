@@ -492,10 +492,29 @@ def cancel_ticket():
     else:
         return jsonify({"message": "Invalid data"}), 400
 
-@app.route('/view-requests', methods=['GET'])
-def view_requests():
-    requests = get_pending_requests()
-    return render_template('cancellation-requests.html', requests=requests)
+@app.route('/view-cancellation-requests', methods=["GET", "POST"])
+def view_cancellation_requests():
+    requests = get_ticket_cancellation_requests()
+    if requests is not None:
+        return render_template('cancellation-requests.html', requests=requests)
+    else:
+        return 'Error in fetching requests', 500
+
+@app.route('/accept-request/<int:request_id>', methods=['POST'])
+def accept_request(request_id):
+    print(f"Received request_id: {request_id}")
+    if update_request_status_and_delete_ticket(request_id, 'accepted'):
+        return redirect(url_for('view_cancellation_requests'))
+    else:
+        return 'Error accepting request', 500
+
+
+@app.route('/decline-request/<int:request_id>', methods=['POST'])
+def decline_request(request_id):
+    if update_request_status(request_id, 'declined'):
+        return redirect(url_for('view_cancellation_requests'))
+    else:
+        return 'Error declining request', 500
 
 
 if __name__ == "__main__":
