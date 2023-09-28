@@ -9,11 +9,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 
 db_config = {
-    'user': os.environ.get("DB_ROOTUSER") or 'root',
-    'password': os.environ.get("DB_ROOTPASSWORD") or '',
+    'user': os.environ.get("DB_ROOTUSER") or 'dbuser',
+    'password': os.environ.get("DB_ROOTPASSWORD") or '1111',
     'host': os.environ.get("DB_HOST") or 'localhost',
     'database': os.environ.get("DB_DATABASE") or 'airline',
-    'port': os.environ.get("DB_PORT") or 3308
+    'port': os.environ.get("DB_PORT") or 3307
 }
 
 app = Flask(__name__)
@@ -564,6 +564,75 @@ def get_pending_requests():
 
     return requests
 
+def get_ticket_cancellation_requests():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId
+            FROM request R
+            JOIN tickets T ON R.request_ticketId = T.ticketId
+            JOIN flights F ON T.ticket_flightcode = F.flightcode
+            JOIN client C ON R.request_clientId = C.clientId
+            JOIN user U ON C.clientId = U.userId
+            WHERE R.request_status = 'pending'
+        """)
+        requests = cursor.fetchall()
+        return requests
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def update_request_status_and_delete_ticket(request_id, status):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        print(f"Trying to update request_status to: {status}")
+        cursor.execute("""
+            UPDATE request 
+            SET request_status = %s 
+            WHERE requestId = %s;
+        """, (status, request_id))
+
+        if status == 'accepted':
+            cursor.execute("""
+                DELETE T FROM tickets T
+                JOIN request R ON T.ticketId = R.request_ticketId
+                WHERE R.requestId = %s;
+            """, (request_id,))
+
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def update_request_status(request_id, status):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            UPDATE request 
+            SET request_status = %s 
+            WHERE requestId = %s;
+        """, (status, request_id))
+
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 def get_user_name(user_Id):
     connection = None
