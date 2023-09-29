@@ -54,7 +54,7 @@ def get_flight_class(flight, flight_price):
 def change_flight_miles_based_on_tier_and_ticket_categrory(tier, category, miles):
     # category economy
     if tier == 'bronze' and category == 'economy':
-        return miles
+        return round(miles)
     elif tier == 'silver' and category == 'economy':
         miles = round(miles * 1.05)
         return miles
@@ -72,18 +72,25 @@ def change_flight_miles_based_on_tier_and_ticket_categrory(tier, category, miles
         miles = round(miles * 1.2)
         return miles
     # category firstclass
-    elif tier == 'silver' and category == 'firstclass':
+    elif tier == 'bronze' and category == 'first-class':
         miles = round(miles * 1.1)
         return miles
-    elif tier == 'silver' and category == 'firstclass':
+    elif tier == 'silver' and category == 'first-class':
         miles = round(miles * 1.25)
         return miles
-    elif tier == 'gold' and category == 'firstclass':
+    elif tier == 'gold' and category == 'first-class':
         miles = round(miles * 1.3)
         return miles
     else:
         return 'combination not found'
 
+
+def remove_fully_booked_flights(flights, flight_date, ticket_count):
+    result = []
+    for flight_info in flights:
+        if get_remaining_capacity(flight_info['flightcode'], flight_date) >= ticket_count:
+            result.append(flight_info)
+    return result
 
 
 @app.route("/")
@@ -99,25 +106,43 @@ def flight_search():
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
     return_date = request.form['return_date']
+    ticket_count = 1
 
     # cheking if tho chosen airport exists
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
 
         # if it exists get the flight data
-        outward_flights_data = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
-        return_flights_data = check_flight_availability(f'{return_date}', get_flights(destination, departure))
+        outward_flights_data_cap = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
+        return_flights_data_cap = check_flight_availability(f'{return_date}', get_flights(destination, departure))
 
         # checking if there are any flights available
-        if outward_flights_data is None or return_flights_data is None:
+        if outward_flights_data_cap is None or return_flights_data_cap is None:
             flash('no flights found')
             return redirect(url_for("search_flights"))
 
-        elif outward_flights_data == []:
+        elif outward_flights_data_cap == []:
             flash('No flights found on the selected departure date. Please select a different date.')
             return redirect(url_for("search_flights"))
 
-        elif return_flights_data == []:
+        elif return_flights_data_cap == []:
             flash('No flights found on the selected return date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+
+        #remove flights without capacity
+        outward_flights_data = remove_fully_booked_flights(outward_flights_data_cap, departure_date, ticket_count)
+        return_flights_data = remove_fully_booked_flights(return_flights_data_cap, return_date, ticket_count)
+
+        if outward_flights_data == [] and return_flights_data == []:
+            flash('Flight for the selected departure and return date already fully booked. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        elif outward_flights_data == []:
+            flash('Flight for the selected departure date already fully booked. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        elif return_flights_data == []:
+            flash('Flight for the selected return date already fully booked. Please select a different date.')
             return redirect(url_for("search_flights"))
 
         # getting the flight miles to check if flight is short, middle or long distance
@@ -416,10 +441,7 @@ def order_confirmation():
     )
 
     flight_miles = ticket_miles_return + ticket_miles_outwards
-
-    flight_miles_before = ticket_miles_ret + ticket_miles_out
-
-    print(flight_miles_before, flight_miles)
+    print(flight_miles)
 
     return render_template('order-confirmation.html',
                            flight_miles=flight_miles)

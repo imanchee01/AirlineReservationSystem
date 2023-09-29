@@ -739,9 +739,35 @@ def update_request_status(request_id, status):
             connection.close()
 
 
+def get_remaining_capacity(flightcode, flightdate):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+
+        # Execute the SQL function to get remaining capacity
+        cursor.execute("SELECT GetRemainingCapacity(%(flightcode)s, %(flightdate)s)",
+                       {'flightcode': flightcode, 'flightdate': flightdate})
+
+        # Retrieve the result from the stored procedure
+        result = cursor.fetchone()
+        remaining_capacity = result[next(iter(result))]
+
+        return remaining_capacity
+
+
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     print(get_user_tier(userId))
     client_data = get_client_data(userId)
+    print(get_remaining_capacity(28, '2023-09-10'))
     print(client_data)  # This will print the data returned by the function
