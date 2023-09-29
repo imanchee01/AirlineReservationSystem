@@ -142,15 +142,28 @@ def flight_search():
 @app.route("/client-account", methods=["GET"])
 def client_account():
     user_id = session["userId"]
-
     # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
     client_data2 = get_client_data(user_id)
     cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
+    chekin_states= get_checkinstatus()
+    print(chekin_states)
     flight_history = get_flighthistory(user_id)
     old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
     return render_template("client-account.html", client_data=client_data2,
-                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
+                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history, chekin_states=chekin_states)
+
+@app.route('/update-checkin-status', methods=['POST'])
+def update_checkin_status():
+    try:
+        data = request.get_json()
+        ticket_id = data.get('ticketId')
+        print("ticket", ticket_id)
+        create_checkIn(ticket_id)
+        # Return a success response.
+        return jsonify({'message': 'Checked in successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 

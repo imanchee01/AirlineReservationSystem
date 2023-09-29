@@ -685,6 +685,41 @@ def get_user_tier(user_id):
         if connection:
             connection.close()
 
+def get_checkinstatus():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(" SELECT ticketId, checkinstatus FROM checkin_status ",)
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def create_checkIn(ticket_id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            UPDATE checkin_status 
+            SET checkinstatus = 'checkedin'
+            WHERE ticketId = %s;
+        """, (ticket_id,))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
