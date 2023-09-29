@@ -199,7 +199,7 @@ def flight_search():
         return render_template("flight-search.html")
 
 
-@app.route("/client-account", methods=["GET"])
+@app.route("/client-account", methods=["GET", "POST"])
 def client_account():
     user_id = session["userId"]
 
@@ -209,8 +209,11 @@ def client_account():
     flight_history = get_flighthistory(user_id)
     old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
-    return render_template("client-account.html", client_data=client_data2,
-                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history)
+    return render_template("client-account.html",
+                           client_data=client_data2,
+                           flight_history=flight_history,
+                           cancellation_requests=cancellation_requests,
+                           old_flight_history=old_flight_history)
 
 
 
@@ -553,8 +556,9 @@ def cancel_ticket():
     client_id = session["userId"]
     data = request.get_json()
     ticket_id = data["ticket_id"]
+    cancellation_reason = data.get("cancellation_reason")
     if "ticket_id" in data:
-        create_ticket_cancellation_request(ticket_id, client_id)
+        create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason)
         return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
     else:
         return jsonify({"message": "Invalid data"}), 400
@@ -562,6 +566,7 @@ def cancel_ticket():
 @app.route('/view-cancellation-requests', methods=["GET", "POST"])
 def view_cancellation_requests():
     requests = get_ticket_cancellation_requests()
+    print(requests)
     if requests is not None:
         return render_template('cancellation-requests.html', requests=requests)
     else:

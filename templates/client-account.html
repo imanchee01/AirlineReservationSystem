@@ -165,11 +165,12 @@
 		<br>
 	</div>
 	<br><br>
-	<script>
 
+<script>
     const check_in_status = {}; // Use this object to keep track of check-in status.
+    const cancellation_reasons = {}; // Use this object to store cancellation reasons.
 
-function checkInButtonClick(button, ticketId) {
+    function checkInButtonClick(button, ticketId) {
         if (button.disabled) {
             // If the "Stornieren" button was already clicked, do nothing.
             return;
@@ -190,69 +191,105 @@ function checkInButtonClick(button, ticketId) {
         }
     }
 
-function stornierenButtonClick(button) {
-        const ticketId = button.getAttribute("data-ticket-id");
 
-        // Check if the "Check-In" button was already clicked.
-        if (check_in_status[ticketId]) {
-            // If the "Check-In" button was already clicked, do nothing.
-            return;
-        }
+    function stornierenButtonClick(button) {
+    const ticketId = button.getAttribute("data-ticket-id");
 
-        // Disable the corresponding "CheckIn" button.
-        const checkIn = document.querySelector(`.checkInButton[data-check-in-id="${ticketId}"]`);
-        if (checkIn) {
-            checkIn.disabled = true;
-        }
+    // Check if the "Check-In" button was already clicked.
+    if (check_in_status[ticketId]) {
+        // If the "Check-In" button was already clicked, do nothing.
+        return;
+    }
 
-        // Check if the button is already in "Pending" state.
-        if (button.innerHTML.trim() === "Pending") {
-            // If yes, change it back to "Stornieren" and remove the background color.
-            button.innerHTML = "Stornieren";
-            button.style.backgroundColor = "";
-        } else {
-            // Otherwise, set the button to "Pending" and change the background color to yellow.
+    // Create a text input field dynamically.
+    const cancellationReasonInput = document.createElement("input");
+    cancellationReasonInput.type = "text";
+    cancellationReasonInput.placeholder = "Enter cancellation reason";
+    cancellationReasonInput.className = "cancellation-reason-input";
+
+    // Create a "Save" button.
+    const saveButton = document.createElement("button");
+    saveButton.innerHTML = "Save";
+    saveButton.className = "save-button";
+
+    // Append the input and save button to the button's parent element.
+    button.parentElement.appendChild(cancellationReasonInput);
+    button.parentElement.appendChild(saveButton);
+
+    // Disable the "Stornieren" button.
+    button.disabled = true;
+
+    // Add an event listener to the "Save" button.
+    saveButton.addEventListener("click", () => {
+        const cancellationReason = cancellationReasonInput.value;
+
+        // Check if a cancellation reason was provided.
+        if (cancellationReason.trim() !== "") {
+            // Save the cancellation reason.
+            cancellation_reasons[ticketId] = cancellationReason;
+
+            // Set the "Stornieren" button to "Pending" and change the background color to yellow.
             button.innerHTML = "Pending";
             button.style.backgroundColor = "yellow";
+            button.disabled = true;
+
+            // Send the cancellation request to the server.
+            sendCancellationRequest(ticketId, cancellationReason);
+
+            // Remove the input and save button.
+            button.parentElement.removeChild(cancellationReasonInput);
+            button.parentElement.removeChild(saveButton);
+        } else {
+            alert("Please enter a cancellation reason.");
         }
-
-        // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
-        const data = {
-            ticket_id: ticketId
-        };
-
-        // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
-        fetch("/cancel-ticket", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
-            },
-            body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
-        })
-        .then((response) => {
-            if (response.ok) {
-                showNotification("Ticket cancellation request submitted successfully.", "success");
-            } else {
-                showNotification("Failed to submit ticket cancellation request.", "error");
-            }
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-        });
-
-
-    }
-
-function toggleInfo(infoId) {
-    var infoElement = document.getElementById(infoId);
-    if (infoElement.style.display === "none") {
-        infoElement.style.display = "block";
-    } else {
-        infoElement.style.display = "none";
-    }
+    });
 }
 
-	</script>
+
+    function sendCancellationRequest(ticketId, cancellationReason) {
+        // You can send the cancellation request to the server here.
+        // This is where you should make an AJAX request to submit the cancellation request.
+
+        // For demonstration purposes, we'll just log the cancellation reason.
+        console.log(`Ticket ID: ${ticketId}, Cancellation Reason: ${cancellationReason}`);
+    }
+
+    function sendCancellationRequest(ticketId, cancellationReason) {
+    const data = {
+        ticket_id: ticketId,
+        cancellation_reason: cancellationReason
+    };
+
+    fetch("/cancel-ticket", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            // Handle success (e.g., update the button to "Pending" or similar).
+        } else {
+            // Handle error.
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+}
+
+    function toggleInfo(infoId) {
+        var infoElement = document.getElementById(infoId);
+        if (infoElement.style.display === "none") {
+            infoElement.style.display = "block";
+        } else {
+            infoElement.style.display = "none";
+        }
+    }
+
+</script>
+
         </div>
     </div>
 {% endblock %}

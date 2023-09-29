@@ -430,14 +430,14 @@ def get_flighthistory_ofOldFlights(userId):
             connection.close()
 
 
-def create_ticket_cancellation_request(ticket_id, client_id):
+def create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason):
     try:
         # Erstellen Sie eine neue Anfrage zur Stornierung des Tickets in der Datenbank.
         new_request = Request(
             request_status="pending",
             request_ticketId=ticket_id,
             request_clientId=client_id,
-            request_information="ticket cancellation"
+            request_information=cancellation_reason
         )
         print(new_request)
 
@@ -673,7 +673,7 @@ def get_ticket_cancellation_requests():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId
+            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId, R.request_information
             FROM request R
             JOIN tickets T ON R.request_ticketId = T.ticketId
             JOIN flights F ON T.ticket_flightcode = F.flightcode
@@ -764,10 +764,10 @@ def get_remaining_capacity(flightcode, flightdate):
             connection.close()
 
 
-
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     print(get_user_tier(userId))
+    print(get_ticket_cancellation_requests())
     client_data = get_client_data(userId)
     print(get_remaining_capacity(28, '2023-09-10'))
     print(client_data)  # This will print the data returned by the function
