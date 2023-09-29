@@ -51,6 +51,41 @@ def get_flight_class(flight, flight_price):
         return None
 
 
+def change_flight_miles_based_on_tier_and_ticket_categrory(tier, category, miles):
+    # category economy
+    if tier == 'bronze' and category == 'economy':
+        return miles
+    elif tier == 'silver' and category == 'economy':
+        miles = round(miles * 1.05)
+        return miles
+    elif tier == 'gold' and category == 'economy':
+        miles = round(miles * 1.1)
+        return miles
+    # category business
+    elif tier == 'bronze' and category == 'business':
+        miles = round(miles * 1.05)
+        return miles
+    elif tier == 'silver' and category == 'business':
+        miles = round(miles * 1.15)
+        return miles
+    elif tier == 'gold' and category == 'business':
+        miles = round(miles * 1.2)
+        return miles
+    # category firstclass
+    elif tier == 'silver' and category == 'firstclass':
+        miles = round(miles * 1.1)
+        return miles
+    elif tier == 'silver' and category == 'firstclass':
+        miles = round(miles * 1.25)
+        return miles
+    elif tier == 'gold' and category == 'firstclass':
+        miles = round(miles * 1.3)
+        return miles
+    else:
+        return 'combination not found'
+
+
+
 @app.route("/")
 def home():
     if "user_name" in session:
@@ -185,7 +220,7 @@ def sign_up():
         try:
             if is_valid_registration_data(firstName, lastName, email, password):
                 save_signup_information(firstName, lastName, email, password)
-                return redirect(url_for("flight_search"))
+                return redirect(url_for("search_flights"))
 
         except Exception as e:
             app.logger.error("Error! " + str(e))
@@ -340,17 +375,20 @@ def order_confirmation():
     ticket_purchaseDate_outward = datetime.datetime.now()
 
     ticket_name = session.get('ticket_name')
-    print(ticket_name)
     ticket_date = session.get("departure_date")
     ticket_userId = session.get("userId")
     ticket_flightcode = session.get("outward_flight")
+    client_tier = get_user_tier(ticket_userId)
     ticket_miles_out = session.get("flight_miles_out")
     ticket_class_out = session.get("outward_selected_category")
+
+    # change ticket miles based on tier and class
+    ticket_miles_outwards = change_flight_miles_based_on_tier_and_ticket_categrory(client_tier, ticket_class_out, ticket_miles_out)
 
     Ticket.add_ticket(
         ticket_name,
         ticket_date,
-        ticket_miles_out,
+        ticket_miles_outwards,
         ticket_purchaseDate_outward,
         ticket_userId,
         ticket_flightcode,
@@ -364,17 +402,24 @@ def order_confirmation():
     ticket_miles_ret = session.get("flight_miles_ret")
     ticket_class_ret = session.get("return_selected_category")
 
+    # change ticket miles based on class and tier
+    ticket_miles_return = change_flight_miles_based_on_tier_and_ticket_categrory(client_tier, ticket_class_ret, ticket_miles_ret)
+
     Ticket.add_ticket(
         ticket_name,
         ticket_date,
-        ticket_miles_ret,
+        ticket_miles_return,
         ticket_purchaseDate_return,
         ticket_userId,
         ticket_flightcode,
         ticket_class_ret
     )
 
-    flight_miles = ticket_miles_ret + ticket_miles_out
+    flight_miles = ticket_miles_return + ticket_miles_outwards
+
+    flight_miles_before = ticket_miles_ret + ticket_miles_out
+
+    print(flight_miles_before, flight_miles)
 
     return render_template('order-confirmation.html',
                            flight_miles=flight_miles)
@@ -499,7 +544,6 @@ def view_cancellation_requests():
         return render_template('cancellation-requests.html', requests=requests)
     else:
         return 'Error in fetching requests', 500
-
 @app.route('/accept-request/<int:request_id>', methods=['POST'])
 def accept_request(request_id):
     print(f"Received request_id: {request_id}")

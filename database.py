@@ -564,6 +564,75 @@ def get_pending_requests():
 
     return requests
 
+def get_ticket_cancellation_requests():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId
+            FROM request R
+            JOIN tickets T ON R.request_ticketId = T.ticketId
+            JOIN flights F ON T.ticket_flightcode = F.flightcode
+            JOIN client C ON R.request_clientId = C.clientId
+            JOIN user U ON C.clientId = U.userId
+            WHERE R.request_status = 'pending'
+        """)
+        requests = cursor.fetchall()
+        return requests
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def update_request_status_and_delete_ticket(request_id, status):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        print(f"Trying to update request_status to: {status}")
+        cursor.execute("""
+            UPDATE request 
+            SET request_status = %s 
+            WHERE requestId = %s;
+        """, (status, request_id))
+
+        if status == 'accepted':
+            cursor.execute("""
+                DELETE T FROM tickets T
+                JOIN request R ON T.ticketId = R.request_ticketId
+                WHERE R.requestId = %s;
+            """, (request_id,))
+
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def update_request_status(request_id, status):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            UPDATE request 
+            SET request_status = %s 
+            WHERE requestId = %s;
+        """, (status, request_id))
+
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 def get_user_name(user_Id):
     connection = None
@@ -669,7 +738,10 @@ def update_request_status(request_id, status):
         if connection:
             connection.close()
 
+
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
+    print(get_user_tier(userId))
     client_data = get_client_data(userId)
     print(client_data)  # This will print the data returned by the function
