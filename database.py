@@ -667,9 +667,46 @@ def get_user_tier(user_id):
     finally:
         if connection:
             connection.close()
+def update_offers(ticket_flightcode, ticket_class, offer):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        query = """
+                    UPDATE tickets 
+                    SET offer = %s 
+                    WHERE ticket_flightcode = %s AND ticket_class = %s
+                """
+        print(f"Executing query: {query} with parameters: {offer}, {ticket_flightcode}, {ticket_class}")
+
+        cursor.execute(query, (offer, ticket_flightcode, ticket_class))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+def get_flight_codes():
+    try:
+        connection = get_db_connection()  # assuming you have a function to get a db connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT flightcode FROM flights")
+        results = cursor.fetchall()
+        print(results)
+        flight_codes = [row[0] for row in results]
+        print(flight_codes)
+        return flight_codes
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
 
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_client_data(userId)
     print(client_data)  # This will print the data returned by the function
+    print(update_offers(1, "economy", "free meal"))

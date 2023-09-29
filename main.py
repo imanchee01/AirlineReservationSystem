@@ -515,6 +515,23 @@ def decline_request(request_id):
     else:
         return 'Error declining request', 500
 
+@app.route('/issue-offers', methods=['GET', 'POST'])
+def issue_offers():
+    if request.method == 'POST':
+        print(request.form)
+        ticket_flightcode = request.form.get('ticket_flightcode')
+        ticket_class = request.form.get('ticket_class')
+        offer = request.form.get('offer')
+        if update_offers(ticket_flightcode, ticket_class, offer):
+            flash('Offer Issued Successfully')
+            return redirect(url_for('issue_offers'))
+        else:
+            return 'Error Issuing Offer', 500
+
+    flight_codes = get_flight_codes()
+    print(flight_codes) #returns None
+    return render_template('issue-offers.html', flight_codes=flight_codes)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

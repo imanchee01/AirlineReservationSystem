@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Offers{% endblock %}
+
+{% block content %}
+<style>
+ /* Style for the employee home button and icon */
+  .employee-home-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+ .logout-button {
+    position: absolute;
+    top: 55px; /* Adjust the top position as needed */
+    right: 20px;
+  }
+</style>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" onclick="closeAlert(this)">&times;</button>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<script>
+    function closeAlert(element) {
+        element.parentElement.style.display='none';
+    }
+</script>
+<!-- Employee Home button with icon -->
+<div class="employee-home-button">
+  <a href="/employee-home">
+    <button class="btn btn-primary">
+      Employee Home
+    </button>
+  </a>
+</div>
+
+<!-- Logout button with icon -->
+<div class="logout-button">
+  <a href="/logout">
+    <i class="fas fa-arrow-right"></i>
+    Logout
+  </a>
+</div>
+<h1>Issue Offers</h1>
+<form method="post" action="{{ url_for('issue_offers') }}">
+    <label for="ticket_flightcode">Flight Code:</label>
+    <select name="ticket_flightcode">
+    {% for ticket_flightcode in flight_codes %}
+        <option value="{{ ticket_flightcode }}">{{ ticket_flightcode }}</option>
+    {% endfor %}
+</select>
+    <br><br>
+    <label for="ticket_class">Ticket Class:</label>
+    <select name="ticket_class" id="ticket_class">
+        <option value="economy">Economy</option>
+        <option value="business">Business</option>
+        <option value="first-class">First Class</option>
+    </select>
+    <br><br>
+    <label for="offer">Offer:</label>
+    <select name="offer" id="offer">
+        <option value="free coffee">Free Coffee</option>
+        <option value="free meal">Free Meal</option>
+        <option value="complementary champagne">Complementary Champagne</option>
+    </select>
+    <br><br>
+    <input type="submit" value="Issue Offer">
+</form>
+{% endblock %}
