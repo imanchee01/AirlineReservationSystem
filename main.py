@@ -553,10 +553,13 @@ def add_aircraft_route():
 
 
 
-@app.route('/delete_aircraft/<int:id>', methods=['GET'])
+@app.route('/delete-aircraft/<int:id>', methods=['POST'])  # Use POST to avoid accidental deletes from web crawlers
 def delete_aircraft(id):
-    db.delete_aircraft(id)
-    return redirect(url_for('edit_aircrafts'))
+    success = delete_aircraft_by_id(id)
+    if success:
+        return redirect(url_for('edit_aircrafts'))
+    else:
+        return 'Internal Server Error', 500
 
 if __name__ == "__main__":
     app.run(debug=True)
