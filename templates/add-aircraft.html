@@ -24,7 +24,7 @@
 <br>
 <form action="/add_aircraft_route" method="post">
     <label>Aircraft Model:</label>
-    <select name="selected_aircraft_model" required>
+    <select name="aircraft_model" required>
         {% for aircraft in aircrafts %}
             <option value="{{ aircraft.aircraft_model }}">{{ aircraft.aircraft_model }}</option>
         {% endfor %}
@@ -34,7 +34,7 @@
     <input type="number" name="aircraft_capacity" required>
 
     <label>First Class:</label>
-    <select name="firstclass" required>
+    <select name="aircraft_firstclass" required>
         <option value="y">Yes</option>
         <option value="n">No</option>
     </select>
