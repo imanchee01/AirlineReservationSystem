@@ -22,7 +22,39 @@
     strong {
       font-weight: bold;
     }
+
+    /* Style for the employee home button and icon */
+  .employee-home-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  /* Style for the logout button */
+  .logout-button {
+    position: absolute;
+    top: 55px; /* Adjust the top position as needed */
+    right: 20px;
+  }
   </style>
+
+    <!-- Employee Home button with icon -->
+<div class="employee-home-button">
+  <a href="/employee-home">
+    <button class="btn btn-primary">
+      Employee Home
+    </button>
+  </a>
+</div>
+
+<!-- Logout button with icon -->
+<div class="logout-button">
+  <a href="/logout">
+    <i class="fas fa-arrow-right"></i>
+    Logout
+  </a>
+</div>
+
   <div class="cancellation-requests">
    <h1 style="font-weight: bold; font-size: 18px;">Cancellation Request</h1>
    <br> <br>
