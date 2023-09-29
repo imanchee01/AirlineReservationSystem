@@ -510,10 +510,10 @@ def accept_request(request_id):
 
 @app.route('/decline-request/<int:request_id>', methods=['POST'])
 def decline_request(request_id):
-    if update_request_status(request_id, 'declined'):
-        return redirect(url_for('view_cancellation_requests'))
-    else:
-        return 'Error declining request', 500
+    print(request_id)
+    delete_request(request_id)
+    return redirect(url_for('view_cancellation_requests'))
+
 
 
 if __name__ == "__main__":

@@ -615,6 +615,24 @@ def update_request_status_and_delete_ticket(request_id, status):
             connection.close()
 
 
+def delete_request(request_id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        print("req", request_id)
+        cursor.execute("""
+            DELETE FROM request 
+            WHERE requestId = %s;
+        """, (request_id,))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
 def update_request_status(request_id, status):
     try:
         connection = get_db_connection()
