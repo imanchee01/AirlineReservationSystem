@@ -703,7 +703,24 @@ def get_flight_codes():
     finally:
         if connection:
             connection.close()
-
+def add_aircraft(model, capacity, firstclass):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """INSERT INTO aircraft (aircraft_model, aircraft_capacity, aircraft_firstclass) 
+                   VALUES (%s, %s, %s)"""
+        params = (model, capacity, firstclass)
+        try:
+            cursor.execute(query, params)
+            print(cursor.execute(query, params))
+            conn.commit()
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+    return True
 
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.

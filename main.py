@@ -531,7 +531,32 @@ def issue_offers():
     flight_codes = get_flight_codes()
     print(flight_codes) #returns None
     return render_template('issue-offers.html', flight_codes=flight_codes)
+@app.route('/add_aircraft_route', methods=['GET', 'POST'])
+def add_aircraft_route():
+    if request.method == 'POST':
+        if not request.form or not all(
+                key in request.form for key in ('aircraft_model', 'aircraft_capacity', 'aircraft_firstclass')):
+            return 'All fields are required', 400
 
+        model = request.form.get('aircraft_model')
+        capacity = request.form.get('aircraft_capacity')
+        firstclass = request.form.get('aircraft_firstclass')
+
+        if add_aircraft(model, capacity, firstclass):
+            return redirect(url_for('edit_aircrafts'))
+        else:
+            return 'Internal Server Error', 500
+
+    aircrafts = get_all_aircrafts()
+    return render_template('add-aircraft.html', aircrafts=aircrafts)
+
+
+
+
+@app.route('/delete_aircraft/<int:id>', methods=['GET'])
+def delete_aircraft(id):
+    db.delete_aircraft(id)
+    return redirect(url_for('edit_aircrafts'))
 
 if __name__ == "__main__":
     app.run(debug=True)

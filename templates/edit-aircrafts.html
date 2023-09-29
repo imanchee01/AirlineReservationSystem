@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Aircrafts{% endblock %}
+{% block title %}Manage Aircrafts{% endblock %}
 
 {% block content %}
 
@@ -53,8 +53,9 @@
   </a>
 </div>
 
-<h1 style="font-weight: bold; font-size: 18px;">Edit Aircraft</h1>
-<br>
+<h1 style="font-weight: bold; font-size: 18px;">Manage Aircrafts</h1>
+<br><br>
+<a href="{{ url_for('add_aircraft_route') }}">Add Aircraft</a>
 <table>
   <tr>
     <th style="width: 10%;">Aircraft ID</th>
@@ -69,7 +70,10 @@
     <td>{{ aircraft.aircraft_model }}</td>
     <td>{{ aircraft.aircraft_capacity }}</td>
     <td>{{ aircraft.aircraft_firstclass }}</td>
-    <td><a href="{{ url_for('edit_aircraft', id=aircraft.aircraftId) }}">Edit</a></td>
+    <td>
+        <a href="{{ url_for('edit_aircraft', id=aircraft.aircraftId) }}">Edit</a> |
+        <a href="{{ url_for('delete_aircraft', id=aircraft.aircraftId) }}">Delete</a>
+    </td>
   </tr>
   {% endfor %}
 </table>

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+<style>
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+      text-align: -webkit-left;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+    }
+
+    /* Other styles remain the same */
+</style>
+
+<h1 style="font-weight: bold; font-size: 18px;">Add Aircraft</h1>
+<br>
+<form action="/add_aircraft_route" method="post">
+    <label>Aircraft Model:</label>
+    <select name="selected_aircraft_model" required>
+        {% for aircraft in aircrafts %}
+            <option value="{{ aircraft.aircraft_model }}">{{ aircraft.aircraft_model }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Aircraft Capacity:</label>
+    <input type="number" name="aircraft_capacity" required>
+
+    <label>First Class:</label>
+    <select name="firstclass" required>
+        <option value="y">Yes</option>
+        <option value="n">No</option>
+    </select>
+
+    <br>
+    <input type="submit" value="Add Aircraft">
+</form>
+
+<!-- Employee Home button and Logout button remain the same -->
+{% endblock %}
