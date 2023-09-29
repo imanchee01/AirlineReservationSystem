@@ -510,7 +510,6 @@ def accept_request(request_id):
 
 @app.route('/decline-request/<int:request_id>', methods=['POST'])
 def decline_request(request_id):
-    print(request_id)
     delete_request(request_id)
     return redirect(url_for('view_cancellation_requests'))
 

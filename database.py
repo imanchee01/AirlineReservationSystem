@@ -619,7 +619,6 @@ def delete_request(request_id):
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        print("req", request_id)
         cursor.execute("""
             DELETE FROM request 
             WHERE requestId = %s;
