@@ -193,65 +193,56 @@
 
 
     function stornierenButtonClick(button) {
-    const ticketId = button.getAttribute("data-ticket-id");
+        const ticketId = button.getAttribute("data-ticket-id");
 
-    // Check if the "Check-In" button was already clicked.
-    if (check_in_status[ticketId]) {
-        // If the "Check-In" button was already clicked, do nothing.
-        return;
-    }
-
-    // Create a text input field dynamically.
-    const cancellationReasonInput = document.createElement("input");
-    cancellationReasonInput.type = "text";
-    cancellationReasonInput.placeholder = "Enter cancellation reason";
-    cancellationReasonInput.className = "cancellation-reason-input";
-
-    // Create a "Save" button.
-    const saveButton = document.createElement("button");
-    saveButton.innerHTML = "Save";
-    saveButton.className = "save-button";
-
-    // Append the input and save button to the button's parent element.
-    button.parentElement.appendChild(cancellationReasonInput);
-    button.parentElement.appendChild(saveButton);
-
-    // Disable the "Stornieren" button.
-    button.disabled = true;
-
-    // Add an event listener to the "Save" button.
-    saveButton.addEventListener("click", () => {
-        const cancellationReason = cancellationReasonInput.value;
-
-        // Check if a cancellation reason was provided.
-        if (cancellationReason.trim() !== "") {
-            // Save the cancellation reason.
-            cancellation_reasons[ticketId] = cancellationReason;
-
-            // Set the "Stornieren" button to "Pending" and change the background color to yellow.
-            button.innerHTML = "Pending";
-            button.style.backgroundColor = "yellow";
-            button.disabled = true;
-
-            // Send the cancellation request to the server.
-            sendCancellationRequest(ticketId, cancellationReason);
-
-            // Remove the input and save button.
-            button.parentElement.removeChild(cancellationReasonInput);
-            button.parentElement.removeChild(saveButton);
-        } else {
-            alert("Please enter a cancellation reason.");
+        // Check if the "Check-In" button was already clicked.
+        if (check_in_status[ticketId]) {
+            // If the "Check-In" button was already clicked, do nothing.
+            return;
         }
-    });
-}
 
+        // Create a text input field dynamically.
+        const cancellationReasonInput = document.createElement("input");
+        cancellationReasonInput.type = "text";
+        cancellationReasonInput.placeholder = "Enter cancellation reason";
+        cancellationReasonInput.className = "cancellation-reason-input";
 
-    function sendCancellationRequest(ticketId, cancellationReason) {
-        // You can send the cancellation request to the server here.
-        // This is where you should make an AJAX request to submit the cancellation request.
+        // Create a "Save" button.
+        const saveButton = document.createElement("button");
+        saveButton.innerHTML = "Save";
+        saveButton.className = "save-button";
 
-        // For demonstration purposes, we'll just log the cancellation reason.
-        console.log(`Ticket ID: ${ticketId}, Cancellation Reason: ${cancellationReason}`);
+        // Append the input and save button to the button's parent element.
+        button.parentElement.appendChild(cancellationReasonInput);
+        button.parentElement.appendChild(saveButton);
+
+        // Disable the "Stornieren" button.
+        button.disabled = true;
+
+        // Add an event listener to the "Save" button.
+        saveButton.addEventListener("click", () => {
+            const cancellationReason = cancellationReasonInput.value;
+
+            // Check if a cancellation reason was provided.
+            if (cancellationReason.trim() !== "") {
+                // Save the cancellation reason.
+                cancellation_reasons[ticketId] = cancellationReason;
+
+                // Set the "Stornieren" button to "Pending" and change the background color to yellow.
+                button.innerHTML = "Pending";
+                button.style.backgroundColor = "yellow";
+                button.disabled = true;
+
+                // Send the cancellation request to the server.
+                sendCancellationRequest(ticketId, cancellationReason);
+
+                // Remove the input and save button.
+                button.parentElement.removeChild(cancellationReasonInput);
+                button.parentElement.removeChild(saveButton);
+            } else {
+                alert("Please enter a cancellation reason.");
+            }
+        });
     }
 
     function sendCancellationRequest(ticketId, cancellationReason) {
@@ -269,9 +260,19 @@
     })
     .then(response => {
         if (response.ok) {
-            // Handle success (e.g., update the button to "Pending" or similar).
+            // Handle success
+            const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
+            if (stornierenButton) {
+                stornierenButton.innerHTML = "Pending";
+                stornierenButton.style.backgroundColor = "yellow";
+                stornierenButton.disabled = true;
+            }
         } else {
-            // Handle error.
+            alert("Cancellation request failed. Please try again.");
+            const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
+            if (stornierenButton) {
+                stornierenButton.disabled = false; // Enable the "Stornieren" button for retry.
+            }
         }
     })
     .catch(error => {
