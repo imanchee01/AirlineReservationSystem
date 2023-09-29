@@ -738,6 +738,20 @@ def delete_aircraft_by_id(id):
             conn.close()
     return False
 
+def get_all_flights():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM flights")
+            flights = cursor.fetchall()
+            return flights
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_client_data(userId)
