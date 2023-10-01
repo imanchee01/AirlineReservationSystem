@@ -569,10 +569,33 @@ def delete_aircraft(id):
 def manage_flights():
     all_flights = get_all_flights()
     return render_template('manage-flights.html', flights=all_flights)
-@app.route('/edit-flight', methods=['GET'])
-def edit_flight():
-    all_flights = get_all_flights()
-    return render_template('manage-flights.html', flights=all_flights)
+@app.route('/edit-flight/<int:id>', methods=['GET'])
+def edit_flight(id):
+    flight = get_flight_by_id(id)
+    if flight:
+        return render_template('edit-flight-form.html', flight=flight)
+    else:
+        return 'Flight not found', 404
+@app.route('/save-flight/<int:id>', methods=['POST'])
+def save_flight(id):
+    if request.method == 'POST':
+        # Get data from form submission
+        flight_miles = request.form['flight_miles']
+        flight_source = request.form['flight_source']
+        flight_destination = request.form['flight_destination']
+        flight_weekday = request.form['flight_weekday']
+        flight_arrTime = request.form['flight_arrTime']
+        flight_depTime = request.form['flight_depTime']
+        flight_aircraftId = request.form['flight_aircraftId']
+
+        # Update flight details
+        if update_flight(id, flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId):
+            flash('Flight updated successfully', 'success')
+            return redirect(url_for('manage_flights'))
+        else:
+            flash('Error updating flight', 'error')
+            return render_template('edit-flight-form.html', id=id), 500
+
 @app.route('/delete-flight/<int:id>', methods=['POST'])  # Use POST to avoid accidental deletes from web crawlers
 def delete_flight(id):
     goal = delete_flight_by_id(id)

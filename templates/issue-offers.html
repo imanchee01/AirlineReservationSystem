@@ -17,21 +17,23 @@
   }
 </style>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" onclick="closeAlert(this)">&times;</button>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-<script>
-    function closeAlert(element) {
-        element.parentElement.style.display='none';
-    }
-</script>
+{#{% with messages = get_flashed_messages(with_categories=true) %}#}
+{#    {% if messages %}#}
+{#        {% for category, message in messages %}#}
+{#            <div class="alert alert-{{ category }} alert-dismissible">#}
+{#                <button type="button" class="close" data-dismiss="alert" onclick="closeAlert(this)">&times;</button>#}
+{#                {{ message }}#}
+{#            </div>#}
+{#        {% endfor %}#}
+{#    {% endif %}#}
+{#{% endwith %}#}
+{#<script>#}
+{#    function closeAlert(element) {#}
+{#        element.parentElement.style.display='none';#}
+{#    }#}
+{#</script>#}
+
+
 <!-- Employee Home button with icon -->
 <div class="employee-home-button">
   <a href="/employee-home">

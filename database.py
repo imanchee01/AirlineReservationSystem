@@ -766,6 +766,42 @@ def delete_flight_by_id(id):
             cursor.close()
             conn.close()
     return False
+
+def get_flight_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM flights WHERE flightcode = %s", (id,))
+            return cursor.fetchone()
+        finally:
+            conn.close()
+
+def update_flight(id, miles, source, destination, weekday, arrival, departure, aircraft_id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE flights SET
+                flight_miles = %s,
+                flight_source = %s,
+                flight_destination = %s,
+                flight_weekday = %s,
+                flight_arrTime = %s,
+                flight_depTime = %s,
+                flight_aircraftId = %s
+                WHERE flightcode = %s
+            """, (miles, source, destination, weekday, arrival, departure, aircraft_id, id))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            conn.close()
+
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_client_data(userId)
