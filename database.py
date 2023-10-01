@@ -9,12 +9,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 
 db_config = {
-    'user': 'root',
-    'password': '',
-    'host': 'localhost',
-    'database': 'airline',
-    'port': 3306
+    'user': os.environ.get("DB_ROOTUSER") or 'root',
+    'password': os.environ.get("DB_ROOTPASSWORD") or '',
+    'host': os.environ.get("DB_HOST") or 'localhost',
+    'database': os.environ.get("DB_DATABASE") or 'airline',
+    'port': os.environ.get("DB_PORT") or 3308
 }
+
 
 app = Flask(__name__)
 
@@ -76,14 +77,6 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.user_name}>"
-
-def get_db_connection():
-    try:
-        conn = mariadb.connect(**db_config)
-        return conn
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
 
 
 class Flight(db.Model):
@@ -430,14 +423,14 @@ def get_flighthistory_ofOldFlights(userId):
             connection.close()
 
 
-def create_ticket_cancellation_request(ticket_id, client_id):
+def create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason):
     try:
         # Erstellen Sie eine neue Anfrage zur Stornierung des Tickets in der Datenbank.
         new_request = Request(
             request_status="pending",
             request_ticketId=ticket_id,
             request_clientId=client_id,
-            request_information="ticket cancellation"
+            request_information=cancellation_reason
         )
         print(new_request)
 
@@ -549,6 +542,7 @@ def get_all_items_by_name__from_directionary(directionary, item_name):
 
     return list
 
+
 def get_pending_requests():
     conn = get_db_connection()
     if not conn:
@@ -564,12 +558,13 @@ def get_pending_requests():
 
     return requests
 
+
 def get_ticket_cancellation_requests():
     try:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
-            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId
+            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId, R.request_information
             FROM request R
             JOIN tickets T ON R.request_ticketId = T.ticketId
             JOIN flights F ON T.ticket_flightcode = F.flightcode
@@ -651,6 +646,7 @@ def update_request_status(request_id, status):
         if connection:
             connection.close()
 
+
 def get_user_name(user_Id):
     connection = None
     try:
@@ -684,6 +680,8 @@ def get_user_tier(user_id):
     finally:
         if connection:
             connection.close()
+
+
 def update_offers(ticket_flightcode, ticket_class, offer):
     try:
         connection = get_db_connection()
@@ -704,6 +702,8 @@ def update_offers(ticket_flightcode, ticket_class, offer):
     finally:
         if connection:
             connection.close()
+
+
 def get_flight_codes():
     try:
         connection = get_db_connection()  # assuming you have a function to get a db connection
@@ -720,6 +720,8 @@ def get_flight_codes():
     finally:
         if connection:
             connection.close()
+
+
 def add_aircraft(model, capacity, firstclass):
     conn = get_db_connection()
     if conn:
@@ -739,6 +741,7 @@ def add_aircraft(model, capacity, firstclass):
             conn.close()
     return True
 
+
 def delete_aircraft_by_id(id):
     conn = get_db_connection()
     if conn:
@@ -755,6 +758,7 @@ def delete_aircraft_by_id(id):
             conn.close()
     return False
 
+
 def get_all_flights():
     conn = get_db_connection()
     if conn:
@@ -768,6 +772,8 @@ def get_all_flights():
         finally:
             cursor.close()
             conn.close()
+
+
 def delete_flight_by_id(id):
     conn = get_db_connection()
     if conn:
@@ -784,6 +790,7 @@ def delete_flight_by_id(id):
             conn.close()
     return False
 
+
 def get_flight_by_id(id):
     conn = get_db_connection()
     if conn:
@@ -793,6 +800,7 @@ def get_flight_by_id(id):
             return cursor.fetchone()
         finally:
             conn.close()
+
 
 def update_flight(id, miles, source, destination, weekday, arrival, departure, aircraft_id):
     conn = get_db_connection()
@@ -818,6 +826,7 @@ def update_flight(id, miles, source, destination, weekday, arrival, departure, a
         finally:
             conn.close()
 
+
 def get_checkinstatus():
     connection = None
     try:
@@ -832,6 +841,7 @@ def get_checkinstatus():
     finally:
         if connection:
             connection.close()
+
 
 def create_checkIn(ticket_id):
     try:
@@ -851,6 +861,30 @@ def create_checkIn(ticket_id):
         if connection:
             connection.close()
 
+
+def get_remaining_capacity(flightcode, flightdate):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+
+        # Execute the SQL function to get remaining capacity
+        cursor.execute("SELECT GetRemainingCapacity(%(flightcode)s, %(flightdate)s)",
+                       {'flightcode': flightcode, 'flightdate': flightdate})
+
+        # Retrieve the result from the stored procedure
+        result = cursor.fetchone()
+        remaining_capacity = result[next(iter(result))]
+
+        return remaining_capacity
+
+
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 
 

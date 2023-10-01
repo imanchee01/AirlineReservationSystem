@@ -51,6 +51,48 @@ def get_flight_class(flight, flight_price):
         return None
 
 
+def change_flight_miles_based_on_tier_and_ticket_categrory(tier, category, miles):
+    # category economy
+    if tier == 'bronze' and category == 'economy':
+        return round(miles)
+    elif tier == 'silver' and category == 'economy':
+        miles = round(miles * 1.05)
+        return miles
+    elif tier == 'gold' and category == 'economy':
+        miles = round(miles * 1.1)
+        return miles
+    # category business
+    elif tier == 'bronze' and category == 'business':
+        miles = round(miles * 1.05)
+        return miles
+    elif tier == 'silver' and category == 'business':
+        miles = round(miles * 1.15)
+        return miles
+    elif tier == 'gold' and category == 'business':
+        miles = round(miles * 1.2)
+        return miles
+    # category firstclass
+    elif tier == 'bronze' and category == 'first-class':
+        miles = round(miles * 1.1)
+        return miles
+    elif tier == 'silver' and category == 'first-class':
+        miles = round(miles * 1.25)
+        return miles
+    elif tier == 'gold' and category == 'first-class':
+        miles = round(miles * 1.3)
+        return miles
+    else:
+        return 'combination not found'
+
+
+def remove_fully_booked_flights(flights, flight_date, ticket_count):
+    result = []
+    for flight_info in flights:
+        if get_remaining_capacity(flight_info['flightcode'], flight_date) >= ticket_count:
+            result.append(flight_info)
+    return result
+
+
 @app.route("/")
 def home():
     if "user_name" in session:
@@ -64,25 +106,43 @@ def flight_search():
     destination = request.form["destination"]
     departure_date = request.form['departure_date']
     return_date = request.form['return_date']
+    ticket_count = 1
 
     # cheking if tho chosen airport exists
     if airport_exists(f"{departure}") and airport_exists(f"{destination}"):
 
         # if it exists get the flight data
-        outward_flights_data = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
-        return_flights_data = check_flight_availability(f'{return_date}', get_flights(destination, departure))
+        outward_flights_data_cap = check_flight_availability(f'{departure_date}', get_flights(departure, destination))
+        return_flights_data_cap = check_flight_availability(f'{return_date}', get_flights(destination, departure))
 
         # checking if there are any flights available
-        if outward_flights_data is None or return_flights_data is None:
+        if outward_flights_data_cap is None or return_flights_data_cap is None:
             flash('no flights found')
             return redirect(url_for("search_flights"))
 
-        elif outward_flights_data == []:
+        elif outward_flights_data_cap == []:
             flash('No flights found on the selected departure date. Please select a different date.')
             return redirect(url_for("search_flights"))
 
-        elif return_flights_data == []:
+        elif return_flights_data_cap == []:
             flash('No flights found on the selected return date. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+
+        #remove flights without capacity
+        outward_flights_data = remove_fully_booked_flights(outward_flights_data_cap, departure_date, ticket_count)
+        return_flights_data = remove_fully_booked_flights(return_flights_data_cap, return_date, ticket_count)
+
+        if outward_flights_data == [] and return_flights_data == []:
+            flash('Flight for the selected departure and return date already fully booked. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        elif outward_flights_data == []:
+            flash('Flight for the selected departure date already fully booked. Please select a different date.')
+            return redirect(url_for("search_flights"))
+
+        elif return_flights_data == []:
+            flash('Flight for the selected return date already fully booked. Please select a different date.')
             return redirect(url_for("search_flights"))
 
         # getting the flight miles to check if flight is short, middle or long distance
@@ -139,7 +199,8 @@ def flight_search():
         return render_template("flight-search.html")
 
 
-@app.route("/client-account", methods=["GET"])
+
+@app.route("/client-account", methods=["GET", "POST"])
 def client_account():
     user_id = session["userId"]
     # Rufen Sie die persönlichen Daten des Clients und die Flugdaten aus der Datenbank ab.
@@ -150,8 +211,12 @@ def client_account():
     flight_history = get_flighthistory(user_id)
     old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
-    return render_template("client-account.html", client_data=client_data2,
-                               flight_history=flight_history, cancellation_requests=cancellation_requests, old_flight_history=old_flight_history, chekin_states=chekin_states)
+    return render_template("client-account.html",
+                           client_data=client_data2,
+                           flight_history=flight_history,
+                           cancellation_requests=cancellation_requests,
+                           old_flight_history=old_flight_history,
+                           chekin_states=chekin_states)
 
 @app.route('/update-checkin-status', methods=['POST'])
 def update_checkin_status():
@@ -198,7 +263,7 @@ def sign_up():
         try:
             if is_valid_registration_data(firstName, lastName, email, password):
                 save_signup_information(firstName, lastName, email, password)
-                return redirect(url_for("flight_search"))
+                return redirect(url_for("search_flights"))
 
         except Exception as e:
             app.logger.error("Error! " + str(e))
@@ -353,17 +418,20 @@ def order_confirmation():
     ticket_purchaseDate_outward = datetime.datetime.now()
 
     ticket_name = session.get('ticket_name')
-    print(ticket_name)
     ticket_date = session.get("departure_date")
     ticket_userId = session.get("userId")
     ticket_flightcode = session.get("outward_flight")
+    client_tier = get_user_tier(ticket_userId)
     ticket_miles_out = session.get("flight_miles_out")
     ticket_class_out = session.get("outward_selected_category")
+
+    # change ticket miles based on tier and class
+    ticket_miles_outwards = change_flight_miles_based_on_tier_and_ticket_categrory(client_tier, ticket_class_out, ticket_miles_out)
 
     Ticket.add_ticket(
         ticket_name,
         ticket_date,
-        ticket_miles_out,
+        ticket_miles_outwards,
         ticket_purchaseDate_outward,
         ticket_userId,
         ticket_flightcode,
@@ -377,17 +445,24 @@ def order_confirmation():
     ticket_miles_ret = session.get("flight_miles_ret")
     ticket_class_ret = session.get("return_selected_category")
 
+    # change ticket miles based on class and tier
+    ticket_miles_return = change_flight_miles_based_on_tier_and_ticket_categrory(client_tier, ticket_class_ret, ticket_miles_ret)
+
     Ticket.add_ticket(
         ticket_name,
         ticket_date,
-        ticket_miles_ret,
+        ticket_miles_return,
         ticket_purchaseDate_return,
         ticket_userId,
         ticket_flightcode,
         ticket_class_ret
     )
 
-    flight_miles = ticket_miles_ret + ticket_miles_out
+    flight_miles = ticket_miles_return + ticket_miles_outwards
+
+    flight_miles_before = ticket_miles_ret + ticket_miles_out
+
+    print(flight_miles_before, flight_miles)
 
     return render_template('order-confirmation.html',
                            flight_miles=flight_miles)
@@ -402,6 +477,7 @@ def employee_home():
 def edit_aircrafts():
     aircrafts = get_all_aircrafts()
     return render_template('edit-aircrafts.html', aircrafts=aircrafts)
+
 
 @app.route('/edit-aircraft/<int:id>', methods=['GET'])
 def edit_aircraft(id):
@@ -428,6 +504,7 @@ def save_aircraft(id):
 @app.route("/edit-flights", methods=["GET", "POST"])
 def edit_flights():
     return render_template("edit-flights.html")
+
 
 '''
 @app.route("/add-flight", methods=["GET", "POST"])
@@ -469,9 +546,11 @@ def add_flight_route():
     return redirect(url_for("add_flight_route"))
 '''
 
+
 @app.route("/cancellation-requests", methods=["GET", "POST"])
 def cancellation_requests():
     return render_template("cancellation-requests.html")
+
 
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
@@ -499,16 +578,24 @@ def add_flight_route():
             return render_template("edit-flights.html"), 500
     return render_template("edit-flights.html")
 
+
 @app.route("/cancel-ticket", methods=["POST"])
 def cancel_ticket():
     client_id = session["userId"]
     data = request.get_json()
     ticket_id = data["ticket_id"]
+
+    # platzhalter, da ich meinen code für das textfeld nicht testen konnte
+    cancellation_reason = 'ticket cancellation'
+    # cancellation_reason = data.get("cancellation_reason")
+
+
     if "ticket_id" in data:
-        create_ticket_cancellation_request(ticket_id, client_id)
+        create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason)
         return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
     else:
         return jsonify({"message": "Invalid data"}), 400
+
 
 @app.route('/view-cancellation-requests', methods=["GET", "POST"])
 def view_cancellation_requests():
@@ -517,6 +604,8 @@ def view_cancellation_requests():
         return render_template('cancellation-requests.html', requests=requests)
     else:
         return 'Error in fetching requests', 500
+
+
 @app.route('/accept-request/<int:request_id>', methods=['POST'])
 def accept_request(request_id):
     print(f"Received request_id: {request_id}")
@@ -548,6 +637,8 @@ def issue_offers():
     flight_codes = get_flight_codes()
     print(flight_codes) #returns None
     return render_template('issue-offers.html', flight_codes=flight_codes)
+
+
 @app.route('/add_aircraft_route', methods=['GET', 'POST'])
 def add_aircraft_route():
     if request.method == 'POST':
@@ -568,8 +659,6 @@ def add_aircraft_route():
     return render_template('add-aircraft.html', aircrafts=aircrafts)
 
 
-
-
 @app.route('/delete-aircraft/<int:id>', methods=['POST'])  # Use POST to avoid accidental deletes from web crawlers
 def delete_aircraft(id):
     success = delete_aircraft_by_id(id)
@@ -577,10 +666,14 @@ def delete_aircraft(id):
         return redirect(url_for('edit_aircrafts'))
     else:
         return 'Internal Server Error', 500
+
+
 @app.route('/manage-flights', methods=['GET'])
 def manage_flights():
     all_flights = get_all_flights()
     return render_template('manage-flights.html', flights=all_flights)
+
+
 @app.route('/edit-flight/<int:id>', methods=['GET'])
 def edit_flight(id):
     flight = get_flight_by_id(id)
@@ -588,6 +681,8 @@ def edit_flight(id):
         return render_template('edit-flight-form.html', flight=flight)
     else:
         return 'Flight not found', 404
+
+
 @app.route('/save-flight/<int:id>', methods=['POST'])
 def save_flight(id):
     if request.method == 'POST':
@@ -615,5 +710,7 @@ def delete_flight(id):
         return redirect(url_for('manage_flights'))
     else:
         return 'Internal Server Error', 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
