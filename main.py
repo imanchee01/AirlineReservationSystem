@@ -505,6 +505,7 @@ def save_aircraft(id):
 def edit_flights():
     return render_template("edit-flights.html")
 
+
 '''
 @app.route("/add-flight", methods=["GET", "POST"])
 def add_flight_route():
@@ -583,7 +584,12 @@ def cancel_ticket():
     client_id = session["userId"]
     data = request.get_json()
     ticket_id = data["ticket_id"]
-    cancellation_reason = data.get("cancellation_reason")
+
+    # platzhalter, da ich meinen code für das textfeld nicht testen konnte
+    cancellation_reason = 'ticket cancellation'
+    # cancellation_reason = data.get("cancellation_reason")
+
+
     if "ticket_id" in data:
         create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason)
         return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
