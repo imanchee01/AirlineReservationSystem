@@ -751,7 +751,21 @@ def get_all_flights():
         finally:
             cursor.close()
             conn.close()
-
+def delete_flight_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """DELETE FROM flights WHERE flightcode = %s"""
+        try:
+            cursor.execute(query, (id,))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+    return False
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
     client_data = get_client_data(userId)
