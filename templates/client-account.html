@@ -54,13 +54,15 @@
             </p>
                 <div class="tier-info" id="info{{ loop.index }}" style="display: none;">
                     ---------------------------------------------------------------------------------------------------------<br>
-                    You earn 1 mile for every mile flown. Different tiers come with different benefits.
+                    You earn 1 mile for every mile flown added by extra miles based on your tier and chosen flight category.
+                    <br>
+                    Different tiers come with different benefits.
                     <br>
                     Bronze Tier: You start as a Bronze member
                     <br>
-                    Silver Tier: With 1.000 flown miles, you reach the Silver tier. You get 5% price discount on each booking.
+                    Silver Tier: With 1.000 earned miles, you reach the Silver tier. You get 5% price discount on each booking.
                     <br>
-                    Gold Tier: You achieve Gold status with 10.000 flown miles. You get 10% price discount on each booking.
+                    Gold Tier: You achieve Gold status with 10.000 earned miles. You get 10% price discount on each booking.
                     <br>
                     ---------------------------------------------------------------------------------------------------------<br>
                 </div>
@@ -96,38 +98,52 @@
                     <td>{{ flight.ticket_miles }}</td>
 
                     <td>
-                        {% if flight.ticketId not in cancellation_requests %}
-                        <button
-                            class="cancellation-button"
-                            data-ticket-id="{{ flight.ticketId }}"
-                            onclick="stornierenButtonClick(this)"
-                            style="width: 100px;"
-                            {% if flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
-                            {% if flight.ticketId not in cancellation_requests %}
-                            Stornieren
-                            {% else %}
-                            Pending
+                    {% if flight.ticketId not in cancellation_requests %}
+                        {% for check in chekin_states %}
+                            {% if flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}
+                            {% if flight.ticketId not in cancellation_requests and check.checkinstatus=='notcheckedin' and check.ticketId == flight.ticketId%}
+                                <button
+                                    class="cancellation-button"
+                                    data-ticket-id="{{ flight.ticketId }}"
+                                    onclick="stornierenButtonClick(this)"
+                                    style="width: 100px;"
+                                    >Cancel
+                                </button>
+                                {% else %}
                             {% endif %}
-                        </button>
-                        {% else %}
+                        {% endfor %}
+                    {% else %}
                         <button class="cancellation-button" style="width: 100px; background-color: yellow;">
                             Pending
                         </button>
-                        {% endif %}
+                    {% endif %}
                     </td>
                     <td>
-                        <button
-                            data-check-in-id="{{ flight.ticketId }}"
-                            class="checkInButton"
-                            onclick="checkInButtonClick(this, {{ flight.ticketId }})"
-                            style="width: 100px;"
-                            {% if flight.ticketId in cancellation_requests or flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}disabled{% endif %}>
-                            {% if flight.ticketId in check_in_status and check_in_status[flight.ticketId] %}
-                            Checked In
-                            {% else %}
-                            Check-In
-                            {% endif %}
-                        </button>
+
+                    {% for check in chekin_states %}
+                        {% if check.checkinstatus=='notcheckedin' and check.ticketId == flight.ticketId and check.ticketId not in cancellation_requests %}
+                            <button
+                                data-check-in-id="{{ flight.ticketId }}"
+                                class="checkInButton"
+                                onclick="checkInButtonClick(this, {{ flight.ticketId }})"
+                                style="width: 100px;"
+                                >Check In
+                            </button>
+                        {% elif check.checkinstatus=='checkedin' and check.ticketId == flight.ticketId and check.ticketId not in cancellation_requests %}
+                            <button
+                                    data-check-in-id="{{ flight.ticketId }}"
+                                    class="checkInButton"
+                                    onclick="checkInButtonClick(this, {{ flight.ticketId }})"
+                                    style="width: 100px;background-color: green"
+                                        >Checked In
+                                </button>
+                            {% elif flight.ticketId in cancellation_requests  %}
+
+                        {% endif %}
+                    {% endfor %}
+
+
+
                     </td>
                 </tr>
                 {% endfor %}
@@ -165,34 +181,48 @@
 		<br>
 	</div>
 	<br><br>
+	<script>
 
-<script>
     const check_in_status = {}; // Use this object to keep track of check-in status.
-    const cancellation_reasons = {}; // Use this object to store cancellation reasons.
+    //const cancellation_reasons = {}; // Use this object to store cancellation reasons.
 
-    function checkInButtonClick(button, ticketId) {
-        if (button.disabled) {
-            // If the "Stornieren" button was already clicked, do nothing.
-            return;
-        }
-
-        // Change the text and color of the "Check-In" button.
-        button.innerHTML = "Checked In";
-        button.style.backgroundColor = "green";
-        button.disabled = true; // Disable the button to prevent further clicks.
-
-        // Update the check-in status in the object.
-        check_in_status[ticketId] = true;
-
-        // Disable the corresponding "Stornieren" button.
-        const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
-        if (stornierenButton) {
-            stornierenButton.disabled = true;
-        }
+function checkInButtonClick(button, ticketId) {
+    if (button.disabled) {
+        return;
     }
 
+    button.innerHTML = "Checked In";
+    button.style.backgroundColor = "green";
+    button.disabled = true;
 
-    function stornierenButtonClick(button) {
+    // Disable the corresponding cancellation button in the same row.
+    const cancellationButton = button.closest("tr").querySelector(".cancellation-button");
+    if (cancellationButton) {
+        cancellationButton.disabled = true;
+    }
+
+    // Send an AJAX or fetch request to the server to update the check-in status.
+    fetch("/update-checkin-status", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ticketId: ticketId }),
+    })
+    .then((response) => {
+        if (response.ok) {
+            showNotification("Checked in successfully.", "success");
+        } else {
+            showNotification("Failed to check in.", "error");
+        }
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+    });
+}
+
+
+function stornierenButtonClick(button) {
         const ticketId = button.getAttribute("data-ticket-id");
 
         // Check if the "Check-In" button was already clicked.
@@ -201,7 +231,7 @@
             return;
         }
 
-        // Create a text input field dynamically.
+        {#// Create a text input field dynamically.
         const cancellationReasonInput = document.createElement("input");
         cancellationReasonInput.type = "text";
         cancellationReasonInput.placeholder = "Enter cancellation reason";
@@ -242,7 +272,51 @@
             } else {
                 alert("Please enter a cancellation reason.");
             }
+        });#}
+
+
+        // Disable the corresponding "CheckIn" button.
+        const checkIn = document.querySelector(`.checkInButton[data-check-in-id="${ticketId}"]`);
+        if (checkIn) {
+            checkIn.disabled = true;
+        }
+
+        // Check if the button is already in "Pending" state.
+        if (button.innerHTML.trim() === "Pending") {
+            // If yes, change it back to "Stornieren" and remove the background color.
+            button.innerHTML = "Stornieren";
+            button.style.backgroundColor = "";
+        } else {
+            // Otherwise, set the button to "Pending" and change the background color to yellow.
+            button.innerHTML = "Pending";
+            button.style.backgroundColor = "yellow";
+        }
+
+        // Erstellen Sie ein JSON-Objekt mit der Ticket-ID.
+        const data = {
+            ticket_id: ticketId
+        };
+
+        // Senden Sie das JSON-Objekt an die Serverroute zum Stornieren.
+        fetch("/cancel-ticket", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json", // Ändern Sie den Content-Type auf JSON.
+            },
+            body: JSON.stringify(data), // Wandeln Sie das JSON-Objekt in einen String um.
+        })
+        .then((response) => {
+            if (response.ok) {
+                showNotification("Ticket cancellation request submitted successfully.", "success");
+            } else {
+                showNotification("Failed to submit ticket cancellation request.", "error");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
         });
+
+
     }
 
     function sendCancellationRequest(ticketId, cancellationReason) {
@@ -280,17 +354,18 @@
     });
 }
 
-    function toggleInfo(infoId) {
-        var infoElement = document.getElementById(infoId);
-        if (infoElement.style.display === "none") {
-            infoElement.style.display = "block";
-        } else {
-            infoElement.style.display = "none";
-        }
+
+
+function toggleInfo(infoId) {
+    var infoElement = document.getElementById(infoId);
+    if (infoElement.style.display === "none") {
+        infoElement.style.display = "block";
+    } else {
+        infoElement.style.display = "none";
     }
+}
 
-</script>
-
+	</script>
         </div>
     </div>
 {% endblock %}

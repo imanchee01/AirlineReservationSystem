@@ -16,6 +16,7 @@ db_config = {
     'port': os.environ.get("DB_PORT") or 3308
 }
 
+
 app = Flask(__name__)
 
 # Set the secret key to some random bytes. Keep this really secret!
@@ -76,14 +77,6 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.user_name}>"
-
-def get_db_connection():
-    try:
-        conn = mariadb.connect(**db_config)
-        return conn
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
 
 
 class Flight(db.Model):
@@ -549,6 +542,7 @@ def get_all_items_by_name__from_directionary(directionary, item_name):
 
     return list
 
+
 def get_pending_requests():
     conn = get_db_connection()
     if not conn:
@@ -564,109 +558,6 @@ def get_pending_requests():
 
     return requests
 
-def get_ticket_cancellation_requests():
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT U.user_name, T.ticketId, T.ticket_date, F.flightcode, R.requestId
-            FROM request R
-            JOIN tickets T ON R.request_ticketId = T.ticketId
-            JOIN flights F ON T.ticket_flightcode = F.flightcode
-            JOIN client C ON R.request_clientId = C.clientId
-            JOIN user U ON C.clientId = U.userId
-            WHERE R.request_status = 'pending'
-        """)
-        requests = cursor.fetchall()
-        return requests
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-    finally:
-        if connection:
-            connection.close()
-
-
-def update_request_status_and_delete_ticket(request_id, status):
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        print(f"Trying to update request_status to: {status}")
-        cursor.execute("""
-            UPDATE request 
-            SET request_status = %s 
-            WHERE requestId = %s;
-        """, (status, request_id))
-
-        if status == 'accepted':
-            cursor.execute("""
-                DELETE T FROM tickets T
-                JOIN request R ON T.ticketId = R.request_ticketId
-                WHERE R.requestId = %s;
-            """, (request_id,))
-
-        connection.commit()
-        return True
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
-    finally:
-        if connection:
-            connection.close()
-
-
-def update_request_status(request_id, status):
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute("""
-            UPDATE request 
-            SET request_status = %s 
-            WHERE requestId = %s;
-        """, (status, request_id))
-
-        connection.commit()
-        return True
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
-    finally:
-        if connection:
-            connection.close()
-
-def get_user_name(user_Id):
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute(" SELECT user_name FROM user WHERE userId= %s", (user_Id))
-        results = cursor.fetchall()
-        return results
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
-        if connection:
-            connection.close()
-
-
-def get_user_tier(user_id):
-    connection = None
-    try:
-        connection = mariadb.connect(**db_config)
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT tier FROM client WHERE clientId = %s", (user_id,))
-        result = cursor.fetchone()
-        if result:
-            return result['tier']
-        else:
-            return None
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-    finally:
-        if connection:
-            connection.close()
 
 def get_ticket_cancellation_requests():
     try:
@@ -719,6 +610,23 @@ def update_request_status_and_delete_ticket(request_id, status):
             connection.close()
 
 
+def delete_request(request_id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            DELETE FROM request 
+            WHERE requestId = %s;
+        """, (request_id,))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
 def update_request_status(request_id, status):
     try:
         connection = get_db_connection()
@@ -729,6 +637,221 @@ def update_request_status(request_id, status):
             WHERE requestId = %s;
         """, (status, request_id))
 
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_user_name(user_Id):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(" SELECT user_name FROM user WHERE userId= %s", (user_Id))
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_user_tier(user_id):
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT tier FROM client WHERE clientId = %s", (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['tier']
+        else:
+            return None
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def update_offers(ticket_flightcode, ticket_class, offer):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        query = """
+                    UPDATE tickets 
+                    SET offer = %s 
+                    WHERE ticket_flightcode = %s AND ticket_class = %s
+                """
+        print(f"Executing query: {query} with parameters: {offer}, {ticket_flightcode}, {ticket_class}")
+
+        cursor.execute(query, (offer, ticket_flightcode, ticket_class))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_flight_codes():
+    try:
+        connection = get_db_connection()  # assuming you have a function to get a db connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT flightcode FROM flights")
+        results = cursor.fetchall()
+        print(results)
+        flight_codes = [row[0] for row in results]
+        print(flight_codes)
+        return flight_codes
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+
+def add_aircraft(model, capacity, firstclass):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """INSERT INTO aircraft (aircraft_model, aircraft_capacity, aircraft_firstclass) 
+                   VALUES (%s, %s, %s)"""
+        params = (model, capacity, firstclass)
+        try:
+            cursor.execute(query, params)
+            #print(cursor.execute(query, params))
+            conn.commit()
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+    return True
+
+
+def delete_aircraft_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """DELETE FROM aircraft WHERE aircraftId = %s"""
+        try:
+            cursor.execute(query, (id,))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+    return False
+
+
+def get_all_flights():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM flights")
+            flights = cursor.fetchall()
+            return flights
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+
+
+def delete_flight_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        query = """DELETE FROM flights WHERE flightcode = %s"""
+        try:
+            cursor.execute(query, (id,))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+    return False
+
+
+def get_flight_by_id(id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM flights WHERE flightcode = %s", (id,))
+            return cursor.fetchone()
+        finally:
+            conn.close()
+
+
+def update_flight(id, miles, source, destination, weekday, arrival, departure, aircraft_id):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE flights SET
+                flight_miles = %s,
+                flight_source = %s,
+                flight_destination = %s,
+                flight_weekday = %s,
+                flight_arrTime = %s,
+                flight_depTime = %s,
+                flight_aircraftId = %s
+                WHERE flightcode = %s
+            """, (miles, source, destination, weekday, arrival, departure, aircraft_id, id))
+            conn.commit()
+            return True
+        except mariadb.Error as e:
+            print(f"Error: {e}")
+            return False
+        finally:
+            conn.close()
+
+
+def get_checkinstatus():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(" SELECT ticketId, checkinstatus FROM checkin_status ",)
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+
+def create_checkIn(ticket_id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            UPDATE checkin_status 
+            SET checkinstatus = 'checkedin'
+            WHERE ticketId = %s;
+        """, (ticket_id,))
         connection.commit()
         return True
     except Exception as e:
@@ -764,10 +887,9 @@ def get_remaining_capacity(flightcode, flightdate):
             connection.close()
 
 
+
 if __name__ == "__main__":
     userId = 28  # Replace with an actual user_id you want to test.
-    print(get_user_tier(userId))
-    print(get_ticket_cancellation_requests())
     client_data = get_client_data(userId)
-    print(get_remaining_capacity(28, '2023-09-10'))
     print(client_data)  # This will print the data returned by the function
+    print(update_offers(1, "economy", "free meal"))
