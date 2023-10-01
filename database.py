@@ -9,11 +9,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 
 db_config = {
-    'user': os.environ.get("DB_ROOTUSER") or 'dbuser',
-    'password': os.environ.get("DB_ROOTPASSWORD") or '1111',
-    'host': os.environ.get("DB_HOST") or 'localhost',
-    'database': os.environ.get("DB_DATABASE") or 'airline',
-    'port': os.environ.get("DB_PORT") or 3307
+    'user': 'root',
+    'password': '',
+    'host': 'localhost',
+    'database': 'airline',
+    'port': 3306
 }
 
 app = Flask(__name__)
@@ -615,6 +615,23 @@ def update_request_status_and_delete_ticket(request_id, status):
             connection.close()
 
 
+def delete_request(request_id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            DELETE FROM request 
+            WHERE requestId = %s;
+        """, (request_id,))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
 def update_request_status(request_id, status):
     try:
         connection = get_db_connection()
@@ -800,6 +817,41 @@ def update_flight(id, miles, source, destination, weekday, arrival, departure, a
             return False
         finally:
             conn.close()
+
+def get_checkinstatus():
+    connection = None
+    try:
+        connection = mariadb.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(" SELECT ticketId, checkinstatus FROM checkin_status ",)
+        results = cursor.fetchall()
+        return results
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def create_checkIn(ticket_id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            UPDATE checkin_status 
+            SET checkinstatus = 'checkedin'
+            WHERE ticketId = %s;
+        """, (ticket_id,))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
 
 
 if __name__ == "__main__":
