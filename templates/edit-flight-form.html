@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Flight{% endblock %}
+
+{% block content %}
+<style>
+    .edit-flight-form {
+        width: 50%;
+        margin: 20px auto;
+    }
+
+    label, input {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    button {
+        padding: 5px 10px;
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: white;
+        color: black;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+
+ /* Style for the employee home button and icon */
+  .employee-home-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+ .logout-button {
+    position: absolute;
+    top: 55px; /* Adjust the top position as needed */
+    right: 20px;
+  }
+</style>
+<div class="edit-flight-form">
+    <h1 style="font-weight: bold; font-size: 18px;">Edit Flight Form</h1>
+    <br>
+    <form method="post" action="{{ url_for('save_flight', id=flight.flightcode) }}">
+        <label for="flight_miles">Miles:</label>
+        <input type="number" id="flight_miles" name="flight_miles" value="{{ flight.flight_miles }}" required>
+        <label for="flight_source">Source:</label>
+        <input type="text" id="flight_source" name="flight_source" value="{{ flight.flight_source }}" required>
+        <label for="flight_destination">Destination:</label>
+        <input type="text" id="flight_destination" name="flight_destination" value="{{ flight.flight_destination }}" required>
+        <label for="flight_weekday">Weekday:</label>
+        <input type="text" id="flight_weekday" name="flight_weekday" value="{{ flight.flight_weekday }}" required>
+        <label for="flight_arrTime">Arrival Time:</label>
+        <input type="text" id="flight_arrTime" name="flight_arrTime" value="{{ flight.flight_arrTime }}" required>
+        <label for="flight_depTime">Departure Time:</label>
+        <input type="text" id="flight_depTime" name="flight_depTime" value="{{ flight.flight_depTime }}" required>
+        <label for="flight_aircraftId">AircraftID:</label>
+        <input type="number" id="flight_aircraftId" name="flight_aircraftId" value="{{ flight.flight_aircraftId }}" required>
+
+        <button type="submit">Save</button>
+    </form>
+</div>
+<!-- Employee Home button with icon -->
+<div class="employee-home-button">
+    <a href="/employee-home">
+        <button class="btn btn-primary">
+            Employee Home
+        </button>
+    </a>
+</div>
+
+<!-- Logout button with icon -->
+<div class="logout-button">
+    <a href="/logout">
+        <i class="fas fa-arrow-right"></i>
+        Logout
+    </a>
+</div>
+{% endblock %}

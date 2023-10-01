@@ -475,24 +475,29 @@ def cancellation_requests():
 
 @app.route('/add_flight_route', methods=["GET", "POST"])
 def add_flight_route():
-    if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
-        return 'All fields are required', 400
-    aircraft_id = request.form['aircraft_id']
-    if not aircraft_exists(aircraft_id):
-        return 'Invalid aircraft_id', 400
-    miles = request.form['miles']
-    source = request.form['source']
-    destination = request.form['destination']
-    weekday = request.form['weekday']
-    arrival = request.form['arrival']
-    departure = request.form['departure']
-    aircraft_id = request.form['aircraft_id']
+    if request.method == "POST":
+        if not request.form or not all(key in request.form for key in ('miles', 'source', 'destination', 'weekday', 'arrival', 'departure', "aircraft_id")):
+            flash('All fields are required', 'error')
+            return render_template("edit-flights.html"), 400
+        aircraft_id = request.form['aircraft_id']
+        if not aircraft_exists(aircraft_id):
+            flash('Invalid aircraft_id', 'error')
+            return render_template("edit-flight.html"), 400
+        miles = request.form['miles']
+        source = request.form['source']
+        destination = request.form['destination']
+        weekday = request.form['weekday']
+        arrival = request.form['arrival']
+        departure = request.form['departure']
+        aircraft_id = request.form['aircraft_id']
 
-    if add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
-        return 'Flight added successfully', 201
-    else:
-        return 'Internal Server Error', 500
-
+        if add_flight(miles, source, destination, weekday, arrival, departure, aircraft_id):
+            flash('Flight added successfully', 'success')
+            return redirect(url_for('manage_flights'))
+        else:
+            flash('Internal Server Error', 'error')
+            return render_template("edit-flights.html"), 500
+    return render_template("edit-flights.html")
 
 @app.route("/cancel-ticket", methods=["POST"])
 def cancel_ticket():
@@ -527,6 +532,88 @@ def decline_request(request_id):
     return redirect(url_for('view_cancellation_requests'))
 
 
+@app.route('/issue-offers', methods=['GET', 'POST'])
+def issue_offers():
+    if request.method == 'POST':
+        print(request.form)
+        ticket_flightcode = request.form.get('ticket_flightcode')
+        ticket_class = request.form.get('ticket_class')
+        offer = request.form.get('offer')
+        if update_offers(ticket_flightcode, ticket_class, offer):
+            flash('Offer Issued Successfully')
+            return redirect(url_for('issue_offers'))
+        else:
+            return 'Error Issuing Offer', 500
 
+    flight_codes = get_flight_codes()
+    print(flight_codes) #returns None
+    return render_template('issue-offers.html', flight_codes=flight_codes)
+@app.route('/add_aircraft_route', methods=['GET', 'POST'])
+def add_aircraft_route():
+    if request.method == 'POST':
+        if not request.form or not all(
+                key in request.form for key in ('aircraft_model', 'aircraft_capacity', 'aircraft_firstclass')):
+            return 'All fields are required', 400
+
+        model = request.form.get('aircraft_model')
+        capacity = request.form.get('aircraft_capacity')
+        firstclass = request.form.get('aircraft_firstclass')
+
+        if add_aircraft(model, capacity, firstclass):
+            return redirect(url_for('edit_aircrafts'))
+        else:
+            return 'Internal Server Error', 500
+
+    aircrafts = get_all_aircrafts()
+    return render_template('add-aircraft.html', aircrafts=aircrafts)
+
+
+
+
+@app.route('/delete-aircraft/<int:id>', methods=['POST'])  # Use POST to avoid accidental deletes from web crawlers
+def delete_aircraft(id):
+    success = delete_aircraft_by_id(id)
+    if success:
+        return redirect(url_for('edit_aircrafts'))
+    else:
+        return 'Internal Server Error', 500
+@app.route('/manage-flights', methods=['GET'])
+def manage_flights():
+    all_flights = get_all_flights()
+    return render_template('manage-flights.html', flights=all_flights)
+@app.route('/edit-flight/<int:id>', methods=['GET'])
+def edit_flight(id):
+    flight = get_flight_by_id(id)
+    if flight:
+        return render_template('edit-flight-form.html', flight=flight)
+    else:
+        return 'Flight not found', 404
+@app.route('/save-flight/<int:id>', methods=['POST'])
+def save_flight(id):
+    if request.method == 'POST':
+        # Get data from form submission
+        flight_miles = request.form['flight_miles']
+        flight_source = request.form['flight_source']
+        flight_destination = request.form['flight_destination']
+        flight_weekday = request.form['flight_weekday']
+        flight_arrTime = request.form['flight_arrTime']
+        flight_depTime = request.form['flight_depTime']
+        flight_aircraftId = request.form['flight_aircraftId']
+
+        # Update flight details
+        if update_flight(id, flight_miles, flight_source, flight_destination, flight_weekday, flight_arrTime, flight_depTime, flight_aircraftId):
+            flash('Flight updated successfully', 'success')
+            return redirect(url_for('manage_flights'))
+        else:
+            flash('Error updating flight', 'error')
+            return render_template('edit-flight-form.html', id=id), 500
+
+@app.route('/delete-flight/<int:id>', methods=['POST'])  # Use POST to avoid accidental deletes from web crawlers
+def delete_flight(id):
+    goal = delete_flight_by_id(id)
+    if goal:
+        return redirect(url_for('manage_flights'))
+    else:
+        return 'Internal Server Error', 500
 if __name__ == "__main__":
     app.run(debug=True)

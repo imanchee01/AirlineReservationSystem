@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Flights{% endblock %}
+
+{% block content %}
+
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px auto;
+  }
+  th, td {
+    padding: 10px;
+    text-align: left;
+  }
+  tr:first-child {
+    border-bottom: 1px solid #ccc;
+  }
+  strong {
+    font-weight: bold;
+  }
+
+  /* Style for the employee home button and icon */
+  .employee-home-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  /* Style for the logout button */
+  .logout-button {
+    position: absolute;
+    top: 55px; /* Adjust the top position as needed */
+    right: 20px;
+  }
+</style>
+<!-- Employee Home button with icon -->
+<div class="employee-home-button">
+  <a href="/employee-home">
+    <button class="btn btn-primary">
+      Employee Home
+    </button>
+  </a>
+</div>
+
+<!-- Logout button with icon -->
+<div class="logout-button">
+  <a href="/logout">
+    <i class="fas fa-arrow-right"></i>
+    Logout
+  </a>
+</div>
+
+<h1 style="font-weight: bold; font-size: 18px;">Manage Flights</h1>
+<br><br>
+<a href="{{ url_for('add_flight_route') }}">Add Flight</a>
+<table>
+  <tr>
+    <th>Flight Code</th>
+    <th>Miles</th>
+    <th>Source</th>
+    <th>Destination</th>
+    <th>Weekday</th>
+    <th>Arrival Time</th>
+    <th>Departure Time</th>
+    <th>AircraftID</th>
+    <th>Actions</th>
+  </tr>
+  {% for flight in flights %}
+  <tr>
+    <td>{{ flight.flightcode }}</td>
+    <td>{{ flight.flight_miles }}</td>
+    <td>{{ flight.flight_source }}</td>
+    <td>{{ flight.flight_destination }}</td>
+    <td>{{ flight.flight_weekday }}</td>
+    <td>{{ flight.flight_arrTime }}</td>
+    <td>{{ flight.flight_depTime }}</td>
+    <td>{{ flight.flight_aircraftId }}</td>
+    <td>
+        <a href="{{ url_for('edit_flight', id=flight.flightcode) }}">Edit</a> |
+        <form method="POST" action="{{ url_for('delete_flight', id=flight.flightcode) }}" style="display:inline;">
+            <button type="submit" style="background:none; border:none; padding:0; color:#007bff; cursor:pointer;">Delete</button>
+        </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
