@@ -653,6 +653,6 @@ def send_emails():
     job()  # Call the function that sends out emails
     return "Emails sent", 200
 #  test the email by navigating to http://localhost:5000/send_emails
-
+# manually run this route in browser
 if __name__ == "__main__":
     app.run(debug=True)
