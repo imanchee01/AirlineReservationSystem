@@ -459,7 +459,10 @@ def order_confirmation():
 
     flight_miles_before = ticket_miles_ret + ticket_miles_out
 
-
+    email_subject = "Thank You for Your Purchase!"
+    email_body = f"Dear {ticket_name},\n\nThank you for purchasing a ticket for flight {ticket_flightcode} on {ticket_date}. " \
+                 f"You have earned {ticket_miles_out + ticket_miles_ret} miles. Please keep this email as a confirmation of your purchase."
+    send_email(ticket_userId, email_subject, email_body)
     return render_template('order-confirmation.html',
                            flight_miles=flight_miles)
 
@@ -703,7 +706,37 @@ def delete_flight(id):
         return redirect(url_for('manage_flights'))
     else:
         return 'Internal Server Error', 500
+def send_email(client_id, email_subject, email_body):
+    print(f"Sending Email to Client {client_id}")
+    print(f"Subject: {email_subject}")
+    print(f"Body: {email_body}")
 
+    # Log the email to the database
+    log_email(client_id, email_subject, email_body)
+
+
+def job():
+    print("Job is running")
+    # Get all flights occurring in two days
+    flights_in_two_days = get_flights_in_two_days()  # Define this function in your database.py
+    print(f"Flights in two days: {flights_in_two_days}")
+    for flight in flights_in_two_days:
+        # For each flight, get all passengers and send them an email
+        passengers = get_passengers_of_flight(flight['flightcode'])  # Define this function in your database.py
+        print("Passengers of flight ", flight['flightcode'], ": ", passengers)  # Print the passengers retrieved
+        for passenger in passengers:
+            email_subject = "Check-In is Now Open!"
+            email_body = f"Dear {passenger['ticket_name']},\n\nCheck-in is now open for your flight {flight['flightcode']} scheduled on {passenger['ticket_date']}. " \
+                         "Please check in at your earliest convenience."
+            if not email_already_sent(passenger['userId'], email_subject):
+                send_email(passenger['userId'], email_subject, email_body)
+
+@app.route("/send_emails", methods=["GET"])
+def send_emails():
+    job()  # Call the function that sends out emails
+    return "Emails sent", 200
+#  test the email by navigating to http://localhost:5000/send_emails
+# manually run this route in browser
 
 if __name__ == "__main__":
     app.run(debug=True)
