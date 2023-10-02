@@ -207,7 +207,6 @@ def client_account():
     client_data2 = get_client_data(user_id)
     cancellation_requests = [i["request_ticketId"] for i in get_cancellation_requests()]
     chekin_states= get_checkinstatus()
-    print(chekin_states)
     flight_history = get_flighthistory(user_id)
     old_flight_history = get_flighthistory_ofOldFlights(user_id)
 
@@ -223,7 +222,6 @@ def update_checkin_status():
     try:
         data = request.get_json()
         ticket_id = data.get('ticketId')
-        print("ticket", ticket_id)
         create_checkIn(ticket_id)
         # Return a success response.
         return jsonify({'message': 'Checked in successfully'}), 200
@@ -375,7 +373,6 @@ def select_flight():
 def booking_summary():
     user_id = session["userId"]
     user_tier = get_user_tier(user_id)
-    print(user_tier)
     return render_template(
         "booking-summary.html",
         outward_flight=session["outward_flight"],
@@ -462,7 +459,6 @@ def order_confirmation():
 
     flight_miles_before = ticket_miles_ret + ticket_miles_out
 
-    print(flight_miles_before, flight_miles)
 
     return render_template('order-confirmation.html',
                            flight_miles=flight_miles)
@@ -584,15 +580,15 @@ def cancel_ticket():
     client_id = session["userId"]
     data = request.get_json()
     ticket_id = data["ticket_id"]
-
-    # platzhalter, da ich meinen code für das textfeld nicht testen konnte
-    cancellation_reason = 'ticket cancellation'
-    # cancellation_reason = data.get("cancellation_reason")
+    cancellation_reason = data.get("cancellation_reason")
 
 
     if "ticket_id" in data:
-        create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason)
-        return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
+        if cancellation_reason is not None:
+            create_ticket_cancellation_request(ticket_id, client_id, cancellation_reason)
+            return jsonify({"message": "Ticket cancellation request submitted successfully"}), 200
+        else:
+            return jsonify({"message": "Invalid data"}), 400
     else:
         return jsonify({"message": "Invalid data"}), 400
 
@@ -608,7 +604,6 @@ def view_cancellation_requests():
 
 @app.route('/accept-request/<int:request_id>', methods=['POST'])
 def accept_request(request_id):
-    print(f"Received request_id: {request_id}")
     if update_request_status_and_delete_ticket(request_id, 'accepted'):
         return redirect(url_for('view_cancellation_requests'))
     else:
@@ -624,7 +619,6 @@ def decline_request(request_id):
 @app.route('/issue-offers', methods=['GET', 'POST'])
 def issue_offers():
     if request.method == 'POST':
-        print(request.form)
         ticket_flightcode = request.form.get('ticket_flightcode')
         ticket_class = request.form.get('ticket_class')
         offer = request.form.get('offer')
@@ -635,7 +629,6 @@ def issue_offers():
             return 'Error Issuing Offer', 500
 
     flight_codes = get_flight_codes()
-    print(flight_codes) #returns None
     return render_template('issue-offers.html', flight_codes=flight_codes)
 
 
