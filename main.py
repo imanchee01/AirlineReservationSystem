@@ -4,6 +4,8 @@ import re
 import json
 import datetime
 from datetime import timedelta
+import time
+
 
 
 # Custom JSON encoder to handle timedelta objects
@@ -486,7 +488,7 @@ def add_flight_route():
         aircraft_id = request.form['aircraft_id']
         if not aircraft_exists(aircraft_id):
             flash('Invalid aircraft_id', 'error')
-            return render_template("edit-flight.html"), 400
+            return render_template("edit-flights.html"), 400
         miles = request.form['miles']
         source = request.form['source']
         destination = request.form['destination']
@@ -629,6 +631,28 @@ def send_email(client_id, email_subject, email_body):
     # Log the email to the database
     log_email(client_id, email_subject, email_body)
 
+
+def job():
+    print("Job is running")
+    # Get all flights occurring in two days
+    flights_in_two_days = get_flights_in_two_days()  # Define this function in your database.py
+    print(f"Flights in two days: {flights_in_two_days}")
+    for flight in flights_in_two_days:
+        # For each flight, get all passengers and send them an email
+        passengers = get_passengers_of_flight(flight['flightcode'])  # Define this function in your database.py
+        print("Passengers of flight ", flight['flightcode'], ": ", passengers)  # Print the passengers retrieved
+        for passenger in passengers:
+            email_subject = "Check-In is Now Open!"
+            email_body = f"Dear {passenger['ticket_name']},\n\nCheck-in is now open for your flight {flight['flightcode']} scheduled on {passenger['ticket_date']}. " \
+                         "Please check in at your earliest convenience."
+            if not email_already_sent(passenger['userId'], email_subject):
+                send_email(passenger['userId'], email_subject, email_body)
+
+@app.route("/send_emails", methods=["GET"])
+def send_emails():
+    job()  # Call the function that sends out emails
+    return "Emails sent", 200
+#  test the email by navigating to http://localhost:5000/send_emails
 
 if __name__ == "__main__":
     app.run(debug=True)

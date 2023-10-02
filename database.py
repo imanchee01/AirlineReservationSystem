@@ -5,6 +5,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
+
 
 load_dotenv()
 
@@ -861,6 +863,55 @@ def log_email(client_id, email_subject, email_body):
                 VALUES (%s, %s, %s)
             """, (client_id, email_subject, email_body))
             conn.commit()
+        finally:
+            conn.close()
+
+
+def get_flights_in_two_days():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            two_days_from_now = datetime.now() + timedelta(days=2)
+            cursor.execute("""
+                SELECT f.* 
+                FROM flights f
+                JOIN tickets t ON f.flightcode = t.ticket_flightcode
+                WHERE t.ticket_date = %s
+            """, (two_days_from_now.date(),))  # Use the date part only for comparison
+
+            return cursor.fetchall()
+        finally:
+            conn.close()
+
+
+def get_passengers_of_flight(flightcode):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM tickets JOIN user ON tickets.ticket_userId = user.userId WHERE ticket_flightcode = %s", (flightcode,))
+            return cursor.fetchall()
+        finally:
+            conn.close()
+
+
+def email_already_sent(user_id, email_subject):
+    conn = get_db_connection()  # Replace with your actual database connection method
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            today_date = datetime.now().date()  # Get today's date
+
+            query = """SELECT * FROM email_logs
+                       WHERE client_id = %s
+                       AND email_subject = %s
+                       AND DATE(sent_at) = %s"""
+
+            cursor.execute(query, (user_id, email_subject, today_date))
+            result = cursor.fetchone()  # fetchone will return None if no record is found
+
+            return result is not None  # Returns True if email is already sent, otherwise False
         finally:
             conn.close()
 
