@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Cancellation Requests{% endblock %}
+
+{% block content %}
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px auto;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    tr:first-child {
+      border-bottom: 1px solid #ccc;
+    }
+
+    strong {
+      font-weight: bold;
+    }
+  </style>
+  <div class="cancellation-requests">
+   <h1 style="font-weight: bold; font-size: 18px;">Cancellation Request</h1>
+   <br> <br>
+   <table>
+    <tr>
+     <th style="width: 5%;">Passenger</th>
+     <th style="width: 5%;">Date</th>
+     <th style="width: 10%;">Departure</th>
+     <th style="width: 10%;">Destination</th>
+     <th style="width: 15%;">Departure Time</th>
+     <th style="width: 10%;">Arrival Time</th>
+     <th style="width: 5%;">Class</th>
+     <th style="width: 5%;">Miles</th>
+     <th style="width: 15%;">Cancel Request</th>
+    </tr>
+    <tr>
+     <!-- Flugdaten hier einfügen -->
+     <td>
+     <td>
+     <td>
+     <td>
+     <td>
+     <td>
+     <td>
+     <td>
+     <td>
+      <button id="CancelButton1"
+              onclick="toggleButton('CancelButton1', 'Accepted', 'blau', 'accepted')">Cancel Request
+      </button>
+     <td>
+    </tr>
+   </table>
+  </div>
+
+  <script>
+    function toggleButton(buttonId, newText, newColor, oppositeButtonId) {
+      const button = document.getElementById(buttonId);
+      button.innerHTML = newText;
+      button.style.backgroundColor = newColor;
+      button.disabled = true;
+
+      // Deaktiviere den gegnerischen Button
+      const oppositeButton = document.getElementById(oppositeButtonId);
+      oppositeButton.disabled = false;
+      oppositeButton.style.backgroundColor = '';
+    }
+  </script>
+
+  <a href="/employee-home">Employee Home</a>
+{% endblock %}

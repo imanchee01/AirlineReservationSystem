@@ -62,6 +62,7 @@
         <th>Ticket ID</th>
         <th>Date</th>
         <th>Flight Code</th>
+        <th>Cancellation Reason</th>
         <th>Action</th>
     </tr>
     {% for request in requests %}
@@ -70,6 +71,7 @@
         <td>{{ request.ticketId }}</td>
         <td>{{ request.ticket_date }}</td>
         <td>{{ request.flightcode }}</td>
+        <td>{{ request.request_information }}</td>
         <td>
             <form method="post" action="{{ url_for('accept_request', request_id=request.requestId) }}">
                 <button type="submit">Accept</button>

@@ -53,7 +53,7 @@
                 <button class="info-button" onclick="toggleInfo('info{{ loop.index }}')">i</button>
             </p>
                 <div class="tier-info" id="info{{ loop.index }}" style="display: none;">
-                    ---------------------------------------------------------------------------------------------------------<br>
+                    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------<br>
                     You earn 1 mile for every mile flown added by extra miles based on your tier and chosen flight category.
                     <br>
                     Different tiers come with different benefits.
@@ -64,7 +64,11 @@
                     <br>
                     Gold Tier: You achieve Gold status with 10.000 earned miles. You get 10% price discount on each booking.
                     <br>
-                    ---------------------------------------------------------------------------------------------------------<br>
+                    Each year on the first of January your miles will be reset to zero.
+                    <br>
+                    You will retain your current tier status for one more year while accumulating miles toward achieving a new tier status.
+                    <br>
+                    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------<br>
                 </div>
 			<p><strong> Total miles:</strong> {{client.miles }}</p>
             {% endfor %}
@@ -83,6 +87,7 @@
                     <th style="width: auto;">Arrival Time (UTC)</th>
                     <th style="width: auto;">Class</th>
                     <th style="width: auto;">Miles</th>
+                    <th style="width: auto;">Offers</th>
                     <th style="width: auto;">Cancellation</th>
                     <th style="width: auto;">Check-In</th>
                 </tr>
@@ -96,6 +101,7 @@
                     <td>{{ flight.flight_arrTime }}</td>
                     <td>{{ flight.ticket_class }}</td>
                     <td>{{ flight.ticket_miles }}</td>
+                    <td>{{ flight.offer }}</td>
 
                     <td>
                     {% if flight.ticketId not in cancellation_requests %}
@@ -184,6 +190,7 @@
 	<script>
 
     const check_in_status = {}; // Use this object to keep track of check-in status.
+    const cancellation_reasons = {}; // Use this object to store cancellation reasons.
 
 function checkInButtonClick(button, ticketId) {
     if (button.disabled) {
@@ -230,6 +237,51 @@ function stornierenButtonClick(button) {
             return;
         }
 
+        {// Create a text input field dynamically.
+        const cancellationReasonInput = document.createElement("input");
+        cancellationReasonInput.type = "text";
+        cancellationReasonInput.placeholder = "Enter cancellation reason";
+        cancellationReasonInput.className = "cancellation-reason-input";
+
+        // Create a "Save" button.
+        const saveButton = document.createElement("button");
+        saveButton.innerHTML = "Save";
+        saveButton.className = "save-button";
+
+        // Append the input and save button to the button's parent element.
+        button.parentElement.appendChild(cancellationReasonInput);
+        button.parentElement.appendChild(saveButton);
+
+        // Disable the "Stornieren" button.
+        button.disabled = true;
+
+        // Add an event listener to the "Save" button.
+        saveButton.addEventListener("click", () => {
+            const cancellationReason = cancellationReasonInput.value;
+
+            // Check if a cancellation reason was provided.
+            if (cancellationReason.trim() !== "") {
+                // Save the cancellation reason.
+                cancellation_reasons[ticketId] = cancellationReason;
+
+                // Set the "Stornieren" button to "Pending" and change the background color to yellow.
+                button.innerHTML = "Pending";
+                button.style.backgroundColor = "yellow";
+                button.disabled = true;
+
+                // Send the cancellation request to the server.
+                console.log(ticketId, cancellationReason)
+                sendCancellationRequest(ticketId, cancellationReason);
+
+                // Remove the input and save button.
+                button.parentElement.removeChild(cancellationReasonInput);
+                button.parentElement.removeChild(saveButton);
+            } else {
+                alert("Please enter a cancellation reason.");
+            }
+        });}
+
+
         // Disable the corresponding "CheckIn" button.
         const checkIn = document.querySelector(`.checkInButton[data-check-in-id="${ticketId}"]`);
         if (checkIn) {
@@ -274,6 +326,44 @@ function stornierenButtonClick(button) {
 
     }
 
+    function sendCancellationRequest(ticketId, cancellationReason) {
+    console.log('in fuction')
+    const data = {
+        ticket_id: ticketId,
+        cancellation_reason: cancellationReason
+    };
+
+    fetch("/cancel-ticket", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            // Handle success
+            const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
+            if (stornierenButton) {
+                stornierenButton.innerHTML = "Pending";
+                stornierenButton.style.backgroundColor = "yellow";
+                stornierenButton.disabled = true;
+            }
+        } else {
+            alert("Cancellation request failed. Please try again.");
+            const stornierenButton = document.querySelector(`.cancellation-button[data-ticket-id="${ticketId}"]`);
+            if (stornierenButton) {
+                stornierenButton.disabled = false; // Enable the "Stornieren" button for retry.
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+}
+
+
+
 function toggleInfo(infoId) {
     var infoElement = document.getElementById(infoId);
     if (infoElement.style.display === "none") {
@@ -287,4 +377,3 @@ function toggleInfo(infoId) {
         </div>
     </div>
 {% endblock %}
-</div>
