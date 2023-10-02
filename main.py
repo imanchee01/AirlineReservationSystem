@@ -557,7 +557,7 @@ def add_flight_route():
         aircraft_id = request.form['aircraft_id']
         if not aircraft_exists(aircraft_id):
             flash('Invalid aircraft_id', 'error')
-            return render_template("edit-flight.html"), 400
+            return render_template("edit-flights.html"), 400
         miles = request.form['miles']
         source = request.form['source']
         destination = request.form['destination']

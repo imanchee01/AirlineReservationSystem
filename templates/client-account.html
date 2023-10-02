@@ -53,7 +53,7 @@
                 <button class="info-button" onclick="toggleInfo('info{{ loop.index }}')">i</button>
             </p>
                 <div class="tier-info" id="info{{ loop.index }}" style="display: none;">
-                    ---------------------------------------------------------------------------------------------------------<br>
+                    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------<br>
                     You earn 1 mile for every mile flown added by extra miles based on your tier and chosen flight category.
                     <br>
                     Different tiers come with different benefits.
@@ -64,7 +64,11 @@
                     <br>
                     Gold Tier: You achieve Gold status with 10.000 earned miles. You get 10% price discount on each booking.
                     <br>
-                    ---------------------------------------------------------------------------------------------------------<br>
+                    Each year on the first of January your miles will be reset to zero.
+                    <br>
+                    You will retain your current tier status for one more year while accumulating miles toward achieving a new tier status.
+                    <br>
+                    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------<br>
                 </div>
 			<p><strong> Total miles:</strong> {{client.miles }}</p>
             {% endfor %}
