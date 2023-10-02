@@ -9,11 +9,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 
 db_config = {
-    'user': 'root',
-    'password': '',
+    'user': 'dbuser',
+    'password': '1111',
     'host': 'localhost',
     'database': 'airline',
-    'port': 3306
+    'port': 3307
 }
 
 app = Flask(__name__)
@@ -851,6 +851,18 @@ def create_checkIn(ticket_id):
         if connection:
             connection.close()
 
+def log_email(client_id, email_subject, email_body):
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO email_logs (client_id, email_subject, email_body) 
+                VALUES (%s, %s, %s)
+            """, (client_id, email_subject, email_body))
+            conn.commit()
+        finally:
+            conn.close()
 
 
 

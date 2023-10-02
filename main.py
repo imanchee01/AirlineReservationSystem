@@ -386,7 +386,11 @@ def order_confirmation():
         ticket_flightcode,
         ticket_class_ret
     )
-
+    # Send the email after purchasing the ticket
+    email_subject = "Thank You for Your Purchase!"
+    email_body = f"Dear {ticket_name},\n\nThank you for purchasing a ticket for flight {ticket_flightcode} on {ticket_date}. " \
+                 f"You have earned {ticket_miles_out + ticket_miles_ret} miles. Please keep this email as a confirmation of your purchase."
+    send_email(ticket_userId, email_subject, email_body)  # Assuming ticket_userId is the client_id
     flight_miles = ticket_miles_ret + ticket_miles_out
 
     return render_template('order-confirmation.html',
@@ -615,5 +619,16 @@ def delete_flight(id):
         return redirect(url_for('manage_flights'))
     else:
         return 'Internal Server Error', 500
+
+
+def send_email(client_id, email_subject, email_body):
+    print(f"Sending Email to Client {client_id}")
+    print(f"Subject: {email_subject}")
+    print(f"Body: {email_body}")
+
+    # Log the email to the database
+    log_email(client_id, email_subject, email_body)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
