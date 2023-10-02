@@ -83,6 +83,7 @@
                     <th style="width: auto;">Arrival Time (UTC)</th>
                     <th style="width: auto;">Class</th>
                     <th style="width: auto;">Miles</th>
+                    <th style="width: auto;">Offers</th>
                     <th style="width: auto;">Cancellation</th>
                     <th style="width: auto;">Check-In</th>
                 </tr>
@@ -96,6 +97,7 @@
                     <td>{{ flight.flight_arrTime }}</td>
                     <td>{{ flight.ticket_class }}</td>
                     <td>{{ flight.ticket_miles }}</td>
+                    <td>{{ flight.offer }}</td>
 
                     <td>
                     {% if flight.ticketId not in cancellation_requests %}
@@ -184,7 +186,7 @@
 	<script>
 
     const check_in_status = {}; // Use this object to keep track of check-in status.
-    //const cancellation_reasons = {}; // Use this object to store cancellation reasons.
+    const cancellation_reasons = {}; // Use this object to store cancellation reasons.
 
 function checkInButtonClick(button, ticketId) {
     if (button.disabled) {
@@ -231,7 +233,7 @@ function stornierenButtonClick(button) {
             return;
         }
 
-        {#// Create a text input field dynamically.
+        {// Create a text input field dynamically.
         const cancellationReasonInput = document.createElement("input");
         cancellationReasonInput.type = "text";
         cancellationReasonInput.placeholder = "Enter cancellation reason";
@@ -264,6 +266,7 @@ function stornierenButtonClick(button) {
                 button.disabled = true;
 
                 // Send the cancellation request to the server.
+                console.log(ticketId, cancellationReason)
                 sendCancellationRequest(ticketId, cancellationReason);
 
                 // Remove the input and save button.
@@ -272,7 +275,7 @@ function stornierenButtonClick(button) {
             } else {
                 alert("Please enter a cancellation reason.");
             }
-        });#}
+        });}
 
 
         // Disable the corresponding "CheckIn" button.
@@ -320,6 +323,7 @@ function stornierenButtonClick(button) {
     }
 
     function sendCancellationRequest(ticketId, cancellationReason) {
+    console.log('in fuction')
     const data = {
         ticket_id: ticketId,
         cancellation_reason: cancellationReason
@@ -369,4 +373,3 @@ function toggleInfo(infoId) {
         </div>
     </div>
 {% endblock %}
-</div>
