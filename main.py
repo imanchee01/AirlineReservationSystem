@@ -4,7 +4,7 @@ import re
 import json
 import datetime
 from datetime import timedelta
-
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Custom JSON encoder to handle timedelta objects
 class TimedeltaEncoder(json.JSONEncoder):
@@ -714,7 +714,7 @@ def send_email(client_id, email_subject, email_body):
     # Log the email to the database
     log_email(client_id, email_subject, email_body)
 
-
+"""
 def job():
     print("Job is running")
     # Get all flights occurring in two days
@@ -736,7 +736,20 @@ def send_emails():
     job()  # Call the function that sends out emails
     return "Emails sent", 200
 #  test the email by navigating to http://localhost:5000/send_emails
-# manually run this route in browser
-
+# manually run this route in browser"""
+@app.route('/send_checkin_emails')
+def send_checkin_emails():
+    tickets = get_flights_in_two_days()
+    for ticket in tickets:
+        user_email = ticket["ticket_userId"]  # Assuming you have a function to get user email by ticket ID
+        email_subject = "Check-in Reminder"
+        email_body = f"Reminder to check-in for your flight on {ticket['ticket_date']}."
+        send_email(user_email, email_subject, email_body)
+    return "Check-in emails sent!", 200
+                
+scheduler = BackgroundScheduler()
+# Schedule the send_check_in_reminders function to be called every minute
+scheduler.add_job(send_checkin_emails, 'interval', minutes=1, start_date='2023-10-04 01:28:00')  # Adjust the start_date
+scheduler.start()
 if __name__ == "__main__":
     app.run(debug=True)

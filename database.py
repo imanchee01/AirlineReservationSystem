@@ -882,25 +882,8 @@ def get_flights_in_two_days():
     if conn:
         cursor = conn.cursor(dictionary=True)
         try:
-            two_days_from_now = datetime.now() + timedelta(days=2)
-            cursor.execute("""
-                SELECT f.* 
-                FROM flights f
-                JOIN tickets t ON f.flightcode = t.ticket_flightcode
-                WHERE t.ticket_date = %s
-            """, (two_days_from_now.date(),))  # Use the date part only for comparison
-
-            return cursor.fetchall()
-        finally:
-            conn.close()
-
-
-def get_passengers_of_flight(flightcode):
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT * FROM tickets JOIN user ON tickets.ticket_userId = user.userId WHERE ticket_flightcode = %s", (flightcode,))
+            two_days_from_now = datetime.now().date() + timedelta(days=2)
+            cursor.execute("SELECT * FROM tickets WHERE ticket_date = %s", (two_days_from_now,))
             return cursor.fetchall()
         finally:
             conn.close()
@@ -956,3 +939,4 @@ if __name__ == "__main__":
     client_data = get_client_data(userId)
     print(client_data)  # This will print the data returned by the function
     print(update_offers(1, "economy", "free meal"))
+    print(get_flights_in_two_days())
