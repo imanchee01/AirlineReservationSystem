@@ -1,4 +1,3 @@
-# Database Systems Lab SoSe 23
 
 ## Name
 
