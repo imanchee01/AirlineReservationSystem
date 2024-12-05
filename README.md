@@ -1,11 +1,11 @@
 
-## Name
+## Online ticketing system for a fictive airline.
 
-Online ticketing system for a fictive airline.
+
 
 ## Description
 Requirements:
-• There exist two types of users for the system; company employees and clients. For their identification, the UI should provide a login page.
+• There exist two types of users for the system; company employees and clients. For their identification, the UI should provide a login page.\\
 • The airline company has its own fleet of aircraft and a number of flight codes; every code has
 a particular source and destination airport, time slot, week day, and the aircraft assigned to it.
 • Company employees can view and modify flight codes and company’s fleet, i.e., add/edit/ remove
